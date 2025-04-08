@@ -55,4 +55,10 @@ class LaraGatekeeperServiceProvider extends PackageServiceProvider
                     });
             });
     }
+
+    public function packageRegistered()
+    {
+        $this->app->register(\Callcocam\LaraGatekeeper\Core\Shinobi\ShinobiServiceProvider::class);
+        $this->app->register(\Callcocam\LaraGatekeeper\Core\Landlord\LandlordServiceProvider::class);
+    }
 }
