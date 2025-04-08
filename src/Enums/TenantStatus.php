@@ -8,16 +8,22 @@ namespace Callcocam\LaraGatekeeper\Enums;
 
 enum TenantStatus: string
 {
-    case DRAFT = 'draft';
-    case PUBLISHED = 'published';
-    case INACTIVE = 'inactive';
+    case Draft = 'draft';
+    case Published = 'published';
 
-    public function getLabel(): string
+    public function label(): string
     {
         return match($this) {
-            self::DRAFT => 'Rascunho',
-            self::PUBLISHED => 'Ativo',
-            self::INACTIVE => 'Inativo',
+            self::Draft => 'Rascunho',
+            self::Published => 'Publicado',
+        };
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Draft => 'gray',
+            self::Published => 'green'
         };
     }
 }
