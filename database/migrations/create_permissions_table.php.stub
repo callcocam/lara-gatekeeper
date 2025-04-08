@@ -1,0 +1,35 @@
+<?php
+/**
+ * Created by Claudio Campos.
+ * User: callcocam@gmail.com, contato@sigasmart.com.br
+ * https://www.sigasmart.com.br
+ */
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Callcocam\LaraGatekeeper\Enums\PermissionStatus;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        $name = config('raptor.tables.permissions', 'permissions');
+
+        Schema::create($name, function (Blueprint $table) {
+            $table->ulid('id')->primary();
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->text('description')->nullable();
+            $table->enum('status', array_column(PermissionStatus::cases(), 'value'))->default(PermissionStatus::DRAFT->value); 
+            $table->ulid('tenant_id')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down()
+    {   
+        $name = config('raptor.tables.permissions', 'permissions');
+        Schema::dropIfExists($name);
+    }
+};

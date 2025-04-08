@@ -1,0 +1,43 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Callcocam\LaraGatekeeper\Enums\DefaultStatus;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->ulid('id') ->change(); 
+            $table->string('slug')->nullable()->after('name');
+            $table->enum('status', array_column(DefaultStatus::cases(), 'value'))->default(DefaultStatus::DRAFT->value)->after('password');
+            $table->softDeletes()->after('updated_at');
+        });
+ 
+
+        Schema::table('sessions', function (Blueprint $table) { 
+            $table->foreignUlid('user_id')->change();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropPrimary('users_id_primary');
+            $table->dropColumn('id');
+            $table->dropSoftDeletes();
+        });
+
+        Schema::table('sessions', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
+        });
+    }
+};
