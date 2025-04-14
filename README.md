@@ -23,6 +23,9 @@ You can install the package via composer:
 composer require callcocam/lara-gatekeeper
 ```
 
+
+
+
 You can publish and run the migrations with:
 
 ```bash

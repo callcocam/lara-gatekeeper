@@ -154,8 +154,8 @@ class LaraGatekeeperSetupCommand extends Command
     {
         $this->comment('Criando usuário');
 
-        $name = $this->ask('Qual o nome do usuário?', 'John Doe');
-        $email = $this->ask('Qual o email do usuário?', sprintf('john-doe@%s', request()->getHost()));
+        $name = $this->ask('Qual o nome do usuário?', 'Admin');
+        $email = $this->ask('Qual o email do usuário?', sprintf('admin@%s', request()->getHost()));
         $status = $this->choice('Qual o status do usuário?', ['published', 'draft'], UserStatus::Published->value);
 
         if (User::where('email', $email)->count()) {
@@ -243,7 +243,7 @@ class LaraGatekeeperSetupCommand extends Command
                     'name' => $name,
                     'slug' => $slug,
                     'description' => "Permissão para {$name}",
-                    'status' => PermissionStatus::PUBLISHED->value,
+                    'status' => PermissionStatus::Published->value,
                 ]);
 
                 $count++;
