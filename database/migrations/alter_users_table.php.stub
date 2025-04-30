@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             //$table->ulid('id') ->change(); 
             $table->string('slug')->nullable()->after('name');
-            $table->enum('status', array_column(DefaultStatus::cases(), 'value'))->default(DefaultStatus::DRAFT->value)->after('password');
+            $table->enum('status', array_column(DefaultStatus::cases(), 'value'))->default(DefaultStatus::Draft->value)->after('password');
             $table->softDeletes()->after('updated_at');
         });
  
