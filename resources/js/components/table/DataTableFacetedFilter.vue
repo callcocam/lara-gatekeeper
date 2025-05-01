@@ -1,36 +1,61 @@
 <script setup lang="ts">
 import type { Column } from '@tanstack/vue-table'
-import type { Component } from 'vue' 
-import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Separator } from '@/components/ui/separator'
-
 import { computed } from 'vue'
 import { CheckIcon, PlusCircleIcon } from 'lucide-vue-next'
-import type { Task } from './schema'
-import type { FilterOption } from './types'
-interface DataTableFacetedFilter {
-  column?: Column<Task>
+
+// TODO: Assumir peer dependencies ou copiar/recriar
+import { cn } from '../../lib/utils'  
+
+// TODO: Usar tipos genéricos 
+import type { FilterOption } from './types' // Assumindo types.ts no pacote
+
+interface DataTableFacetedFilterProps {
+  column?: Column<any> // Tornar genérico
   title?: string
   options: FilterOption[]
 }
 
-const props = defineProps<DataTableFacetedFilter>()
+const props = defineProps<DataTableFacetedFilterProps>()
 
-const facets = computed(() => props.column?.getFacetedUniqueValues())
-const selectedValues = computed(() => new Set(props.column?.getFilterValue() as string[]))
+const facets = computed(() => props.column?.getFacetedUniqueValues());
+const selectedValues = computed(() => {
+    const filterValue = props.column?.getFilterValue();
+    // Garante que é sempre um Set de strings
+    if (Array.isArray(filterValue)) {
+        return new Set(filterValue.map(String));
+    }
+    return new Set<string>();
+});
+
+const handleSelect = (option: FilterOption) => {
+    if (!props.column) return;
+
+    const currentFilter = props.column.getFilterValue();
+    let currentSet = new Set<string>();
+    if (Array.isArray(currentFilter)) {
+        currentSet = new Set(currentFilter.map(String));
+    }
+
+    const isSelected = currentSet.has(option.value);
+
+    if (isSelected) {
+        currentSet.delete(option.value);
+    } else {
+        currentSet.add(option.value);
+    }
+
+    const filterValues = Array.from(currentSet);
+    props.column.setFilterValue(filterValues.length ? filterValues : undefined);
+}
+
+const clearFilters = () => {
+    props.column?.setFilterValue(undefined);
+}
+
 </script>
 
 <template>
-  <Popover>
+  <Popover v-if="column">
     <PopoverTrigger as-child>
       <Button variant="outline" size="sm" class="h-8 border-dashed">
         <PlusCircleIcon class="mr-2 h-4 w-4" />
@@ -49,13 +74,11 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
               variant="secondary"
               class="rounded-sm px-1 font-normal"
             >
-              {{ selectedValues.size }} selected
+              {{ selectedValues.size }} selecionados
             </Badge>
-
             <template v-else>
               <Badge
-                v-for="option in options
-                  .filter((option) => selectedValues.has(option.value))"
+                v-for="option in options.filter((opt) => selectedValues.has(opt.value))"
                 :key="option.value"
                 variant="secondary"
                 class="rounded-sm px-1 font-normal"
@@ -69,28 +92,15 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
     </PopoverTrigger>
     <PopoverContent class="w-[200px] p-0" align="start">
       <Command>
-        <CommandInput :placeholder="title" />
+        <CommandInput :placeholder="title" class="h-9" />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>Nenhum resultado.</CommandEmpty>
           <CommandGroup>
             <CommandItem
               v-for="option in options"
               :key="option.value"
-              :value="option"
-              @select="(e) => {
-                console.log(e.detail.value)
-                const isSelected = selectedValues.has(option.value)
-                if (isSelected) {
-                  selectedValues.delete(option.value)
-                }
-                else {
-                  selectedValues.add(option.value)
-                }
-                const filterValues = Array.from(selectedValues)
-                column?.setFilterValue(
-                  filterValues.length ? filterValues : undefined,
-                )
-              }"
+              :value="option.value" 
+              @select="() => handleSelect(option)"
             >
               <div
                 :class="cn(
@@ -114,11 +124,11 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
             <CommandSeparator />
             <CommandGroup>
               <CommandItem
-                :value="{ label: 'Clear filters' }"
-                class="justify-center text-center"
-                @select="column?.setFilterValue(undefined)"
+                 :value="'_clear_'"
+                 class="justify-center text-center"
+                 @select="clearFilters"
               >
-                Clear filters
+                Limpar filtros
               </CommandItem>
             </CommandGroup>
           </template>

@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import { computed } from 'vue' 
 import { ChevronLeftIcon, ChevronRightIcon, ArrowLeftIcon, ArrowRightIcon } from 'lucide-vue-next'
 
 interface ServerSideDataTablePaginationProps {
-    pageIndex: number
+    pageIndex: number // Current page (1-based)
     pageSize: number
-    pageCount: number
+    pageCount: number // Total number of pages
     totalItems: number
     hasPreviousPage: boolean
     hasNextPage: boolean
@@ -26,22 +19,43 @@ const emit = defineEmits<{
 }>()
 
 const goToPage = (page: number) => {
-    emit('pageChange', page)
-}
-
-// Manipular a mudança de tamanho de página
-const handlePageSizeChange = (value: any) => {
-    if (value && !isNaN(Number(value))) {
-        emit('pageSizeChange', Number(value))
+    // Garante que a página está dentro dos limites
+    const validPage = Math.max(1, Math.min(page, props.pageCount));
+    if (validPage !== props.pageIndex) { // Evita emitir se a página já for a atual
+      console.log(`[Gatekeeper/Pagination] Emitting pageChange: ${validPage}`);
+      emit('pageChange', validPage);
     }
 }
+
+const handlePageSizeChange = (value: string | number) => {
+    const newSize = Number(value);
+    if (!isNaN(newSize) && newSize > 0 && newSize !== props.pageSize) {
+        console.log(`[Gatekeeper/Pagination] Emitting pageSizeChange: ${newSize}`);
+        emit('pageSizeChange', newSize);
+    }
+}
+
+// Calculando o range de itens exibidos
+const fromItem = computed(() => {
+    if (props.totalItems === 0) return 0;
+    return (props.pageIndex - 1) * props.pageSize + 1;
+});
+const toItem = computed(() => {
+    return Math.min(props.pageIndex * props.pageSize, props.totalItems);
+});
+
 </script>
 
 <template>
     <div class="flex items-center justify-between px-2">
         <div class="flex-1 text-sm text-muted-foreground">
-            Mostrando {{ (pageIndex - 1) * pageSize + 1 }} a {{ Math.min(pageIndex * pageSize, totalItems) }} 
-            de {{ totalItems }} registro(s).
+            <template v-if="totalItems > 0">
+                Mostrando {{ fromItem }} a {{ toItem }}
+                de {{ totalItems }} registro(s).
+            </template>
+            <template v-else>
+                Nenhum registro encontrado.
+            </template>
         </div>
         <div class="flex items-center space-x-6 lg:space-x-8">
             <div class="flex items-center space-x-2">
@@ -59,44 +73,49 @@ const handlePageSizeChange = (value: any) => {
                     </SelectContent>
                 </Select>
             </div>
-            <div class="flex w-[100px] items-center justify-center text-sm font-medium">
-                Página {{ pageIndex }} de {{ pageCount }}
+            <div class="flex w-[110px] items-center justify-center text-sm font-medium">
+                 <template v-if="pageCount > 0">
+                    Página {{ pageIndex }} de {{ pageCount }}
+                 </template>
+                 <template v-else>
+                    Página 0 de 0
+                 </template>
             </div>
             <div class="flex items-center space-x-2">
-                <Button 
-                    variant="outline" 
-                    class="hidden h-8 w-8 p-0 lg:flex" 
+                <Button
+                    variant="outline"
+                    class="hidden h-8 w-8 p-0 lg:flex"
                     :disabled="!hasPreviousPage"
                     @click="goToPage(1)"
+                    aria-label="Ir para primeira página"
                 >
-                    <span class="sr-only">Ir para primeira página</span>
                     <ArrowLeftIcon class="h-4 w-4" />
                 </Button>
-                <Button 
-                    variant="outline" 
-                    class="h-8 w-8 p-0" 
+                <Button
+                    variant="outline"
+                    class="h-8 w-8 p-0"
                     :disabled="!hasPreviousPage"
                     @click="goToPage(pageIndex - 1)"
+                     aria-label="Ir para página anterior"
                 >
-                    <span class="sr-only">Ir para página anterior</span>
                     <ChevronLeftIcon class="h-4 w-4" />
                 </Button>
-                <Button 
-                    variant="outline" 
-                    class="h-8 w-8 p-0" 
+                <Button
+                    variant="outline"
+                    class="h-8 w-8 p-0"
                     :disabled="!hasNextPage"
                     @click="goToPage(pageIndex + 1)"
+                     aria-label="Ir para próxima página"
                 >
-                    <span class="sr-only">Ir para próxima página</span>
                     <ChevronRightIcon class="h-4 w-4" />
                 </Button>
-                <Button 
-                    variant="outline" 
-                    class="hidden h-8 w-8 p-0 lg:flex" 
+                <Button
+                    variant="outline"
+                    class="hidden h-8 w-8 p-0 lg:flex"
                     :disabled="!hasNextPage"
                     @click="goToPage(pageCount)"
+                     aria-label="Ir para última página"
                 >
-                    <span class="sr-only">Ir para última página</span>
                     <ArrowRightIcon class="h-4 w-4" />
                 </Button>
             </div>

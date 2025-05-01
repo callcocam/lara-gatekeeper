@@ -7,8 +7,7 @@ import {
     ListOrdered,
     Heading2,
 } from 'lucide-vue-next'
-// TODO: Assumir Toggle como peer dependency de shadcn-vue ou copiar/recriar
-import { Toggle } from 'shadcn-vue' // TODO: Verificar path se necessário
+// TODO: Assumir Toggle como peer dependency de shadcn-vue ou copiar/recriar 
 import { computed } from 'vue'
 
 const props = defineProps<{

@@ -1,20 +1,9 @@
 <script setup lang="ts">
 import { defineProps, computed, defineAsyncComponent, watch } from 'vue'
 import { useField } from 'vee-validate'
-// Assumindo shadcn-vue como peer dependency
-import { Label } from 'shadcn-vue' // TODO: Verificar path exato se necessário (e.g., 'shadcn-vue/dist/components/ui/label')
+// Assumindo shadcn-vue como peer dependency 
 import { cn } from '../../lib/utils' // Path relativo para o utils.ts dentro do pacote
-
-// Define type for field configuration
-interface FieldConfig {
-    name: string;
-    label: string;
-    type: string;
-    required?: boolean;
-    description?: string;
-    inputProps?: Record<string, any>;
-    [key: string]: any;
-}
+import type { FieldConfig } from './DynamicForm.vue' // Importar tipo do DynamicForm no mesmo diretório
 
 const props = defineProps<{
     field: FieldConfig;

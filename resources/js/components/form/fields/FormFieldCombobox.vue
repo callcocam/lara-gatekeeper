@@ -3,21 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { Check, ChevronsUpDown } from 'lucide-vue-next'
 
 // TODO: Assumir dependências como peer dependencies ou copiar/recriar
-import { cn } from '../../lib/utils' // Path relativo correto é um nível acima
-import { Button } from 'shadcn-vue' // Assumindo peer dependency
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from 'shadcn-vue' // Assumindo peer dependency
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from 'shadcn-vue' // Assumindo peer dependency
+import { cn } from '../../../lib/utils' // Path relativo correto é um nível acima 
 
 interface ApiOption {
     [key: string]: any;

@@ -1,18 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, shallowRef, defineAsyncComponent } from 'vue'
-// TODO: Assumir dependências como peer dependencies ou copiar/recriar
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-    DialogClose,
-} from 'shadcn-vue' 
-import { Button } from 'shadcn-vue'
+// TODO: Assumir dependências como peer dependencies ou copiar/recriar 
 import { X } from 'lucide-vue-next'
-import { cn } from '../../lib/utils' 
+import { cn } from '../../../lib/utils' 
 
 // Define props
 const props = defineProps<{

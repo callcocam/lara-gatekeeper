@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useDropZone } from '@vueuse/core'
-import { cn } from '../../lib/utils'
-import { Button } from 'shadcn-vue'
+import { cn } from '../../../lib/utils' 
 import { UploadCloud, X, File as FileIcon, Image as ImageIcon } from 'lucide-vue-next'
 
 // Define props

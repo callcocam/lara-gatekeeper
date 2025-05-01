@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import type { Table } from '@tanstack/vue-table'
-import type { Task } from '@/components/table/schema'
-import { Button } from '@/components/ui/button'
+import type { Table } from '@tanstack/vue-table' 
+    import { computed } from 'vue'
+import { X } from 'lucide-vue-next'
+import DataTableFacetedFilter from './DataTableFacetedFilter.vue'
+import DataTableViewOptions from './DataTableViewOptions.vue'
+import type { Filter } from './types'
 
-import { Input } from '@/components/ui/input'
-import { computed } from 'vue'
-import { CrossIcon } from 'lucide-vue-next'
-
-import DataTableFacetedFilter from '@/components/table/DataTableFacetedFilter.vue'
-import DataTableViewOptions from '@/components/table/DataTableViewOptions.vue'
-import type { Filter } from '@/components/table/types'
 interface DataTableToolbarProps {
-    table: Table<Task>
+    table: Table<any>
     filters?: Filter[]
+    tableName?: string
 }
 
 const props = defineProps<DataTableToolbarProps>()
@@ -33,9 +30,9 @@ const isFiltered = computed(() => props.table.getState().columnFilters.length > 
 
             <Button v-if="isFiltered" variant="ghost" class="h-8 px-2 lg:px-3" @click="table.resetColumnFilters()">
                 Limpar
-                <CrossIcon class="ml-2 h-4 w-4" />
+                <X class="ml-2 h-4 w-4" />
             </Button>
         </div>
-        <DataTableViewOptions :table="table" />
+        <DataTableViewOptions :table="table" :table-name="props.tableName" />
     </div>
 </template>

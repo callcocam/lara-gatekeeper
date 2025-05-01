@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useFieldArray } from 'vee-validate'
-import FormFieldWrapper from '../FormFieldWrapper.vue'
-import { Button } from 'shadcn-vue'
+import FormFieldWrapper from '../FormFieldWrapper.vue' 
 import { Trash2 } from 'lucide-vue-next'
 import type { FieldConfig } from '../DynamicForm.vue'
 

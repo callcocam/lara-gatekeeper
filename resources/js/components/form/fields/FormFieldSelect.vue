@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-// TODO: Assumir componentes Select como peer dependency de shadcn-vue ou copiar/recriar
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from 'shadcn-vue' // TODO: Verificar path se necessário
+import { computed } from 'vue' 
 
 // Define props expected from FormFieldWrapper (agora dentro do pacote)
 const props = defineProps<{

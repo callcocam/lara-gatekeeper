@@ -2,7 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import { useForm } from 'vee-validate'
 // @ts-ignore
-import FormFieldWrapper from '@/components/form/FormFieldWrapper.vue' // TODO: Ajustar este path após mover FormFieldWrapper
+import FormFieldWrapper from './FormFieldWrapper.vue' // Path relativo dentro do pacote
 // DO NOT import types from self
 
 // DEFINE and EXPORT types locally (ou mover para um arquivo types.ts dentro do pacote)
@@ -125,7 +125,7 @@ const handleFieldUpdate = (fieldName: string, newValue: any) => {
         <div
             v-for="(rowFields, rowIndex) in groupedFields"
             :key="`row-${rowIndex}`"
-            class="grid grid-cols-12 gap-x-4 gap-y-4 items-start" // Adicionado items-start
+            class="grid grid-cols-12 gap-x-4 gap-y-4 items-start"
         >
             <!-- Iterate over fields in the current row -->
             <div

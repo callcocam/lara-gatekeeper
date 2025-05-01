@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-// TODO: Assumir Textarea como peer dependency de shadcn-vue ou copiar/recriar
-import { Textarea } from 'shadcn-vue' // TODO: Verificar path se necessário
-
+import { computed } from 'vue' 
 // Define props expected from FormFieldWrapper (agora dentro do pacote)
 const props = defineProps<{
     id: string;

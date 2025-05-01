@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-// TODO: Assumir dependências como peer dependencies ou copiar/recriar
-import { Checkbox } from 'shadcn-vue' 
-import { Label } from 'shadcn-vue' 
-import { cn } from '../../lib/utils' 
+// TODO: Assumir dependências como peer dependencies ou copiar/recriar 
+import { cn } from '../../../lib/utils' 
 
 // Define props
 const props = defineProps<{
@@ -84,10 +82,9 @@ function handleCheckboxChange(checked: boolean, value: string | number) {
         >
             <Checkbox 
                 :id="`${props.id}-${value}`" 
-                 :checked="selectedValues.map(v => v.toString()).includes(value.toString())" // Compare as strings
-                @update:checked="(checked) => typeof checked === 'boolean' && handleCheckboxChange(checked, value)" // Pass value too
-                v-bind="props.inputProps"
-                :value="value.toString()" // Pass value for accessibility/forms
+                 :checked="selectedValues.map(v => v.toString()).includes(value.toString())" 
+                @update:checked="(checked: boolean) => handleCheckboxChange(checked, value)"
+                v-bind="props.inputProps" 
             />
             <Label :for="`${props.id}-${value}`" class="font-normal cursor-pointer">
                 {{ label }}

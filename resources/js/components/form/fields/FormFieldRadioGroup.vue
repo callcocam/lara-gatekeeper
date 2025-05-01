@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
-// TODO: Assumir dependências como peer dependencies ou copiar/recriar
-import { Label } from 'shadcn-vue' 
-import { RadioGroup, RadioGroupItem } from 'shadcn-vue' 
-import { cn } from '../../lib/utils' 
+import { computed, watch } from 'vue' 
+import { cn } from '../../../lib/utils' 
 
 // Define props
 const props = defineProps<{
@@ -36,8 +33,8 @@ watch(model, (newValue) => {
 <template>
     <RadioGroup 
         :id="props.id" 
-        :model-value="model?.toString()" // Ensure model value is string for RadioGroup
-        @update:model-value="(val) => model = val" // Update model on change
+        :model-value="model?.toString()"  
+        @update:model-value="(val: any) => model = val" 
         :class="cn('py-1', orientationClass)"
         v-bind="props.inputProps"
     >

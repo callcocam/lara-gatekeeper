@@ -2,7 +2,7 @@
 import { watch, onBeforeUnmount, computed } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
-import { cn } from '../../lib/utils'
+import { cn } from '../../../lib/utils'
 import RichTextToolbar from './RichTextToolbar.vue'
 
 // Define props

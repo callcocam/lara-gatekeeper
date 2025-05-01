@@ -17,7 +17,7 @@ export const taskSchema = baseEntitySchema.extend({
 export const userSchema = baseEntitySchema.extend({
   name: z.string(),
   email: z.string(),
-  status: z.string(),
+  status: z.string().optional(),
   tenant_id: z.string().nullable().optional(),
   tenant: z.object({
     id: z.string(),
