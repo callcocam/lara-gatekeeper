@@ -42,7 +42,7 @@ const { values, setValues, handleSubmit, setFieldError, errors: formErrors, setF
 
 // DEBUG: Watch for changes in the main values object
 watch(values, (newValues) => {
-    console.log('[Gatekeeper/DynamicForm] values updated:', JSON.stringify(newValues));
+    // console.log('[Gatekeeper/DynamicForm] values updated:', JSON.stringify(newValues));
 }, { deep: true });
 
 // Watch for external errors and update VeeValidate form errors

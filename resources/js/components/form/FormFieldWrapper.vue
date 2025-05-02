@@ -13,12 +13,7 @@ const props = defineProps<{
 const { 
     value: model,
     errorMessage,
-} = useField<any>(() => props.field.name);
-
-// Debug log
-watch(errorMessage, (newError) => {
-    console.log(`[Gatekeeper/FormFieldWrapper:${props.field.name}] errorMessage updated:`, newError);
-});
+} = useField<any>(() => props.field.key);
 
 // Dynamically load field components based on field.type
 const fieldComponents = {
@@ -44,7 +39,7 @@ const FieldComponent = computed(() => {
     return fieldType && fieldComponents[fieldType] ? fieldComponents[fieldType] : null;
 });
 
-const fieldId = computed(() => `field-${props.field.name}`);
+const fieldId = computed(() => `field-${props.field.key}`);
 
 </script>
 
@@ -66,7 +61,7 @@ const fieldId = computed(() => `field-${props.field.name}`);
             :field="field"
             :inputProps="{ ...field.inputProps, 'aria-invalid': !!errorMessage, 'aria-describedby': errorMessage ? `${fieldId}-error` : undefined }"
             v-model="model"
-            :error="errorMessage" 
+            :error="errorMessage"
         />
         <div v-else class="text-sm text-destructive bg-destructive/10 p-2 rounded">
             [Gatekeeper] Componente de campo não encontrado para o tipo: {{ field.type }}

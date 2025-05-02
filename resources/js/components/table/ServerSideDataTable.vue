@@ -18,7 +18,7 @@ import {
     getSortedRowModel,
     useVueTable,
 } from '@tanstack/vue-table'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import DataTableToolbar from './DataTableToolbar.vue'
 import ServerSideDataTablePagination from './ServerSideDataTablePagination.vue'
 import { router } from '@inertiajs/vue3'
@@ -27,11 +27,22 @@ import { debounce } from 'lodash'
 // Declara route como global (assume Ziggy configurado na app principal)
 declare const route: any;
 
+interface BackendColumnDef {
+    accessorKey?: string;
+    id?: string;
+    header?: any;
+    cell?: any; // Pode ser definido no backend ou frontend
+    sortable?: boolean;
+    enableHiding?: boolean;
+    // Outras props que o backend possa enviar (ex: class, meta)
+    [key: string]: any;
+}
+
 interface ServerSideDataTableProps {
-    columns: ColumnDef<any>[]
-    data: TableData[]
-    tableName?: string
-    filters: Filter[]
+    columns: BackendColumnDef[];
+    data: any[];
+    tableName?: string;
+    filters: Filter[];
     meta: {
         current_page: number;
         last_page: number;
@@ -46,6 +57,7 @@ interface ServerSideDataTableProps {
     };
     baseRoute: string;
     currentRoute: string;
+    columnFiltersProp?: Record<string, string>;
 }
 
 const props = defineProps<ServerSideDataTableProps>()
@@ -90,9 +102,43 @@ const initializeStateFromUrl = () => {
 
 initializeStateFromUrl();
 
+// Mapear colunas de props (BackendColumnDef) para ColumnDef do Tanstack Table
+const tableColumns = computed(() => {
+    const backendColumns = Array.isArray(props.columns) ? props.columns : [];
+    
+    return backendColumns.map((backendCol: BackendColumnDef): ColumnDef<any> => {
+        // Construir o ColumnDef para Tanstack
+        const tanstackCol: ColumnDef<any> = {
+            // Passar chaves reconhecidas pelo Tanstack
+            ...(backendCol.accessorKey && { accessorKey: backendCol.accessorKey }),
+            ...(backendCol.id && { id: backendCol.id }),
+            ...(backendCol.header && { header: backendCol.header }),
+            ...(backendCol.cell && { cell: backendCol.cell }), // Passar cell se definida no backend
+            // Configurar opções do Tanstack com base nos flags customizados
+            enableSorting: backendCol.sortable ?? true,
+            enableHiding: backendCol.enableHiding ?? true,
+            // Incluir quaisquer outras props válidas do ColumnDef que possam ter vindo
+            // (ex: meta, size, minSize, maxSize) - Cuidado para não passar props inválidas
+             ...(backendCol.meta && { meta: backendCol.meta }),
+             ...(backendCol.size && { size: backendCol.size }),
+             ...(backendCol.minSize && { minSize: backendCol.minSize }),
+             ...(backendCol.maxSize && { maxSize: backendCol.maxSize }),
+        };
+        // Garantir que haja um id se header/cell for customizado (Tanstack exige)
+        if (!tanstackCol.id && (typeof tanstackCol.header !== 'string' || typeof tanstackCol.cell === 'function')) {
+             // Usar backendCol.accessorKey aqui para o fallback
+             tanstackCol.id = backendCol.accessorKey ?? Math.random().toString(36).substring(7);
+             console.warn(`[Gatekeeper/Table] Coluna sem ID explícito com header/cell customizado. Chave/ID inferido/gerado: ${tanstackCol.id}`, backendCol);
+        }
+       
+        return tanstackCol;
+    });
+});
+
 const table = useVueTable({
     get data() { return props.data },
-    get columns() { return props.columns },
+    // Usar as colunas computadas que incluem enableSorting/enableHiding
+    get columns() { return tableColumns.value }, 
     state: {
         get sorting() { return sorting.value },
         get columnFilters() { return columnFilters.value },
@@ -260,9 +306,9 @@ const handlePageSizeChange = (newSize: number) => {
                     <template v-else>
                         <TableRow>
                             <TableCell :colSpan="columns.length" class="h-24 text-center">
-                                Nenhum resultado encontrado.
-                            </TableCell>
-                        </TableRow>
+                            Nenhum resultado encontrado.
+                        </TableCell>
+                    </TableRow>
                     </template>
                 </TableBody>
             </Table>
