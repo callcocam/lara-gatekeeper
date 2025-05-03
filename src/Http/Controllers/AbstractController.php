@@ -16,6 +16,8 @@ use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\Inertia;
 use Callcocam\LaraGatekeeper\Traits\ManagesSidebarMenu;
+use Callcocam\LaraGatekeeper\Core\Support\Column;
+use Callcocam\LaraGatekeeper\Core\Support\Field;
 
 abstract class AbstractController extends Controller
 {
@@ -136,6 +138,28 @@ abstract class AbstractController extends Controller
         return []; // Padrão: não carregar nenhum relacionamento
     }
 
+    /**
+     * Processa os campos definidos pelo método getFields.
+     * Converte objetos Field em arrays e filtra os nulos (condicionais não atendidas).
+     */
+    protected function processFields(?Model $model = null): array
+    {
+        $rawFields = $this->getFields($model);
+        $processedFields = [];
+
+        if (!empty($rawFields) && $rawFields[0] instanceof Field) {
+            $processedFields = array_map(fn(Field $field) => $field->toArray(), $rawFields);
+            // Filtrar campos que retornaram null (condição não atendida)
+            $processedFields = array_filter($processedFields, fn($field) => $field !== null);
+        } elseif (is_array($rawFields)) {
+             // Se já for um array de arrays, assumir que a lógica condicional
+             // já foi tratada dentro do getFields (menos ideal)
+            $processedFields = $rawFields;
+        }
+        // Reindexar array para evitar problemas com índices faltando no JS
+        return array_values($processedFields);
+    }
+
     public function index(Request $request): Response
     {
         $perPage = $request->input('per_page', 15);
@@ -147,9 +171,19 @@ abstract class AbstractController extends Controller
             $query->with($relationsToLoad);
         }
 
-        $tableColumns = $this->getTableColumns();
+        $rawColumns = $this->getTableColumns(); // Obter colunas (podem ser arrays ou objetos Column)
 
-        // Aplicar filtros (lógica básica, pode precisar de mais refinamento)
+        // Processar colunas: converter objetos Column para arrays se necessário
+        $tableColumns = [];
+        if (!empty($rawColumns) && $rawColumns[0] instanceof Column) {
+            $tableColumns = array_map(fn(Column $column) => $column->toArray(), $rawColumns);
+            $tableColumns = array_filter($tableColumns, fn($column) => $column !== null); 
+        } elseif (is_array($rawColumns)) {
+            $tableColumns = $rawColumns;
+        }
+        $tableColumns = array_values($tableColumns);
+
+        // Aplicar filtros (usando $tableColumns processado se necessário para lógica futura)
         foreach ($this->getFilters() as $filter) {
             if ($request->filled($filter['column'])) {
                 // Assumindo filtro simples por 'where' por enquanto
@@ -157,7 +191,7 @@ abstract class AbstractController extends Controller
             }
         }
 
-        // Aplicar busca (usando getSearchableColumns)
+        // Aplicar busca (usando $tableColumns processado)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $searchableDbColumns = $this->getSearchableColumns(); // Obter colunas do novo método
@@ -181,7 +215,7 @@ abstract class AbstractController extends Controller
             }
         }
 
-        // Aplicar ordenação (lógica aprimorada)
+        // Aplicar ordenação (usando $tableColumns processado)
         if ($request->has('sort')) {
             $direction = $request->input('direction', 'asc');
             $columnKey = $request->input('sort'); // A chave da coluna (accessorKey ou id)
@@ -219,8 +253,7 @@ abstract class AbstractController extends Controller
              }
         }
 
-        $paginator = $query->paginate($perPage)->withQueryString();
-
+        $paginator = $query->paginate($perPage)->withQueryString(); 
         return Inertia::render("{$this->viewPrefix}/Index", [
             'data' => [
                 'data' => $paginator->items(),
@@ -237,8 +270,8 @@ abstract class AbstractController extends Controller
                     'next' => $paginator->nextPageUrl(),
                 ],
             ],
-            'columns' => $tableColumns, // Passar as definições completas
-            'filters' => $request->only(array_merge(['search', 'sort', 'direction', 'per_page'], array_column($this->getFilters(), 'key'))),
+            'columns' => $tableColumns, // <-- Passar colunas processadas
+            'filters' => $request->only(array_merge(['search', 'sort', 'direction', 'per_page'], array_column($this->getFilters(), 'column'))), // Corrigir 'key' para 'column' aqui?
             'filterOptions' => $this->getFilters(),
             'pageTitle' => $this->generatePageTitle('index'),
             'pageDescription' => $this->generatePageDescription('index'),
@@ -250,9 +283,12 @@ abstract class AbstractController extends Controller
 
     public function create(): Response
     {
+        // Usar o método processFields
+        $fields = $this->processFields();
+
         return Inertia::render("{$this->viewPrefix}/Create", [
-            'fields' => $this->getFields(),
-            'initialValues' => new $this->model(), // Objeto vazio para o form
+            'fields' => $fields,
+            'initialValues' => new $this->model(),
             'pageTitle' => $this->generatePageTitle('create'),
             'pageDescription' => $this->generatePageDescription('create'),
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('create'),
@@ -279,7 +315,7 @@ abstract class AbstractController extends Controller
     {
         $modelInstance = $this->model::findOrFail($id);
         return Inertia::render("{$this->viewPrefix}/Show", [
-            'model' => $modelInstance,
+            'model' => $modelInstance->toArray(),
             'pageTitle' => $this->generatePageTitle('show', $modelInstance),
             'pageDescription' => $this->generatePageDescription('show', $modelInstance),
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('show', $modelInstance),
@@ -289,16 +325,30 @@ abstract class AbstractController extends Controller
 
     public function edit(string $id): Response
     {
-        $modelInstance = $this->model::findOrFail($id);
+        $modelInstance = $this->model::findOrFail($id); 
+        // Usar o método processFields
+        $fields = $this->processFields($modelInstance);
+        // Obter valores iniciais (lógica específica pode estar no controller filho)
+        $initialValues = $this->getInitialValuesForEdit($modelInstance);
+
         return Inertia::render("{$this->viewPrefix}/Edit", [
-            'fields' => $this->getFields($modelInstance),
-            'initialValues' => $modelInstance,
-            'modelId' => $id, // Passar o ID para a action do form
+            'fields' => $fields,
+            'initialValues' => $initialValues,
+            'modelId' => $id,
             'pageTitle' => $this->generatePageTitle('edit', $modelInstance),
             'pageDescription' => $this->generatePageDescription('edit', $modelInstance),
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('edit', $modelInstance),
             'routeNameBase' => $this->getRouteNameBase(),
         ]);
+    }
+
+    /**
+     * Obtém os valores iniciais para o formulário de edição.
+     * Pode ser sobrescrito por controllers filhos para lógica customizada.
+     */
+    protected function getInitialValuesForEdit(Model $modelInstance): array
+    {
+        return $modelInstance->toArray();
     }
 
     public function update(Request $request, string $id): RedirectResponse

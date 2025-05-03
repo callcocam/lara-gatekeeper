@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { Table } from '@tanstack/vue-table'
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { Settings2 } from 'lucide-vue-next'
- 
+
 
 interface DataTableViewOptionsProps {
     table: Table<any>
@@ -15,25 +15,30 @@ const visibilityStorageKey = computed(() => props.tableName ? `table_visibility_
 
 const columns = computed(() => props.table.getAllColumns()
     .filter(
-        column =>
-            typeof column.accessorFn !== 'undefined' && column.getCanHide(),
+        column => column.getCanHide(),
     ))
 
 // Lógica para carregar/salvar visibilidade (opcional)
-// onMounted(() => {
-//     if (visibilityStorageKey.value) {
-//         const storedVisibility = localStorage.getItem(visibilityStorageKey.value);
-//         if (storedVisibility) {
-//             props.table.setColumnVisibility(JSON.parse(storedVisibility));
-//         }
-//     }
-// });
+onMounted(() => {
+    if (visibilityStorageKey.value) {
+        const storedVisibility = localStorage.getItem(visibilityStorageKey.value);
+        if (storedVisibility) {
+            try {
+                props.table.setColumnVisibility(JSON.parse(storedVisibility));
+            } catch (e) {
+                console.error("Erro ao parsear visibilidade do localStorage:", e);
+                // Opcional: remover item inválido
+                // localStorage.removeItem(visibilityStorageKey.value);
+            }
+        }
+    }
+});
 
-// watch(props.table.getState().columnVisibility, (newVisibility) => {
-//     if (visibilityStorageKey.value) {
-//         localStorage.setItem(visibilityStorageKey.value, JSON.stringify(newVisibility));
-//     }
-// }, { deep: true });
+watch(() => props.table.getState().columnVisibility, (newVisibility) => {
+    if (visibilityStorageKey.value) {
+        localStorage.setItem(visibilityStorageKey.value, JSON.stringify(newVisibility));
+    }
+}, { deep: true });
 
 </script>
 
@@ -48,13 +53,9 @@ const columns = computed(() => props.table.getAllColumns()
         <DropdownMenuContent align="end" class="w-[150px]">
             <DropdownMenuLabel>Alternar Colunas</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-                v-for="column in columns"
-                :key="column.id"
-                class="capitalize"
-                :checked="column.getIsVisible()" 
-                @update:checked="(value: boolean) => column.toggleVisibility(!!value)" 
-            >
+            <DropdownMenuCheckboxItem v-for="column in columns" :key="column.id" class="capitalize"
+                :modelValue="column.getIsVisible()"
+                @update:model-value="(value: boolean) => props.table.setColumnVisibility(old => ({ ...old, [column.id]: !!value }))">
                 {{ typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id }}
             </DropdownMenuCheckboxItem>
         </DropdownMenuContent>

@@ -40,6 +40,7 @@ class LaraGatekeeperServiceProvider extends PackageServiceProvider
             ->hasCommand(LaraGatekeeperCommand::class)
             ->hasTranslations()
             ->hasAssets()
+            ->hasRoutes('web','api')
             ->hasCommand(LaraGatekeeperSetupCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command

@@ -23,15 +23,14 @@ const model = defineModel<(string | number)[] | null>()
 
 // Internal ref to always work with an array
 const selectedValues = ref<(string | number)[]>([])
-
+console.log(`[Gatekeeper/CheckboxList:${props.field.name || props.id}] Model atualizado externamente:`, selectedValues.value);
 // Log para debug
 const logName = computed(() => `[Gatekeeper/CheckboxList:${props.field.name || props.id}]`);
 
 // Sync internal array with external model ONCE initially and when model changes
 watch(model, (newModelValue) => {
     // Sempre tratar como array, mesmo que seja null
-    selectedValues.value = Array.isArray(newModelValue) ? [...newModelValue] : [];
-    console.log(`${logName.value} Model atualizado externamente:`, selectedValues.value);
+    selectedValues.value = Array.isArray(newModelValue) ? [...newModelValue] : []; 
 }, { immediate: true }); 
 
 // Sync internal changes back to the external model
@@ -46,8 +45,7 @@ watch(selectedValues, (newSelectedArray) => {
             currentModelArray.some(v => String(v) === String(value))
         );
     
-    if (!isSameContent) {
-        console.log(`${logName.value} Atualizando modelo com:`, newSelectedArray);
+    if (!isSameContent) { 
         // Precisamos criar um novo array para garantir a reatividade
         model.value = newSelectedArray.length > 0 ? [...newSelectedArray] : null;
     }
@@ -122,7 +120,7 @@ function handleSelectAllChange(newValue: boolean | 'indeterminate') {
     }
     
     console.log(`${logName.value} Valores após Select All:`, selectedValues.value);
-}
+    }
 
 // Adjusted to potentially receive boolean or indeterminate from @update:modelValue
 // Although individual checkboxes should likely only emit boolean
@@ -138,9 +136,9 @@ function handleCheckboxChange(newValue: boolean | 'indeterminate', value: string
         currentSelectedSet.delete(stringValue);
     }
     
-    // Update the selectedValues array
-    selectedValues.value = Array.from(currentSelectedSet).map(Number);
-    
+    // Update the selectedValues array, keeping original string types
+    selectedValues.value = Array.from(currentSelectedSet);
+
     console.log(`${logName.value} Valores após mudança:`, selectedValues.value);
 }
 
@@ -176,20 +174,20 @@ function isSelected(value: string | number): boolean {
 
         <!-- Options List (Applies layoutClass) -->
         <div :class="cn(layoutClass)">
-            <div 
+        <div 
                 v-for="(label, value) in filteredOptions" 
-                :key="value"
-                class="flex items-center space-x-2"
-            >
-                <Checkbox 
-                    :id="`${props.id}-${value}`"  
+            :key="value"
+            class="flex items-center space-x-2"
+        >
+            <Checkbox 
+                :id="`${props.id}-${value}`" 
                     :modelValue="isSelected(value)"
                     @update:modelValue="(newVal: boolean | 'indeterminate') => handleCheckboxChange(newVal, value)" 
-                    v-bind="props.inputProps" 
-                />
-                <Label :for="`${props.id}-${value}`" class="font-normal cursor-pointer">
-                    {{ label }}
-                </Label>
+                v-bind="props.inputProps"
+            />
+            <Label :for="`${props.id}-${value}`" class="font-normal cursor-pointer">
+                {{ label }}
+            </Label>
             </div>
             <!-- Mensagem se nenhum item for encontrado -->
              <div v-if="Object.keys(filteredOptions).length === 0 && searchTerm"
@@ -198,4 +196,4 @@ function isSelected(value: string | number): boolean {
              </div>
         </div>
     </div>
-</template>
+</template> 

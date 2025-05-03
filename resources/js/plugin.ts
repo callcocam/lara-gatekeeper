@@ -1,58 +1,60 @@
 import type { App, Component } from 'vue';
+import { provide } from 'vue';
+
+// Importar InjectionKeys
+import { formatterRegistryKey, fieldRegistryKey } from './injectionKeys';
+
+// Importar Registros Padrão
+import * as defaultFormatters from './utils/columnFormatters';
+import { defaultFieldComponents } from './components/form/fieldRegistry';
+import type { FieldRegistry } from './components/form/fieldRegistry';
 
 // --- Form Components --- 
 import DynamicForm from './components/form/DynamicForm.vue';
 import FormFieldWrapper from './components/form/FormFieldWrapper.vue';
-// Import *all* individual field components:
-import FormFieldInput from './components/form/fields/FormFieldInput.vue';
-import FormFieldTextarea from './components/form/fields/FormFieldTextarea.vue';
-import FormFieldSelect from './components/form/fields/FormFieldSelect.vue';
-import FormFieldCombobox from './components/form/fields/FormFieldCombobox.vue';
-import FormFieldRichText from './components/form/fields/FormFieldRichText.vue';
-import RichTextToolbar from './components/form/fields/RichTextToolbar.vue'; // Toolbar is also needed
-import FormFieldFile from './components/form/fields/FormFieldFile.vue';
-import FormFieldModalSelect from './components/form/fields/FormFieldModalSelect.vue';
-import FormFieldRadioGroup from './components/form/fields/FormFieldRadioGroup.vue';
-import FormFieldCheckboxList from './components/form/fields/FormFieldCheckboxList.vue';
-import FormFieldRepeater from './components/form/fields/FormFieldRepeater.vue';
+// Import *all* individual field components: 
 
 // --- Table Components --- 
-import ServerSideDataTable from './components/table/ServerSideDataTable.vue';
-import DataTableToolbar from './components/table/DataTableToolbar.vue';
-import ServerSideDataTablePagination from './components/table/ServerSideDataTablePagination.vue';
-import DataTableFacetedFilter from './components/table/DataTableFacetedFilter.vue';
+import ServerSideDataTable from './components/table/ServerSideDataTable.vue'; 
+import DataTableColumnHeader from './components/table/DataTableColumnHeader.vue';
 import DataTableViewOptions from './components/table/DataTableViewOptions.vue';
+import ConfirmationModal from './components/ConfirmationModal.vue';
+
+// Tipagem para as opções do plugin
+interface LaraGatekeeperPluginOptions {
+  customFormatters?: Record<string, Function>;
+  customFields?: FieldRegistry;
+}
 
 // Export the plugin install function
-const install = (app: App): void => {
-    
-    // Register UI Components
+const install = (app: App, options: LaraGatekeeperPluginOptions = {}): void => {
+
+    // --- Registro de Formatadores ---
+    const { renderFormattedCell, ...usableFormatters } = defaultFormatters;
+    const finalFormatters = { 
+        ...usableFormatters, 
+        ...(options.customFormatters || {}) 
+    };
+    app.provide(formatterRegistryKey, finalFormatters);
+    console.log('[LaraGatekeeperPlugin] Column Formatters Provided:', Object.keys(finalFormatters));
+
+    // --- Registro de Campos de Formulário ---
+    const finalFields = { 
+        ...defaultFieldComponents, 
+        ...(options.customFields || {}) 
+    };
+    app.provide(fieldRegistryKey, finalFields);
+    console.log('[LaraGatekeeperPlugin] Form Fields Provided:', Object.keys(finalFields));
+
+    // --- Registro de Componentes Globais Essenciais ---
     registerUIComponents(app);
-    // Register Form Components
     app.component('DynamicForm', DynamicForm);
     app.component('FormFieldWrapper', FormFieldWrapper);
-    // Register Individual Fields 
-    app.component('FormFieldInput', FormFieldInput);
-    app.component('FormFieldTextarea', FormFieldTextarea);
-    app.component('FormFieldSelect', FormFieldSelect);
-    app.component('FormFieldCombobox', FormFieldCombobox);
-    app.component('FormFieldRichText', FormFieldRichText);
-    app.component('RichTextToolbar', RichTextToolbar);
-    app.component('FormFieldFile', FormFieldFile);
-    app.component('FormFieldModalSelect', FormFieldModalSelect);
-    app.component('FormFieldRadioGroup', FormFieldRadioGroup);
-    app.component('FormFieldCheckboxList', FormFieldCheckboxList);
-    app.component('FormFieldRepeater', FormFieldRepeater);
-
-    // Register Table Components
     app.component('ServerSideDataTable', ServerSideDataTable);
-    app.component('DataTableToolbar', DataTableToolbar);
-    app.component('ServerSideDataTablePagination', ServerSideDataTablePagination);
-    app.component('DataTableFacetedFilter', DataTableFacetedFilter);
+    app.component('DataTableColumnHeader', DataTableColumnHeader);
     app.component('DataTableViewOptions', DataTableViewOptions);
-
-
-    console.log('[LaraGatekeeperPlugin] Components registered globally.');
+    app.component('ConfirmationModal', ConfirmationModal);
+    console.log('[LaraGatekeeperPlugin] Essential components registered globally.');
 }
 
 // Register Form Components
@@ -72,7 +74,7 @@ const registerUIComponents = (app: App): void => {
         if (componentRegistry.indexOf(originalName) === -1) {
             app.component(originalName, definition.default);
             componentRegistry.push(originalName);
-            console.log('originalName', originalName);
+            // console.log('originalName', originalName);
         }
     });
 }

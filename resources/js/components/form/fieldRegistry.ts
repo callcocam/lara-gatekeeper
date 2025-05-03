@@ -1,0 +1,36 @@
+// Registro central dos componentes de campo padrão
+import FormFieldInput from './fields/FormFieldInput.vue';
+import FormFieldTextarea from './fields/FormFieldTextarea.vue';
+import FormFieldSelect from './fields/FormFieldSelect.vue';
+import FormFieldCombobox from './fields/FormFieldCombobox.vue';
+import FormFieldRichText from './fields/FormFieldRichText.vue';
+import FormFieldFile from './fields/FormFieldFile.vue'; // Nota: Manter este?
+import FormFieldFilePond from './fields/FormFieldFilePond.vue'; // Adicionar FilePond
+import FormFieldModalSelect from './fields/FormFieldModalSelect.vue';
+import FormFieldRadioGroup from './fields/FormFieldRadioGroup.vue';
+import FormFieldCheckboxList from './fields/FormFieldCheckboxList.vue';
+import FormFieldRepeater from './fields/FormFieldRepeater.vue';
+
+export const defaultFieldComponents = {
+    text: FormFieldInput,
+    email: FormFieldInput,
+    password: FormFieldInput,
+    number: FormFieldInput,
+    textarea: FormFieldTextarea,
+    select: FormFieldSelect,
+    combobox: FormFieldCombobox,
+    richtext: FormFieldRichText,
+    file: FormFieldFile, 
+    filepond: FormFieldFilePond, // Adicionar mapeamento
+    image: FormFieldFile, // 'image' ainda usa FormFieldFile?
+    repeater: FormFieldRepeater,
+    modalSelect: FormFieldModalSelect,
+    radio: FormFieldRadioGroup,
+    checkboxList: FormFieldCheckboxList,
+    // avatarPreview: FormFieldAvatarPreview, // Remover mapeamento
+    // Adicionar outros campos padrão aqui
+};
+
+// Tipar para garantir consistência (Opcional, mas bom)
+import type { Component } from 'vue';
+export type FieldRegistry = Record<string, Component>; 
