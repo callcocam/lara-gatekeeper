@@ -18,6 +18,10 @@ class Field
     public ?int $gridCols = null; // For checkboxList, radioGroup layouts
     public ?string $description = null;
     public ?string $accept = null; // For file inputs
+    public ?bool $multiple = false; // For file inputs
+    public ?string $relationship = null; // For related fields
+    public ?string $labelAttribute = null; // For related fields
+    public ?string $valueAttribute = null; // For related fields
 
     protected function __construct(string $key, string $label)
     {
@@ -95,6 +99,14 @@ class Field
         return $this;
     }
 
+    public function relationship(string $relationship, string $labelAttribute = 'name', string $valueAttribute = 'id'): self
+    {
+        $this->relationship = $relationship;
+        $this->labelAttribute = $labelAttribute;
+        $this->valueAttribute = $valueAttribute;
+        return $this;
+    }
+
     // Resolve the condition
     protected function resolveCondition(): bool
     {
@@ -102,6 +114,26 @@ class Field
             return (bool) call_user_func($this->condition);
         }
         return (bool) $this->condition;
+    }
+
+    public function multiple(bool $multiple = true): self
+    {
+        $this->multiple = $multiple;
+        return $this;
+    }
+
+    public function acceptedFileTypes(string $acceptedFileTypes): self
+    {
+        $this->acceptedFileTypes = $acceptedFileTypes;
+        return $this;
+    }
+
+    public function resolveRelationship($modelInstance, $labelAttribute = 'name', $valueAttribute = 'id'): self
+    {
+        if ($this->relationship) {
+            $this->options = $modelInstance->{$this->relationship}->pluck($labelAttribute, $valueAttribute)->toArray();
+        }
+        return $this;
     }
 
     // Convert the field definition to an array for the frontend
@@ -137,6 +169,11 @@ class Field
         }
          if ($this->accept !== null) {
              $data['accept'] = $this->accept;
+         }
+         if ($this->relationship !== null) {
+            $data['relationship'] = $this->relationship;
+            $data['labelAttribute'] = $this->labelAttribute;
+            $data['valueAttribute'] = $this->valueAttribute;
          }
 
         // Condition is resolved server-side, not passed to frontend

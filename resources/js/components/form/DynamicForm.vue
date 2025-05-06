@@ -71,7 +71,7 @@ const handleFieldUpdate = (fieldName: string, newValue: any) => {
     <!-- Remover @submit.prevent para permitir que o evento borbulhe -->
     <form class="space-y-4" @submit.prevent="$emit('submit', $event)"> 
         <div v-for="(rowFields, rowIndex) in groupedFields" :key="`row-${rowIndex}`"
-            class="grid grid-cols-12 gap-x-4 gap-y-4 items-start space-x-4">
+            class="grid grid-cols-12 gap-x-4 gap-y-4 items-start">
             <div v-for="field in rowFields" :key="field.name" :class="getColSpanClass(field)">                 
                 <FormFieldWrapper 
                     :field="field" 

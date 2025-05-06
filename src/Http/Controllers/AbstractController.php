@@ -332,7 +332,10 @@ abstract class AbstractController extends Controller
         // Usar o método processFields
         $fields = $this->processFields($modelInstance);
         // Obter valores iniciais (lógica específica pode estar no controller filho)
-        $initialValues = $this->getInitialValuesForEdit($modelInstance);
+        $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields);
+
+        // Verificar se há campos de upload
+        
 
         return Inertia::render("{$this->viewPrefix}/Edit", [
             'fields' => $fields,
@@ -349,9 +352,26 @@ abstract class AbstractController extends Controller
      * Obtém os valores iniciais para o formulário de edição.
      * Pode ser sobrescrito por controllers filhos para lógica customizada.
      */
-    protected function getInitialValuesForEdit(Model $modelInstance): array
+    protected function getInitialValuesForEdit(Model $modelInstance, array $fields=[]): array
     {
-        return $modelInstance->toArray();
+        $values = $modelInstance->toArray();
+        foreach($fields as $field) {
+            if(isset($field['relationship'])) {
+                $values[$field['key']] = $this->resolveRelationship($field['relationship'], $modelInstance, $field['labelAttribute'], $field['valueAttribute']); 
+            }
+        }
+        // Remover campos desnecessários se houver (ex: avatar_url que estava no UserController)
+        // unset($values['avatar_url']); 
+        return $values;
+    }
+
+    public function resolveRelationship($relationship, $modelInstance, $labelAttribute = 'name', $valueAttribute = 'id'): array
+    {
+        $options = [];
+        if ($relationship) {
+            $options = $modelInstance->{$relationship}->pluck($valueAttribute)->toArray();
+        }
+        return $options;
     }
 
     public function update(Request $request, string $id): RedirectResponse
