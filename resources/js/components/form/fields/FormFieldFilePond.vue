@@ -58,10 +58,10 @@ const serverOptions = computed(() => {
                 'X-CSRF-TOKEN': csrfToken.value
             },
             onload: (response: any) => {
-                // response é o path retornado pelo UploadController
-                console.log('File processed, server response:', response);
+                // response é o path retornado pelo UploadController 
                 // O FilePond armazena isso internamente, não precisamos emitir aqui diretamente
                 // Mas podemos usar o @processfile para pegar o ID
+                emit('update:modelValue', response);
                 return response; 
             },
             onerror: (response: any) => {
@@ -88,22 +88,21 @@ const serverOptions = computed(() => {
                 return null;
             },
         },
-        load: { // Adicionado endpoint de restore
-            url: '/uploads/load/', // Reutiliza o endpoint de load para buscar o arquivo pelo ID/path
-            method: 'GET',
-             headers: { 
-                 // ... headers se necessário ...
-             },
-             onerror: (response: any) => {
-                console.error('File restore error:', response);
-            },
-        },
+        // load: { // Adicionado endpoint de restore
+        //     url: '/uploads/load/', // Reutiliza o endpoint de load para buscar o arquivo pelo ID/path
+        //     method: 'GET',
+        //      headers: { 
+        //          // ... headers se necessário ...
+        //      },
+        //      onerror: (response: any) => {
+        //         console.error('File restore error:', response);
+        //     },
+        // },
     }
 });
 
 // Computa os arquivos iniciais
-const initialFiles = computed(() => {
-    console.log('[initialFiles] initial modelValue:', props.modelValue);
+const initialFiles = computed(() => { 
     let relativePath: string | null = null;
 
     if (typeof props.modelValue === 'string' && props.modelValue) {
@@ -112,8 +111,7 @@ const initialFiles = computed(() => {
                 const url = new URL(props.modelValue);
                 const storagePrefix = '/storage/'; 
                 if (url.pathname.startsWith(storagePrefix)) {
-                    relativePath = url.pathname.substring(storagePrefix.length);
-                    console.log('[initialFiles] Extracted relative path:', relativePath);
+                    relativePath = url.pathname.substring(storagePrefix.length); 
                 } else {
                      console.warn('[initialFiles] Could not extract relative path from URL:', props.modelValue);
                 }
@@ -121,14 +119,12 @@ const initialFiles = computed(() => {
                 console.error('[initialFiles] Invalid URL:', props.modelValue, e);
             }
         } else {
-            relativePath = props.modelValue;
-            console.log('[initialFiles] Using modelValue as relative path:', relativePath);
+            relativePath = props.modelValue; 
         }
     }
 
     // Se conseguimos um path relativo, passamos como source
-    if (relativePath) {
-        console.log('[initialFiles] Setting initial file object for:', relativePath);
+    if (relativePath) { 
         return [
             {
                 source: relativePath, 
@@ -147,24 +143,39 @@ const initialFiles = computed(() => {
 });
 
 // Handler para quando a lista interna de arquivos do FilePond é atualizada
-const handleUpdateFiles = (fileItems: any[]) => {
-    console.log('[updatefiles] Event triggered. Items:', fileItems);
+const handleUpdateFiles = (fileItems: any[]) => { 
     
     // Filtra para pegar apenas arquivos processados com sucesso pelo servidor
-    const processedFiles = fileItems.filter(item => item.status === 5 && item.serverId);
-    console.log('[updatefiles] Processed files:', processedFiles);
+    const processedFiles = fileItems.filter(item => item.status === 5 && item.serverId); 
 
     if (props.field.multiple) {
-        const serverIds = processedFiles.map(item => item.serverId);
-        console.log('[updatefiles] Emitting multiple serverIds:', serverIds);
+        const serverIds = processedFiles.map(item => item.serverId); 
         emit('update:modelValue', serverIds);
     } else {
         // Se não for múltiplo, pega o último arquivo processado (ou null)
-        const latestServerId = processedFiles.length > 0 ? processedFiles[processedFiles.length - 1].serverId : null;
-        console.log('[updatefiles] Emitting single serverId:', latestServerId);
+        const latestServerId = processedFiles.length > 0 ? processedFiles[processedFiles.length - 1].serverId : null; 
         emit('update:modelValue', latestServerId);
     }
 };
+
+// Computa a URL pública visualizável do arquivo atual (para upload único)
+const viewableFileUrl = computed(() => {
+    // Verifica se não é múltiplo e se modelValue contém um path relativo válido
+    if (!props.field.multiple && typeof props.modelValue === 'string' && props.modelValue && !props.modelValue.startsWith('http')) {
+        try {
+            // Assume que a URL base do storage é /storage/
+            // Pode precisar buscar de uma config global se for diferente
+            const baseUrl = window.location.origin;
+            const storagePath = '/storage/'; 
+            const fullUrl = `${baseUrl}${storagePath}${props.modelValue}`; 
+            return fullUrl;
+        } catch (e) {
+            console.error('Error generating viewable URL:', e);
+            return null;
+        }
+    }
+    return null;
+});
 
 // TODO: Configurar FilePond options baseado em props.field (outras opções além do server)
 
@@ -172,8 +183,7 @@ const handleUpdateFiles = (fileItems: any[]) => {
 
 <template>
     <div>
-        <label v-if="field.label" :for="field.key" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">{{ field.label }}</label>
-        
+        <!-- <label v-if="field.label" :for="field.key" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">{{ field.label }}</label> --> 
         <FilePond 
             v-if="serverOptions" 
             ref="pond" 
@@ -189,6 +199,18 @@ const handleUpdateFiles = (fileItems: any[]) => {
         />
         <div v-else>
             Carregando configuração do uploader... (ou erro de CSRF)
+        </div>
+
+        <!-- Link para Visualizar -->
+        <div v-if="viewableFileUrl" class="mt-2">
+            <a 
+                :href="viewableFileUrl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200"
+            >
+                Visualizar Imagem Atual
+            </a>
         </div>
 
         <p v-if="field.help" class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ field.help }}</p>

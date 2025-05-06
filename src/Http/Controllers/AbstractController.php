@@ -410,12 +410,13 @@ abstract class AbstractController extends Controller
             // O segundo argumento do move é o caminho relativo ao disco de destino
             if (Storage::disk($destinationDisk)->move($temporaryPath, $targetPath)) {
                  // O move já deleta o original se bem-sucedido
+                 Storage::disk($destinationDisk)->delete($temporaryPath);
                 Log::info("Arquivo movido de [local] {$temporaryPath} para [{$destinationDisk}] {$targetPath}");
                 return $targetPath; // Retorna o caminho relativo ao disco de destino
             } else {
                  Log::error("Falha ao mover arquivo de [local] {$temporaryPath} para [{$destinationDisk}] {$targetPath}");
                  // Tentar deletar o temporário mesmo em caso de falha no move?
-                 // Storage::disk('local')->delete($temporaryPath);
+                 Storage::disk($destinationDisk)->delete($temporaryPath);
                  return null;
             }
         } catch (\Exception $e) {
