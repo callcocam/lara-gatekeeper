@@ -7,7 +7,7 @@ const { isOpen, title, message, confirmText, cancelText, confirmAction, cancelAc
 </script>
 
 <template>
-    <AlertDialog :open="isOpen" @update:open="(value: boolean) => !value && cancelAction()"> // Adicionar tipo
+    <AlertDialog :open="isOpen">
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>{{ title }}</AlertDialogTitle>

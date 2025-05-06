@@ -7,6 +7,7 @@ use Closure;
 class Field
 {
     public string $key;
+    public string $name;
     public string $label;
     public string $type = 'text'; // Default type
     public bool $required = false;
@@ -21,6 +22,7 @@ class Field
     protected function __construct(string $key, string $label)
     {
         $this->key = $key;
+        $this->name = $key;
         $this->label = $label;
     }
 
@@ -112,6 +114,7 @@ class Field
 
         $data = [
             'key' => $this->key,
+            'name' => $this->name,
             'label' => $this->label,
             'type' => $this->type,
             'required' => $this->required,

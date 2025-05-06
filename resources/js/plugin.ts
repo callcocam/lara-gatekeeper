@@ -1,5 +1,4 @@
-import type { App, Component } from 'vue';
-import { provide } from 'vue';
+import type { App, Component } from 'vue'; 
 
 // Importar InjectionKeys
 import { formatterRegistryKey, fieldRegistryKey } from './injectionKeys';
@@ -35,16 +34,14 @@ const install = (app: App, options: LaraGatekeeperPluginOptions = {}): void => {
         ...usableFormatters, 
         ...(options.customFormatters || {}) 
     };
-    app.provide(formatterRegistryKey, finalFormatters);
-    console.log('[LaraGatekeeperPlugin] Column Formatters Provided:', Object.keys(finalFormatters));
+    app.provide(formatterRegistryKey, finalFormatters); 
 
     // --- Registro de Campos de Formulário ---
     const finalFields = { 
         ...defaultFieldComponents, 
         ...(options.customFields || {}) 
     };
-    app.provide(fieldRegistryKey, finalFields);
-    console.log('[LaraGatekeeperPlugin] Form Fields Provided:', Object.keys(finalFields));
+    app.provide(fieldRegistryKey, finalFields); 
 
     // --- Registro de Componentes Globais Essenciais ---
     registerUIComponents(app);

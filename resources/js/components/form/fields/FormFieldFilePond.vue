@@ -1,259 +1,202 @@
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+// import type { ConcreteComponent } from 'vue'; // Ajustar import se necessário
 
-// Import Vue FilePond
-// @ts-ignore
+// Import vueFilePond
 import vueFilePond from 'vue-filepond';
 
 // Import FilePond styles
 import 'filepond/dist/filepond.min.css';
 
 // Import FilePond plugins
-import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
+// Please install these plugins with npm i filepond-plugin-image-preview -S
+import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type'; // Exemplo: Adicionando validação de tipo
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
-// TODO: Add image edit plugin later
-// import FilePondPluginImageEdit from 'filepond-plugin-image-edit';
-// import 'filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css';
 
+// Create FilePond component
+const FilePond = vueFilePond(FilePondPluginFileValidateType, FilePondPluginImagePreview);
 
-// Define props
-const props = defineProps<{
-    id: string;
-    field: {
-        name: string;
+interface Props {
+    field: { 
         key: string;
-        type: 'filepond'; // Specific type for this component
-        accept?: string;
+        label?: string;
+        help?: string;
         multiple?: boolean;
-        labelIdle?: string; // Custom label
-        // Add other FilePond options via field if needed
-        filepondOptions?: Record<string, any>;
+        acceptedFileTypes?: string[] | null;
         [key: string]: any;
     };
-    inputProps?: { [key: string]: any }; // General input props, might not be very relevant here
-}>();
-
-// Use defineModel for v-model binding (can receive URL string or File object)
-const model = defineModel<string | File | File[] | null>();
-
-
-// Create FilePond component instance
-const FilePond = vueFilePond(
-    FilePondPluginFileValidateType,
-    FilePondPluginImagePreview
-    // FilePondPluginImageEdit // Register later
-);
-
-const pond = ref<any>(null); // Ref for FilePond instance
-
-// --- FilePond Configuration ---
-
-const initialFiles = computed(() => {
-    const relativePath = model.value; // Assume model.value is the relative path from backend
-
-    if (typeof relativePath === 'string' && relativePath) {
-        console.log(`[FormFieldFilePond:${props.field.name}] Setting initial file from relative path:`, relativePath);
-        // FilePond expects an object for existing files when using server.load
-        return [{
-            source: relativePath, // Use the relative path directly as the source ID for server.load
-            options: { type: 'local' } // Explicitly mark as local file for server interaction
-        }];
-    }
-    // console.log(`[FormFieldFilePond:${props.field.name}] No valid initial relative path provided or model is not a string.`);
-    return [];
-});
-
-// DEBUG: Watch model and initialFiles
-watchEffect(() => {
-    console.log(`[FormFieldFilePond DEBUG - ${props.field.key}] model.value:`, model.value);
-    console.log(`[FormFieldFilePond DEBUG - ${props.field.key}] initialFiles.value:`, JSON.stringify(initialFiles.value));
-});
-// --- Server Configuration for Loading Initial Files ---
-const serverOptions = computed(() => ({
-    load: (source: string, load: Function, error: Function, progress: Function, abort: Function, headers: Function) => {
-        // source should be the relative path (e.g., 'avatars/...')
-        console.log(`[FormFieldFilePond:${props.field.name}] server.load called with source:`, source);
-        const request = new XMLHttpRequest();
-        const loadUrl = `/filepond/load?path=${encodeURIComponent(source)}`; // Endpoint Laravel
-        console.log('loadUrl', loadUrl);
-        request.open('GET', loadUrl);
-        request.responseType = 'blob';
-
-        request.onload = function() {
-            if (request.status >= 200 && request.status < 300) {
-                console.log(`[FormFieldFilePond:${props.field.name}] File loaded successfully from server.`);
-                load(request.response); // Success: pass blob to FilePond
-            } else {
-                console.error(`[FormFieldFilePond:${props.field.name}] Error loading file from server: ${request.status} ${request.statusText}`);
-                error(`Erro ${request.status} ao carregar arquivo`);
-            }
-        };
-        request.onerror = () => {
-             console.error(`[FormFieldFilePond:${props.field.name}] Network error during server.load.`);
-             error('Erro de rede ao carregar arquivo');
-        }
-        request.onabort = () => {
-             console.log(`[FormFieldFilePond:${props.field.name}] server.load aborted.`);
-             abort();
-        }
-        
-        // TODO: Set CSRF token header if your endpoint is protected
-        // const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        // if (csrfToken) {
-        //    request.setRequestHeader('X-CSRF-TOKEN', csrfToken);
-        // }
-        
-        request.send();
-
-        // Return abort method
-        return {
-            abort: () => {
-                request.abort();
-            }
-        };
-    },
-    // process: ..., // Define later for uploads
-    // revert: ...,  // Define later for upload cancellation
-    // restore: ..., // Define later
-    // fetch: ...,   // Define later
-}));
-
-const filePondOptions = computed(() => {
-
-    console.log(`[FormFieldFilePond:${props.field.key}] Initial files:`, initialFiles.value);
-    const options = {
-        labelIdle: props.field.labelIdle || 'Arraste e solte seu arquivo ou <span class="filepond--label-action">Procure</span>',
-        allowMultiple: props.field.multiple || false,
-        acceptedFileTypes: props.field.accept,
-        files: initialFiles.value, // Use computed initial files with relative paths
-        allowImagePreview: true, // Explicitly enable image preview
-        // server: serverOptions.value, // Already handled by the separate :server prop
-        ...(props.field.filepondOptions || {}) // Merge any custom options
-    };
-    // console.log(`[FormFieldFilePond:${props.field.name}] Computed FilePond options:`, options);
-    return options;
-});
-
-// --- Event Handlers ---
-
-function handleInit() {
-    console.log(`[FormFieldFilePond:${props.field.key}] FilePond instance initialized.`);
-    // You can access the FilePond instance here if needed: pond.value.filepond
+    modelValue: string | string[] | null;
 }
 
-function handleAddFile(error: any, file: any) {
-    if (error) {
-        console.error(`[FormFieldFilePond:${props.field.name}] Error adding file:`, error);
-        return;
-    }
+const props = defineProps<Props>();
 
-    // Update model to File/Blob only if it's currently the initial relative path string
-    // This prevents the loop caused by the initial server.load triggering an update
-    if (typeof model.value === 'string') {
-        console.log(`[FormFieldFilePond:${props.field.name}] Updating model from initial string to File/Blob:`, file.file.name);
-        model.value = file.file; // Emit the File/Blob object
+const emit = defineEmits(['update:modelValue']);
+
+const pond = ref<any>(null); // Ref para a instância do FilePond
+const csrfToken = ref<string|null>(null);
+
+// Pega o token CSRF do meta tag (padrão Laravel)
+onMounted(() => {
+    const tokenElement = document.head.querySelector('meta[name="csrf-token"]');
+    if (tokenElement) {
+        csrfToken.value = tokenElement.getAttribute('content');
     } else {
-         console.log(`[FormFieldFilePond:${props.field.name}] File added event ignored, model already updated. Origin: ${file.origin}, File:`, file.file?.name);
-         // If allowMultiple=false, FilePond might fire addfile for replacement.
-         // If the model needs updating *only* on user action (input/drop), more complex logic might be needed.
-         // But let's see if this simple check breaks the loop for initial load.
-    }
-}
-
-function handleRemoveFile(error: any, file: any) {
-    if (error) {
-        console.error(`[FormFieldFilePond:${props.field.key}] Error removing file:`, error);
-        return;
-    }
-    // When a file is removed (could be the initial 'local' file or a newly added one)
-    console.log(`[FormFieldFilePond:${props.field.key}] File removed:`, file.file?.name || file.filename); // filename for local
-    model.value = null; // Emit null when file is removed
-}
-
-// Optional: Watch for external changes to model (e.g., form reset)
-watch(model, (newValue) => {
-    // If model is cleared externally (set to null or empty string) and FilePond has files
-    if (!newValue && pond.value?.getFiles().length > 0) {
-        console.log(`[FormFieldFilePond:${props.field.key}] Model cleared externally, removing files from FilePond.`);
-        pond.value.removeFiles();
-    }
-    // If model is set to a URL externally and files array is empty or doesn't match
-    else if (typeof newValue === 'string' && newValue && pond.value &&
-        (!pond.value.getFiles().length ||
-            JSON.stringify(initialFiles.value) !== JSON.stringify(pond.value.getFiles().map((f: any) => ({ source: f.source }))))) {
-        console.log(`[FormFieldFilePond:${props.field.key}] Model set externally to URL, resetting FilePond files.`);
-        // Force update das files para garantir que a visualização seja atualizada
-        pond.value.removeFiles();
-        setTimeout(() => {
-            pond.value.addFiles(initialFiles.value);
-        }, 100);
+        console.warn('CSRF token not found. File uploads might fail.');
     }
 });
 
-// --- Download Logic (Placeholder) ---
-const canDownload = computed(() => typeof model.value === 'string' && model.value);
-
-function downloadInitialFile(event: Event) {
-    event.stopPropagation(); // Prevent FilePond click event
-    if (typeof model.value === 'string' && model.value) {
-        console.log(`[FormFieldFilePond:${props.field.key}] Triggering download for:`, model.value);
-        // Create a temporary link and click it
-        const link = document.createElement('a');
-        link.href = model.value;
-        link.setAttribute('download', model.value.substring(model.value.lastIndexOf('/') + 1)); // Extract filename
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+// Configuração do servidor FilePond
+const serverOptions = computed(() => {
+    if (!csrfToken.value) return null; // Não configurar se não houver token
+    return {
+        url: '/api', // URL base, endpoints específicos abaixo
+        process: {
+            url: '/uploads/process',
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken.value
+            },
+            onload: (response: any) => {
+                // response é o path retornado pelo UploadController
+                console.log('File processed, server response:', response);
+                // O FilePond armazena isso internamente, não precisamos emitir aqui diretamente
+                // Mas podemos usar o @processfile para pegar o ID
+                return response; 
+            },
+            onerror: (response: any) => {
+                console.error('File process error:', response);
+                // TODO: Tratar erro de upload (ex: mostrar mensagem)
+                return null; 
+            },
+        },
+        revert: {
+            url: '/uploads/revert',
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken.value,
+                'Content-Type': 'text/plain' // O controller espera o path no corpo
+            },
+            onload: (response: any) => {
+                console.log('File revert success:', response);
+                // Atualizar o modelValue se necessário (removendo o ID)
+                // FilePond lida com isso bem ao remover o arquivo da UI
+            },
+            onerror: (response: any) => {
+                console.error('File revert error:', response);
+                // TODO: Tratar erro de revert
+                return null;
+            },
+        },
+        load: { // Adicionado endpoint de restore
+            url: '/uploads/load/', // Reutiliza o endpoint de load para buscar o arquivo pelo ID/path
+            method: 'GET',
+             headers: { 
+                 // ... headers se necessário ...
+             },
+             onerror: (response: any) => {
+                console.error('File restore error:', response);
+            },
+        },
     }
-}
+});
+
+// Computa os arquivos iniciais
+const initialFiles = computed(() => {
+    console.log('[initialFiles] initial modelValue:', props.modelValue);
+    let relativePath: string | null = null;
+
+    if (typeof props.modelValue === 'string' && props.modelValue) {
+        if (props.modelValue.startsWith('http')) {
+            try {
+                const url = new URL(props.modelValue);
+                const storagePrefix = '/storage/'; 
+                if (url.pathname.startsWith(storagePrefix)) {
+                    relativePath = url.pathname.substring(storagePrefix.length);
+                    console.log('[initialFiles] Extracted relative path:', relativePath);
+                } else {
+                     console.warn('[initialFiles] Could not extract relative path from URL:', props.modelValue);
+                }
+            } catch (e) {
+                console.error('[initialFiles] Invalid URL:', props.modelValue, e);
+            }
+        } else {
+            relativePath = props.modelValue;
+            console.log('[initialFiles] Using modelValue as relative path:', relativePath);
+        }
+    }
+
+    // Se conseguimos um path relativo, passamos como source
+    if (relativePath) {
+        console.log('[initialFiles] Setting initial file object for:', relativePath);
+        return [
+            {
+                source: relativePath, 
+                options: { 
+                    type: 'local',
+                    file: { 
+                        name: relativePath.split('/').pop() || 'arquivo-existente',
+                        size: 12345, 
+                    },
+                }
+            }
+        ];
+    }
+
+    return []; 
+});
+
+// Handler para quando a lista interna de arquivos do FilePond é atualizada
+const handleUpdateFiles = (fileItems: any[]) => {
+    console.log('[updatefiles] Event triggered. Items:', fileItems);
+    
+    // Filtra para pegar apenas arquivos processados com sucesso pelo servidor
+    const processedFiles = fileItems.filter(item => item.status === 5 && item.serverId);
+    console.log('[updatefiles] Processed files:', processedFiles);
+
+    if (props.field.multiple) {
+        const serverIds = processedFiles.map(item => item.serverId);
+        console.log('[updatefiles] Emitting multiple serverIds:', serverIds);
+        emit('update:modelValue', serverIds);
+    } else {
+        // Se não for múltiplo, pega o último arquivo processado (ou null)
+        const latestServerId = processedFiles.length > 0 ? processedFiles[processedFiles.length - 1].serverId : null;
+        console.log('[updatefiles] Emitting single serverId:', latestServerId);
+        emit('update:modelValue', latestServerId);
+    }
+};
+
+// TODO: Configurar FilePond options baseado em props.field (outras opções além do server)
 
 </script>
 
 <template>
-    <div class="filepond-wrapper space-y-2">
-        <FilePond
-            ref="pond"
-            :name="props.field.key"
-            :server="serverOptions"           
-            :files="filePondOptions.files"    
-            :accepted-file-types="filePondOptions.acceptedFileTypes"
-            :allow-multiple="filePondOptions.allowMultiple"
-            :label-idle="filePondOptions.labelIdle"
-            credits="false"  
-            @init="handleInit"
-            @addfile="handleAddFile"
-            @removefile="handleRemoveFile"
+    <div>
+        <label v-if="field.label" :for="field.key" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">{{ field.label }}</label>
+        
+        <FilePond 
+            v-if="serverOptions" 
+            ref="pond" 
+            :name="field.key"
+            label-idle="Arraste e solte seus arquivos aqui ou <span class='filepond--label-action'> Navegue </span>"
+            :allow-multiple="field.multiple ?? false"
+            :accepted-file-types="field.acceptedFileTypes ?? null"
+            :server="serverOptions"
+            :files="initialFiles"
+            :credits="null"
+            labelFileProcessingError="Erro during processing"
+            @updatefiles="handleUpdateFiles"
         />
-        <!-- Link de download para o arquivo inicial -->
-         <div v-if="canDownload" class="text-sm text-right">
-              <a 
-                :href="typeof model === 'string' ? model : undefined" 
-                download 
-                target="_blank" 
-                class="text-blue-600 hover:underline"
-                @click="downloadInitialFile" 
-                v-if="typeof model === 'string'" 
-              >
-                Baixar arquivo atual
-              </a>
-         </div>
+        <div v-else>
+            Carregando configuração do uploader... (ou erro de CSRF)
+        </div>
+
+        <p v-if="field.help" class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ field.help }}</p>
+        <!-- TODO: Lógica para exibir erros (ex: field.errors) pode ser adicionada aqui -->
     </div>
 </template>
 
-<style>
-/* Ajustando o estilo para melhorar a visualização */
-.filepond--panel-root {
-    background-color: #f8f9fa;
-}
-
-.filepond--image-preview-wrapper {
-    width: 100%;
-    height: auto;
-}
-
-.filepond--image-preview {
-    height: auto !important;
-    max-height: 200px;
-}
-</style>
+<style scoped>
+/* Estilos específicos podem ser adicionados aqui */
+/* Você pode precisar ajustar estilos para que o FilePond se integre bem visualmente */
+</style> 

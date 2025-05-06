@@ -18,6 +18,9 @@ use Inertia\Inertia;
 use Callcocam\LaraGatekeeper\Traits\ManagesSidebarMenu;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
 
 abstract class AbstractController extends Controller
 {
@@ -377,5 +380,50 @@ abstract class AbstractController extends Controller
 
         return redirect()->route($this->getRouteNameBase() . '.index')
              ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
+    }
+
+    
+    /**
+     * Move um arquivo temporário (identificado pelo seu path no disco local)
+     * para o disco de destino padrão (geralmente 'public').
+     *
+     * @param string $temporaryPath Caminho do arquivo no disco 'local' (ex: "tmp/uploads/xyz.jpg")
+     * @param string $targetDirectory Diretório de destino no disco padrão (ex: "avatars")
+     * @return string|null O caminho relativo ao disco de destino se sucesso, null caso contrário.
+     */
+    protected function moveTemporaryFile(string $temporaryPath, string $targetDirectory): ?string
+    {
+        $destinationDisk = config('filesystems.default'); // Ex: 'public' 
+        // 1. Verificar se o arquivo temporário existe no disco 'local'
+        if (!Storage::disk($destinationDisk)->exists($temporaryPath)) {
+            Log::warning("Arquivo temporário não encontrado em [local]: " . $temporaryPath);
+            return null;
+        }
+
+        // 2. Definir o caminho de destino no disco padrão (provavelmente 'public')
+        $filename = basename($temporaryPath);
+        // Garante que não haja barras duplicadas se $targetDirectory já terminar com uma
+        $targetPath = rtrim($targetDirectory, '/') . '/' . $filename;
+
+        // 3. Mover o arquivo do disco 'local' para o disco padrão ('public')
+        try {
+            // O segundo argumento do move é o caminho relativo ao disco de destino
+            if (Storage::disk($destinationDisk)->move($temporaryPath, $targetPath)) {
+                 // O move já deleta o original se bem-sucedido
+                Log::info("Arquivo movido de [local] {$temporaryPath} para [{$destinationDisk}] {$targetPath}");
+                return $targetPath; // Retorna o caminho relativo ao disco de destino
+            } else {
+                 Log::error("Falha ao mover arquivo de [local] {$temporaryPath} para [{$destinationDisk}] {$targetPath}");
+                 // Tentar deletar o temporário mesmo em caso de falha no move?
+                 // Storage::disk('local')->delete($temporaryPath);
+                 return null;
+            }
+        } catch (\Exception $e) {
+            Log::error("Erro ao mover arquivo {$temporaryPath}: " . $e->getMessage());
+            report($e); // Reporta a exceção
+            // Tentar deletar o temporário em caso de exceção?
+            // Storage::disk('local')->delete($temporaryPath);
+            return null;
+        }
     }
 }
