@@ -104,6 +104,7 @@ trait HasTypes
     public function date(): self
     {
         $this->type = 'date';
+        $this->inputProps['type'] = 'date';
         return $this;
     }
 
