@@ -11,7 +11,7 @@ trait HasTypes
      */
     public function text(): self
     {
-        $this->type = 'text';
+        $this->type('text');
         return $this;
     }
 
@@ -67,6 +67,8 @@ trait HasTypes
     public function password(): self
     {
         $this->type = 'password';
+        $this->inputProps['autocomplete'] = 'new-password';
+        $this->inputProps['type'] = 'password';
         return $this;
     }
 
@@ -77,7 +79,8 @@ trait HasTypes
      */
     public function email(): self
     {
-        $this->type = 'email';
+        $this->type = 'email'; 
+        $this->inputProps['type'] = 'email';
         return $this;
     }
 
@@ -89,6 +92,7 @@ trait HasTypes
     public function number(): self
     {
         $this->type = 'number';
+        $this->inputProps['type'] = 'number';
         return $this;
     }
 
@@ -111,6 +115,7 @@ trait HasTypes
     public function datetime(): self
     {
         $this->type = 'datetime-local';
+        $this->inputProps['type'] = 'datetime-local';
         return $this;
     }
 
@@ -133,6 +138,7 @@ trait HasTypes
     public function hidden(): self
     {
         $this->type = 'hidden';
+        $this->inputProps['type'] = 'hidden';
         return $this;
     }
 
@@ -144,6 +150,7 @@ trait HasTypes
     public function color(): self
     {
         $this->type = 'color';
+        $this->inputProps['type'] = 'color';
         return $this;
     }
 
@@ -155,6 +162,7 @@ trait HasTypes
     public function tel(): self
     {
         $this->type = 'tel';
+        $this->inputProps['type'] = 'tel';
         return $this;
     }
 
@@ -166,6 +174,7 @@ trait HasTypes
     public function url(): self
     {
         $this->type = 'url';
+        $this->inputProps['type'] = 'url';
         return $this;
     }
 }
