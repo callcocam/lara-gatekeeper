@@ -308,6 +308,9 @@ abstract class AbstractController extends Controller
             $validatedData['password'] = bcrypt($validatedData['password']);
         }
 
+        if (!isset($validatedData['user_id'])) {
+            $validatedData['user_id'] = $request->user()->id;
+        }
         $this->model::create($validatedData);
 
         return redirect()->route($this->getRouteNameBase() . '.index')
