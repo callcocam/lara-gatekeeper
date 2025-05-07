@@ -111,7 +111,7 @@ abstract class AbstractController extends Controller
                 $breadcrumbs[] = ['title' => "Editar {$singularTitle}" . ($identifier ? ": {$identifier}" : ''), 'href' => ''];
                 break;
             case 'show':
-                 $identifier = $modelInstance ? ($modelInstance->name ?? $modelInstance->id) : '';
+                $identifier = $modelInstance ? ($modelInstance->name ?? $modelInstance->id) : '';
                 $breadcrumbs[] = ['title' => "Detalhes" . ($identifier ? ": {$identifier}" : ''), 'href' => ''];
                 break;
         }
@@ -129,7 +129,49 @@ abstract class AbstractController extends Controller
     abstract protected function getFilters(): array;
     abstract protected function getValidationRules(bool $isUpdate = false, ?Model $model = null): array;
     abstract protected function getSearchableColumns(): array;
-
+    protected function getActions(): array
+    {
+        // permission: 'view_resource',
+        // variant: 'ghost',
+        // isLink: true,
+        // routeSuffix: 'show',
+        // title: 'Visualizar',
+        // icon: Eye,
+        // row,
+        // routeNameBase: routeNameBase.value,
+        return [
+            [
+                'permission' => 'view_resource',
+                'variant' => 'ghost',
+                'isLink' => true,
+                'routeSuffix' => 'show',
+                'title' => 'Visualizar',
+                'icon' => 'Eye',
+                'row' => null,
+                'routeNameBase' => $this->getRouteNameBase(),
+            ],
+            [
+                'permission' => 'edit_resource',
+                'variant' => 'outline',
+                'isLink' => true,
+                'routeSuffix' => 'edit',
+                'title' => 'Editar',
+                'icon' => 'PenSquare',
+                'row' => null,
+                'routeNameBase' => $this->getRouteNameBase(),
+            ],
+            // [
+            //     'permission' => 'delete_resource',
+            //     'variant' => 'danger',
+            //     'isLink' => false,
+            //     'routeSuffix' => null,
+            //     'title' => 'Excluir',
+            //     'icon' => 'Trash2',
+            //     'row' => null,
+            //     'routeNameBase' => $this->getRouteNameBase(),
+            // ]
+        ];
+    }
     /**
      * Define os relacionamentos que devem ser carregados (eager loaded)
      * na listagem principal (método index).
@@ -155,8 +197,8 @@ abstract class AbstractController extends Controller
             // Filtrar campos que retornaram null (condição não atendida)
             $processedFields = array_filter($processedFields, fn($field) => $field !== null);
         } elseif (is_array($rawFields)) {
-             // Se já for um array de arrays, assumir que a lógica condicional
-             // já foi tratada dentro do getFields (menos ideal)
+            // Se já for um array de arrays, assumir que a lógica condicional
+            // já foi tratada dentro do getFields (menos ideal)
             $processedFields = $rawFields;
         }
         // Reindexar array para evitar problemas com índices faltando no JS
@@ -166,7 +208,7 @@ abstract class AbstractController extends Controller
     public function index(Request $request): Response
     {
         $perPage = $request->input('per_page', 15);
-        
+
         // Iniciar query e carregar relacionamentos definidos
         $query = $this->model::query();
         $relationsToLoad = $this->getWithRelations();
@@ -180,7 +222,7 @@ abstract class AbstractController extends Controller
         $tableColumns = [];
         if (!empty($rawColumns) && $rawColumns[0] instanceof Column) {
             $tableColumns = array_map(fn(Column $column) => $column->toArray(), $rawColumns);
-            $tableColumns = array_filter($tableColumns, fn($column) => $column !== null); 
+            $tableColumns = array_filter($tableColumns, fn($column) => $column !== null);
         } elseif (is_array($rawColumns)) {
             $tableColumns = $rawColumns;
         }
@@ -200,19 +242,19 @@ abstract class AbstractController extends Controller
             $searchableDbColumns = $this->getSearchableColumns(); // Obter colunas do novo método
 
             if (!empty($searchableDbColumns)) {
-                $query->where(function($q) use ($search, $searchableDbColumns) {
+                $query->where(function ($q) use ($search, $searchableDbColumns) {
                     foreach ($searchableDbColumns as $dbColumn) {
-                         // Assume que getSearchableColumns retorna nomes de coluna válidos do DB
-                         // Adicionar tratamento para relacionamentos se necessário (ex: 'relation.field')
+                        // Assume que getSearchableColumns retorna nomes de coluna válidos do DB
+                        // Adicionar tratamento para relacionamentos se necessário (ex: 'relation.field')
                         if (str_contains($dbColumn, '.')) {
-                             // Exemplo básico para relacionamento (pode precisar de joins)
+                            // Exemplo básico para relacionamento (pode precisar de joins)
                             [$relation, $relatedColumn] = explode('.', $dbColumn, 2);
-                             $q->orWhereHas($relation, function($relationQuery) use ($relatedColumn, $search) {
-                                 $relationQuery->where($relatedColumn, 'like', "%{$search}%");
-                             });
-                         } else {
+                            $q->orWhereHas($relation, function ($relationQuery) use ($relatedColumn, $search) {
+                                $relationQuery->where($relatedColumn, 'like', "%{$search}%");
+                            });
+                        } else {
                             $q->orWhere($dbColumn, 'like', "%{$search}%");
-                         }
+                        }
                     }
                 });
             }
@@ -235,28 +277,28 @@ abstract class AbstractController extends Controller
             // Verificar se a coluna existe e está marcada como sortable
             if ($sortColumnDef && ($sortColumnDef['sortable'] ?? false)) {
                 // Usar accessorKey ou id como nome da coluna no DB
-                 $dbColumn = $sortColumnDef['accessorKey'] ?? $sortColumnDef['id'] ?? null;
-                 if ($dbColumn) {
-                     $query->orderBy($dbColumn, $direction);
-                 }
+                $dbColumn = $sortColumnDef['accessorKey'] ?? $sortColumnDef['id'] ?? null;
+                if ($dbColumn) {
+                    $query->orderBy($dbColumn, $direction);
+                }
             }
         } else {
-             // Tentar ordenar pela primeira coluna sortable ou created_at como padrão
-             $defaultSortColumn = null;
-             foreach($tableColumns as $colDef) {
-                 if ($colDef['sortable'] ?? false) {
-                     $defaultSortColumn = $colDef['accessorKey'] ?? $colDef['id'] ?? null;
-                     if ($defaultSortColumn) break;
-                 }
-             }
-             if ($defaultSortColumn) {
-                 $query->orderBy($defaultSortColumn, 'asc');
-             } else {
-                  $query->latest(); // Fallback para latest()
-             }
+            // Tentar ordenar pela primeira coluna sortable ou created_at como padrão
+            $defaultSortColumn = null;
+            foreach ($tableColumns as $colDef) {
+                if ($colDef['sortable'] ?? false) {
+                    $defaultSortColumn = $colDef['accessorKey'] ?? $colDef['id'] ?? null;
+                    if ($defaultSortColumn) break;
+                }
+            }
+            if ($defaultSortColumn) {
+                $query->orderBy($defaultSortColumn, 'asc');
+            } else {
+                $query->latest(); // Fallback para latest()
+            }
         }
 
-        $paginator = $query->paginate($perPage)->withQueryString(); 
+        $paginator = $query->paginate($perPage)->withQueryString();
         return Inertia::render("{$this->viewPrefix}/Index", [
             'data' => [
                 'data' => $paginator->items(),
@@ -280,6 +322,7 @@ abstract class AbstractController extends Controller
             'pageDescription' => $this->generatePageDescription('index'),
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('index'),
             'routeNameBase' => $this->getRouteNameBase(),
+            'actions' => $this->getActions(),
             // Adicionar permissões (can) se necessário
         ]);
     }
@@ -331,14 +374,14 @@ abstract class AbstractController extends Controller
 
     public function edit(string $id): Response
     {
-        $modelInstance = $this->model::findOrFail($id); 
+        $modelInstance = $this->model::findOrFail($id);
         // Usar o método processFields
         $fields = $this->processFields($modelInstance);
         // Obter valores iniciais (lógica específica pode estar no controller filho)
         $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields);
 
         // Verificar se há campos de upload
-        
+
 
         return Inertia::render("{$this->viewPrefix}/Edit", [
             'fields' => $fields,
@@ -355,12 +398,12 @@ abstract class AbstractController extends Controller
      * Obtém os valores iniciais para o formulário de edição.
      * Pode ser sobrescrito por controllers filhos para lógica customizada.
      */
-    protected function getInitialValuesForEdit(Model $modelInstance, array $fields=[]): array
+    protected function getInitialValuesForEdit(Model $modelInstance, array $fields = []): array
     {
         $values = $modelInstance->toArray();
-        foreach($fields as $field) {
-            if(isset($field['relationship'])) {
-                $values[$field['key']] = $this->resolveRelationship($field['relationship'], $modelInstance, $field['labelAttribute'], $field['valueAttribute']); 
+        foreach ($fields as $field) {
+            if (isset($field['relationship'])) {
+                $values[$field['key']] = $this->resolveRelationship($field['relationship'], $modelInstance, $field['labelAttribute'], $field['valueAttribute']);
             }
         }
         // Remover campos desnecessários se houver (ex: avatar_url que estava no UserController)
@@ -392,7 +435,7 @@ abstract class AbstractController extends Controller
         $modelInstance->update($validatedData);
 
         return redirect()->route($this->getRouteNameBase() . '.index')
-             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' atualizado(a) com sucesso.');
+            ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' atualizado(a) com sucesso.');
     }
 
     public function destroy(string $id): RedirectResponse
@@ -402,10 +445,10 @@ abstract class AbstractController extends Controller
         $modelInstance->delete();
 
         return redirect()->route($this->getRouteNameBase() . '.index')
-             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
+            ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
     }
 
-    
+
     /**
      * Move um arquivo temporário (identificado pelo seu path no disco local)
      * para o disco de destino padrão (geralmente 'public').
@@ -432,15 +475,15 @@ abstract class AbstractController extends Controller
         try {
             // O segundo argumento do move é o caminho relativo ao disco de destino
             if (Storage::disk($destinationDisk)->move($temporaryPath, $targetPath)) {
-                 // O move já deleta o original se bem-sucedido
-                 Storage::disk($destinationDisk)->delete($temporaryPath);
+                // O move já deleta o original se bem-sucedido
+                Storage::disk($destinationDisk)->delete($temporaryPath);
                 Log::info("Arquivo movido de [local] {$temporaryPath} para [{$destinationDisk}] {$targetPath}");
                 return $targetPath; // Retorna o caminho relativo ao disco de destino
             } else {
-                 Log::error("Falha ao mover arquivo de [local] {$temporaryPath} para [{$destinationDisk}] {$targetPath}");
-                 // Tentar deletar o temporário mesmo em caso de falha no move?
-                 Storage::disk($destinationDisk)->delete($temporaryPath);
-                 return null;
+                Log::error("Falha ao mover arquivo de [local] {$temporaryPath} para [{$destinationDisk}] {$targetPath}");
+                // Tentar deletar o temporário mesmo em caso de falha no move?
+                Storage::disk($destinationDisk)->delete($temporaryPath);
+                return null;
             }
         } catch (\Exception $e) {
             Log::error("Erro ao mover arquivo {$temporaryPath}: " . $e->getMessage());
