@@ -13,6 +13,11 @@ import FormFieldFilePond from './fields/FormFieldFilePond.vue';
 
 export const defaultFieldComponents = {
     text: FormFieldInput,
+    date: FormFieldInput,
+    datetime: FormFieldInput,
+    time: FormFieldInput,
+    tel: FormFieldInput,
+    url: FormFieldInput,
     email: FormFieldInput,
     password: FormFieldInput,
     number: FormFieldInput,
@@ -33,4 +38,5 @@ export const defaultFieldComponents = {
 
 // Tipar para garantir consistência (Opcional, mas bom)
 import type { Component } from 'vue';
+import { date } from 'zod';
 export type FieldRegistry = Record<string, Component>; 
