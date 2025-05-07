@@ -8,6 +8,7 @@ class Field
 {
     use Concerns\HasTypes;
     use Concerns\HasOptions;
+    use Concerns\HasTextarea;
 
     public string $key;
     public string $name;
