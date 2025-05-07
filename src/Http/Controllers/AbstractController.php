@@ -6,6 +6,7 @@
 
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Illuminate\Routing\Controller;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
@@ -129,48 +130,45 @@ abstract class AbstractController extends Controller
     abstract protected function getFilters(): array;
     abstract protected function getValidationRules(bool $isUpdate = false, ?Model $model = null): array;
     abstract protected function getSearchableColumns(): array;
+
+    /**
+     * Define as ações padrão para a tabela.
+     * Pode ser sobrescrito por controllers filhos para lógica customizada.
+     */
+    protected function getTableActions(): array
+    {
+        return [
+            // Adicionar ações padrão se necessário
+            Action::make('show')
+                ->icon('Eye')
+                ->color('success')
+                ->routeNameBase($this->getRouteNameBase())
+                ->routeSuffix('show')
+                ->permission('view_resource')
+                ->setIsHtml(false)
+                ->header('Visualizar')
+                ->accessorKey('show'),
+            Action::make('edit')
+                ->icon('PenSquare')
+                ->color('primary')
+                ->routeNameBase($this->getRouteNameBase())
+                ->routeSuffix('edit')
+                ->permission('edit_resource')
+                ->setIsHtml(false)
+                ->header('Editar')
+                ->accessorKey('edit'),
+        ];
+    }
     protected function getActions(): array
     {
-        // permission: 'view_resource',
-        // variant: 'ghost',
-        // isLink: true,
-        // routeSuffix: 'show',
-        // title: 'Visualizar',
-        // icon: Eye,
-        // row,
-        // routeNameBase: routeNameBase.value,
-        return [
-            [
-                'permission' => 'view_resource',
-                'variant' => 'ghost',
-                'isLink' => true,
-                'routeSuffix' => 'show',
-                'title' => 'Visualizar',
-                'icon' => 'Eye',
-                'row' => null,
-                'routeNameBase' => $this->getRouteNameBase(),
-            ],
-            [
-                'permission' => 'edit_resource',
-                'variant' => 'outline',
-                'isLink' => true,
-                'routeSuffix' => 'edit',
-                'title' => 'Editar',
-                'icon' => 'PenSquare',
-                'row' => null,
-                'routeNameBase' => $this->getRouteNameBase(),
-            ],
-            // [
-            //     'permission' => 'delete_resource',
-            //     'variant' => 'danger',
-            //     'isLink' => false,
-            //     'routeSuffix' => null,
-            //     'title' => 'Excluir',
-            //     'icon' => 'Trash2',
-            //     'row' => null,
-            //     'routeNameBase' => $this->getRouteNameBase(),
-            // ]
-        ];
+
+        $actions = $this->getTableActions();
+
+        // Adicionar ações padrão se não estiverem definidas
+        return collect($actions)->map(function ($action) {
+            return $action->toArray();
+        })->toArray();
+        
     }
     /**
      * Define os relacionamentos que devem ser carregados (eager loaded)
