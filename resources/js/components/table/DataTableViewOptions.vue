@@ -2,7 +2,7 @@
 import type { Table } from '@tanstack/vue-table'
 import { computed, onMounted, watch } from 'vue'
 import { Settings2 } from 'lucide-vue-next'
-
+ 
 
 interface DataTableViewOptionsProps {
     table: Table<any>

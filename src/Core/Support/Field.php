@@ -6,6 +6,9 @@ use Closure;
 
 class Field
 {
+    use Concerns\HasTypes;
+    use Concerns\HasOptions;
+
     public string $key;
     public string $name;
     public string $label;
@@ -53,11 +56,11 @@ class Field
         return $this;
     }
 
-    public function options(array $options): self
-    {
-        $this->options = $options;
-        return $this;
-    }
+    // public function options(array $options): self
+    // {
+    //     $this->options = $options;
+    //     return $this;
+    // }
 
     // Method to set generic input properties
     public function props(array $props): self
