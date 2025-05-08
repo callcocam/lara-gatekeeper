@@ -130,7 +130,12 @@ abstract class AbstractController extends Controller
     abstract protected function getFilters(): array;
     abstract protected function getValidationRules(bool $isUpdate = false, ?Model $model = null): array;
     abstract protected function getSearchableColumns(): array;
-
+    protected function getImportOptions(): array
+    {
+        return [ 
+            //
+        ];
+    }
     /**
      * Define as ações padrão para a tabela.
      * Pode ser sobrescrito por controllers filhos para lógica customizada.
@@ -296,7 +301,7 @@ abstract class AbstractController extends Controller
             }
         }
 
-        $paginator = $query->paginate($perPage)->withQueryString();
+        $paginator = $query->paginate($perPage)->withQueryString(); 
         return Inertia::render("{$this->viewPrefix}/Index", [
             'data' => [
                 'data' => $paginator->items(),
@@ -321,6 +326,7 @@ abstract class AbstractController extends Controller
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('index'),
             'routeNameBase' => $this->getRouteNameBase(),
             'actions' => $this->getActions(),
+            'importOptions' => $this->getImportOptions(),
             // Adicionar permissões (can) se necessário
         ]);
     }
