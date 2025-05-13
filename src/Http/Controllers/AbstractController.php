@@ -57,36 +57,42 @@ abstract class AbstractController extends Controller
 
     protected function getResourceName(): string
     {
-        return $this->resourceName;
+        return __($this->resourceName);
     }
 
     protected function getPluralResourceName(): string
     {
-        return $this->pluralResourceName;
+        return __($this->pluralResourceName);
     }
 
     protected function getRouteNameBase(): string
     {
-        return $this->routeNameBase;
+        return __($this->routeNameBase);
     }
 
     protected function generatePageTitle(string $action, ?Model $modelInstance = null): string
     {
         $resourceTitle = Str::ucfirst(str_replace('_', ' ', $this->getPluralResourceName()));
+        $title = null;
         switch ($action) {
             case 'index':
-                return "Gerenciar {$resourceTitle}";
+                $title = sprintf('Gerenciar %s', $resourceTitle);
+                break;
             case 'create':
-                return "Cadastrar Novo " . Str::singular($resourceTitle);
+                $title = sprintf('Cadastrar %s', Str::singular($resourceTitle));
+                break;
             case 'edit':
                 $identifier = $modelInstance ? ($modelInstance->name ?? $modelInstance->id) : '';
-                return "Editar " . Str::singular($resourceTitle) . ($identifier ? ": {$identifier}" : '');
+                $title = sprintf('Editar %s', Str::singular($resourceTitle)) . ($identifier ? ": {$identifier}" : '');
+                break;
             case 'show':
                 $identifier = $modelInstance ? ($modelInstance->name ?? $modelInstance->id) : '';
-                return "Detalhes de " . Str::singular($resourceTitle) . ($identifier ? ": {$identifier}" : '');
+                $title = sprintf('Detalhes de %s', Str::singular($resourceTitle)) . ($identifier ? ": {$identifier}" : '');
+                break;
             default:
-                return $resourceTitle;
+                $title = $resourceTitle;
         }
+        return __($title);
     }
 
     protected function generatePageDescription(string $action, ?Model $modelInstance = null): string
