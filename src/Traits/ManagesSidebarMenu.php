@@ -83,4 +83,10 @@ trait ManagesSidebarMenu
             'order' => $this->getSidebarMenuOrder(),
         ];
     }
+
+    public function getSidebarMenuPermission($action = 'index'): string
+    {
+        $routeName = $this->getRouteNameBase() . '.' . $action;
+        return $routeName;
+    }
 } 

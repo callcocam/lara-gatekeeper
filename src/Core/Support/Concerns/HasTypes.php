@@ -48,6 +48,17 @@ trait HasTypes
         return $this;
     }
 
+    /** 
+     * Set field type to switch
+     * 
+     * @return $this
+     */
+    public function switch(): self
+    {
+        $this->type = 'switch';
+        return $this;
+    }
+
     /**
      * Set field type to radio
      * 
@@ -178,4 +189,5 @@ trait HasTypes
         $this->inputProps['type'] = 'url';
         return $this;
     }
+ 
 }

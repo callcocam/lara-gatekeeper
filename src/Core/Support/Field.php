@@ -9,7 +9,7 @@ class Field
     use Concerns\HasTypes;
     use Concerns\HasOptions;
     use Concerns\HasTextarea;
-
+    use Concerns\HasCombobox;
     public string $key;
     public string $name;
     public string $label;
@@ -155,6 +155,10 @@ class Field
             'type' => $this->type,
             'required' => $this->required,
         ];
+
+        if ($this->apiEndpoint !== null) {
+            $data['apiEndpoint'] = $this->apiEndpoint;
+        }
 
         if ($this->colSpan !== null) {
             $data['colSpan'] = $this->colSpan;

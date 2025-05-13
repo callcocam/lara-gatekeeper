@@ -22,7 +22,7 @@ trait HasPermissions
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(config('raptor.models.permission', ModelsPermission::class))->withTimestamps();
+        return $this->belongsToMany(config('shinobi.models.permission', ModelsPermission::class))->withTimestamps();
     }
 
     /**
@@ -39,12 +39,11 @@ trait HasPermissions
         if ((method_exists($this, 'hasPermissionRoleFlags') and $this->hasPermissionRoleFlags())) {
             return $this->hasPermissionThroughRoleFlag();
         }
-
         if ((method_exists($this, 'hasPermissionFlags') and $this->hasPermissionFlags())) {
             return $this->hasPermissionThroughFlag();
         }
         // Fetch permission if we pass through a string
-        if (is_string($permission)) {
+        if (is_string($permission)) { 
             $permission = $this->getPermissionModel()->where('slug', $permission)->first();
 
             if (! $permission) {
@@ -161,17 +160,17 @@ trait HasPermissions
      * @return \Callcocam\LaraGatekeeper\Core\Shinobi\Contracts\Permission|\Illuminate\Database\Eloquent\Collection
      */
     protected function getPermissionModel()
-    {
-        if (config('raptor.cache.enabled')) {
-            return cache()->tags(config('raptor.cache.tag'))->remember(
+    {  
+        if (config('shinobi.cache.enabled')) {
+            return cache()->tags(config('shinobi.cache.tag'))->remember(
                 'permissions',
-                config('raptor.cache.length'),
+                config('shinobi.cache.length'),
                 function() {
-                    return app()->make(config('raptor.models.permission'))->get();
+                    return app()->make(config('shinobi.models.permission'))->get();
                 }
             );
         }
 
-        return app()->make(config('raptor.models.permission'));
+        return app()->make(config('shinobi.models.permission'));
     }
 }

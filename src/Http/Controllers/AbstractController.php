@@ -19,13 +19,14 @@ use Inertia\Inertia;
 use Callcocam\LaraGatekeeper\Traits\ManagesSidebarMenu;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 
 abstract class AbstractController extends Controller
 {
-    use ManagesSidebarMenu;
+    use ManagesSidebarMenu, AuthorizesRequests;
 
     protected ?string $model = null;
     protected string $resourceName = '';
@@ -142,28 +143,30 @@ abstract class AbstractController extends Controller
      */
     protected function getTableActions(): array
     {
-        return [
-            // Adicionar ações padrão se necessário
-            Action::make('show')
+        $actions = [];
+        if (Gate::allows($this->getSidebarMenuPermission('show'))) {
+            $actions[] = Action::make('show')
                 ->icon('Eye')
                 ->color('success')
                 ->routeNameBase($this->getRouteNameBase())
                 ->routeSuffix('show')
-                ->permission('view_resource')
                 ->setIsHtml(false)
                 ->header('Visualizar')
-                ->accessorKey('show'),
-            Action::make('edit')
+                ->accessorKey('show');
+        }
+        if (Gate::allows($this->getSidebarMenuPermission('edit'))) {
+            $actions[] = Action::make('edit')
                 ->icon('PenSquare')
                 ->color('primary')
                 ->routeNameBase($this->getRouteNameBase())
                 ->routeSuffix('edit')
-                ->permission('edit_resource')
                 ->setIsHtml(false)
                 ->header('Editar')
-                ->accessorKey('edit'),
-        ];
-    }
+                ->accessorKey('edit');
+        }
+        return $actions;
+    } 
+    
     protected function getActions(): array
     {
 
@@ -184,6 +187,11 @@ abstract class AbstractController extends Controller
     protected function getWithRelations(): array
     {
         return []; // Padrão: não carregar nenhum relacionamento
+    }
+
+    protected function getDataToUpdate(array $validatedData, Model $modelInstance): array
+    {
+        return $validatedData;
     }
 
     /**
@@ -210,6 +218,7 @@ abstract class AbstractController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->authorize($this->getSidebarMenuPermission('index'));
         $perPage = $request->input('per_page', 15);
 
         // Iniciar query e carregar relacionamentos definidos
@@ -327,12 +336,19 @@ abstract class AbstractController extends Controller
             'routeNameBase' => $this->getRouteNameBase(),
             'actions' => $this->getActions(),
             'importOptions' => $this->getImportOptions(),
+            'can' => [
+                'create_resource' => Gate::allows($this->getSidebarMenuPermission('create')),
+                'edit_resource' => Gate::allows($this->getSidebarMenuPermission('edit')),
+                'show_resource' => Gate::allows($this->getSidebarMenuPermission('show')),
+                'destroy_resource' => Gate::allows($this->getSidebarMenuPermission('destroy')),
+            ],
             // Adicionar permissões (can) se necessário
         ]);
     }
 
     public function create(): Response
     {
+        $this->authorize($this->getSidebarMenuPermission('create'));
         // Usar o método processFields
         $fields = $this->processFields();
 
@@ -348,6 +364,7 @@ abstract class AbstractController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize($this->getSidebarMenuPermission('store'));
         $validatedData = $request->validate($this->getValidationRules());
 
         // Lógica para tratar senha, se existir
@@ -366,6 +383,7 @@ abstract class AbstractController extends Controller
 
     public function show(string $id): Response
     {
+        $this->authorize($this->getSidebarMenuPermission('show'));
         $modelInstance = $this->model::findOrFail($id);
         return Inertia::render("{$this->viewPrefix}/Show", [
             'model' => $modelInstance->toArray(),
@@ -378,6 +396,7 @@ abstract class AbstractController extends Controller
 
     public function edit(string $id): Response
     {
+        $this->authorize($this->getSidebarMenuPermission('edit'));
         $modelInstance = $this->model::findOrFail($id);
         // Usar o método processFields
         $fields = $this->processFields($modelInstance);
@@ -426,16 +445,16 @@ abstract class AbstractController extends Controller
 
     public function update(Request $request, string $id): RedirectResponse
     {
+        $this->authorize($this->getSidebarMenuPermission('update'));
         $modelInstance = $this->model::findOrFail($id);
-        $validatedData = $request->validate($this->getValidationRules(true, $modelInstance));
-
+        $validatedData = $this->getDataToUpdate($request->validate($this->getValidationRules(true, $modelInstance)), $modelInstance);
         // Lógica para tratar senha, se existir e não estiver vazia
         if (isset($validatedData['password']) && !empty($validatedData['password'])) {
             $validatedData['password'] = bcrypt($validatedData['password']);
         } else {
             unset($validatedData['password']); // Remover senha se vazia para não sobrescrever
         }
-
+         
         $modelInstance->update($validatedData);
 
         return redirect()->route($this->getRouteNameBase() . '.index')
@@ -444,6 +463,7 @@ abstract class AbstractController extends Controller
 
     public function destroy(string $id): RedirectResponse
     {
+        $this->authorize($this->getSidebarMenuPermission('destroy'));
         $modelInstance = $this->model::findOrFail($id);
         // Adicionar verificação de permissão aqui (Gate::authorize)
         $modelInstance->delete();

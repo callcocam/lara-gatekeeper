@@ -10,15 +10,7 @@ class Action
     use Concerns\HasColor;
     use Concerns\HasLabel;
     use Table\Concerns\HasAction;
-
-    // 'permission' => $action['permission'] ?? null,
-    // 'variant' => $action['variant'] ?? 'outline',
-    // 'isLink' => $action['isLink'] ?? false,
-    // 'routeSuffix' => $action['routeSuffix'] ?? null,
-    // 'title' => $action['title'] ?? '',
-    // 'icon' => $action['icon'] ?? null,
-    // // 'row' => $action['row'] ?? null,
-    // 'routeNameBase' => $this->getRouteNameBase(),
+ 
     public string $id;
     public string $accessorKey;
     public ?string $variant = null; // Variantes de cores

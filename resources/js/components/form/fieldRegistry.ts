@@ -10,7 +10,8 @@ import FormFieldRadioGroup from './fields/FormFieldRadioGroup.vue';
 import FormFieldCheckboxList from './fields/FormFieldCheckboxList.vue';
 import FormFieldRepeater from './fields/FormFieldRepeater.vue';
 import FormFieldFilePond from './fields/FormFieldFilePond.vue';
-
+import FormFieldSwitch from './fields/FormFieldSwitch.vue';
+import FormFieldMultiLevelSelect from './fields/FormFieldMultiLevelSelect.vue';
 export const defaultFieldComponents = {
     text: FormFieldInput,
     date: FormFieldInput,
@@ -32,6 +33,8 @@ export const defaultFieldComponents = {
     radio: FormFieldRadioGroup,
     checkboxList: FormFieldCheckboxList,
     filepond: FormFieldFilePond,
+    switch: FormFieldSwitch, 
+    multiLevelSelect: FormFieldMultiLevelSelect,
     // avatarPreview: FormFieldAvatarPreview, // Remover mapeamento
     // Adicionar outros campos padrão aqui
 };
