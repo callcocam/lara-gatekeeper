@@ -22,8 +22,7 @@ const props = defineProps<{
 const model = defineModel<(string | number)[] | null>()
 
 // Internal ref to always work with an array
-const selectedValues = ref<(string | number)[]>([])
-console.log(`[Gatekeeper/CheckboxList:${props.field.name || props.id}] Model atualizado externamente:`, selectedValues.value);
+const selectedValues = ref<(string | number)[]>([]) 
 // Log para debug
 const logName = computed(() => `[Gatekeeper/CheckboxList:${props.field.name || props.id}]`);
 
