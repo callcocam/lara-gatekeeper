@@ -107,8 +107,7 @@ export function useDataTableColumns({
             }
         } else {
             currentSort.value = { key: columnKey, dir: 'asc' };
-        }
-        console.log('[useDataTableColumns] Sort changed by external toggle:', currentSort.value);
+        } 
     };
 
     const tableColumns: ComputedRef<BackendColumnDef[]> = computed(() => {
@@ -132,8 +131,7 @@ export function useDataTableColumns({
             // Processar coluna de ações (lógica mantida)
             if (newCol.id === 'actions') {
                 newCol.header = 'Ações';
-                newCol.cell = ({ row }) => {
-                    console.log(actions);
+                newCol.cell = ({ row }) => { 
                     const actionButtons = [] as any[];
                     // ].filter(button => button !== null) as any[];
 
