@@ -1,0 +1,242 @@
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue'; // Ajuste o caminho se necessário
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button'; // Ajuste o caminho se necessário
+import { Input } from '@/components/ui/input'; // Importar Input 
+import { h, computed, toRefs, watch, ref } from 'vue'; // Restaurar imports h, resolveComponent, watch
+import type { BreadcrumbItem } from '@/types'; // Supondo que BreadcrumbItem está em @/types
+import { useDataTableColumns } from '@/composables/useDataTableColumns'; // Importar o composable
+import type { BackendColumnDef } from '@/types/tables'; // Importar do arquivo central
+// @ts-ignore
+import { useConfirmationModal } from '@lara-gatekeeper/composables/useConfirmationModal'; // Usar caminho relativo
+import { toast } from 'vue-sonner';
+import ButtomImport from '@/components/import/ButtomImport.vue';
+import ImportExcel from '@/components/import/ImportExcel.vue';
+
+// --- Tipos --- (Manter simples ou importar de locais compartilhados)
+interface LinkItem {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface MetaData {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    links: LinkItem[];
+    path: string;
+    per_page: number;
+    to: number | null;
+    total: number;
+}
+
+interface SimpleLink {
+    prev: string | null;
+    next: string | null;
+}
+
+interface PaginatedData<T> {
+    data: T[];
+    meta: MetaData;
+    links: SimpleLink;
+}
+
+interface FilterOption { // Tipo básico para opções de filtro
+    key: string;
+    label: string;
+    type: string; // 'text', 'select', 'date', etc.
+    options?: { value: string | number; label: string }[];
+}
+
+interface CanPermissions { // Estrutura de exemplo para permissões
+    create_resource?: boolean;
+    edit_resource?: boolean;
+    delete_resource?: boolean;
+    import_resource?: boolean;
+    [key: string]: boolean | undefined;
+}
+
+interface ImportOptions {
+    import_resource?: boolean;
+    import_type?: string;
+    target_table?: string;
+    [key: string]: boolean | string | undefined;
+}
+
+interface Props {
+    data: PaginatedData<any>;
+    columns: BackendColumnDef[];
+    filters: Record<string, string>;
+    filterOptions: FilterOption[];
+    pageTitle: string;
+    breadcrumbs: BreadcrumbItem[];
+    routeNameBase: string;
+    actions?: any[];
+    can?: CanPermissions;
+    importOptions?: ImportOptions;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    can: () => ({ create_resource: true, edit_resource: true, delete_resource: true }) // Valores padrão para teste
+}); 
+
+const importModal = ref<any>(null);
+
+function handleImportClick() {
+    // Abrir o modal quando o botão for clicado
+    if (importModal.value) {
+        importModal.value.open();
+    }
+}
+// Obter a função para abrir o modal
+const confirmationModal = useConfirmationModal();
+
+// Extrai o nome do recurso singular do routeNameBase (ex: 'admin.users' -> 'user')
+const resourceSingularName = props.routeNameBase.split('.').pop()?.replace(/s$/, '') ?? 'recurso';
+
+// Função genérica para exclusão - AGORA ASSÍNCRONA
+const deleteItem = async (item: any) => {
+    const itemName = item.name || item.title || `ID ${item.id}`;
+
+    // Abrir o modal e esperar a resposta (true para confirmar, false para cancelar)
+    const confirmed = await confirmationModal.openModal({
+        title: `Confirmar Exclusão`, // Título mais específico
+        message: `Tem certeza que deseja excluir ${resourceSingularName} "${itemName}"? Esta ação não pode ser desfeita.`,
+        confirmText: 'Excluir',
+        cancelText: 'Cancelar'
+    });
+    // Se o usuário confirmou no modal
+    if (confirmed) {
+        router.delete(route(`${props.routeNameBase}.destroy`, item.id), {
+            preserveScroll: true,
+            onError: (errors) => {
+                // Idealmente, mostrar um toast/notificação de erro aqui
+                toast.error("Ocorreu um erro ao excluir.");
+            },
+            onSuccess: () => {
+                // O flash message do backend ou um toast/notificação de sucesso deve aparecer
+                toast.success(`${resourceSingularName} excluído com sucesso!`);
+            }
+        });
+    }
+};
+
+// Computed para verificar se há colunas pesquisáveis (usa getSearchableColumns() do backend agora)
+const hasSearchableColumns = computed(() => {
+    // A lógica de busca está no backend, verificamos se o campo de busca deve ser mostrado
+    // Poderíamos receber um flag do backend ou assumir que se a busca global existe, mostramos o campo.
+    // Por simplicidade, vamos assumir que se a rota atual tem o parâmetro 'search', mostramos.
+    // Ou, melhor, podemos basear na existência de colunas no getSearchableColumns (indiretamente)
+    // Mas a forma mais simples é assumir que a busca sempre está disponível se habilitada no backend.
+    // Vamos deixar sempre visível por enquanto e depender do backend para a lógica.
+    return true; // Simplificado - assume que a busca está sempre disponível se configurada no backend
+    // Alternativa: verificar se props.filters contém 'search'
+    // return props.filters?.hasOwnProperty('search');
+});
+
+// Obter estado inicial de ordenação da página
+const page = usePage();
+
+// Helper para obter query params de forma segura
+const getQueryParams = () => {
+    const ziggy = page.props.ziggy as any; // Usar 'as any' ou tipo mais específico se disponível
+    return (ziggy && typeof ziggy === 'object' && ziggy.query) ? ziggy.query : {};
+};
+
+const initialSortKey = computed(() => getQueryParams().sort || null);
+const initialSortDir = computed(() => {
+    const dir = getQueryParams().direction;
+    return (dir === 'asc' || dir === 'desc') ? dir : null;
+});
+
+// --- Usar o Composable ---
+const { columns: backendColumnsFromProps, routeNameBase, can, actions } = toRefs(props);
+
+const { tableColumns, currentSort } = useDataTableColumns({
+    columns: computed(() => backendColumnsFromProps.value),
+    routeNameBase: computed(() => routeNameBase.value),
+    can: computed(() => can?.value),
+    initialSortKey: initialSortKey,
+    initialSortDir: initialSortDir,
+    deleteItem,
+    actions: actions.value,
+});
+
+// Observar mudanças no estado de ordenação do composable e recarregar dados
+watch(currentSort, (newSort) => {
+    router.get(route(props.routeNameBase + '.index'), {
+        // Preservar outros query params existentes (filtros, busca, etc.)
+        ...getQueryParams(), // Usar helper para pegar query params atuais
+        sort: newSort.key || undefined, // Enviar undefined se null para remover da URL
+        direction: newSort.dir || undefined, // Enviar undefined se null
+        page: 1 // Resetar para página 1 ao reordenar
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        // only: ['data'], // Descomentar se o backend suportar partial reloads para 'data'
+    });
+}, { deep: true });
+
+</script>
+
+<template>
+
+    <Head :title="pageTitle" />
+
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <template #header>
+            <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                {{ pageTitle }}
+            </h2>
+        </template>
+
+        <div class="py-12">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <div class="mb-4 flex justify-end gap-2">
+                            <!-- Botão de Criar (usa can.create_resource ou um nome mais específico se passado) -->
+                            <Button v-if="can?.create_resource ?? true" :as="Link"
+                                :href="route(`${routeNameBase}.create`)">
+                                Cadastrar Novo {{ resourceSingularName }}
+                            </Button>
+
+                            <template v-if="importOptions?.import_resource && importOptions">
+                                <ButtomImport :target-table="importOptions.target_table"
+                                    @import-click="handleImportClick" variant="outline" />
+                                <ImportExcel ref="importModal" :target-table="importOptions.target_table"
+                                    :import-options="importOptions" />
+                            </template>
+                        </div>
+
+                        <ServerSideDataTable :columns="tableColumns" :data="data.data" :meta="data.meta"
+                            :links="data.links" :filters="filterOptions" :column-filters-prop="filters"
+                            :base-route="routeNameBase + '.index'"
+                            :current-route="route().current() ?? routeNameBase + '.index'"
+                            :table-name="routeNameBase.split('.').pop() ?? 'default'">
+                            <!-- Slot de Busca (descomentado e condicional) -->
+                            <template #search="{ searchQuery, handleSearchInput }" v-if="hasSearchableColumns">
+                                <Input placeholder="Buscar..." :model-value="searchQuery"
+                                    @update:model-value="(value) => handleSearchInput(value ?? '')" class="max-w-sm" />
+                            </template>
+
+                            <!-- Slot para ações da toolbar (onde vai o botão de visibilidade) -->
+                            <template #toolbar-actions="{ table }">
+                                <DataTableViewOptions :table="table"
+                                    :table-name="routeNameBase.split('.').pop() ?? 'default'" />
+                                <!-- Outros botões de ação da toolbar podem ir aqui -->
+                            </template>
+
+                            <!-- Exemplo: Slot para filtros customizados -->
+                            <!-- <template #filters="{ table }">
+                                 Adicionar mais filtros aqui se necessário
+                             </template> -->
+                        </ServerSideDataTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </AppLayout>
+</template>
