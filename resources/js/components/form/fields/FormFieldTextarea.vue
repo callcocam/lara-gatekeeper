@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue' 
+import { Textarea } from '@/components/ui/textarea'
 // Define props expected from FormFieldWrapper (agora dentro do pacote)
 const props = defineProps<{
     id: string;

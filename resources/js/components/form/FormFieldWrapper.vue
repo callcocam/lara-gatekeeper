@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils'
 import type { FieldConfig } from './DynamicForm.vue'
 import { fieldRegistryKey } from '../../injectionKeys';
 import type { FieldRegistry } from './fieldRegistry';
+import { Label } from '@/components/ui/label'
 
 const props = defineProps<{
     field: FieldConfig;

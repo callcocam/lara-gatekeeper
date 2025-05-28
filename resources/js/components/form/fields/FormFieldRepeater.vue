@@ -25,21 +25,18 @@ const defaultItemValues = computed(() => {
         defaults[subField.name] = subField.defaultValue ?? 
                                   (subField.type === 'number' ? 0 : 
                                   (subField.type === 'boolean' ? false : ''));
-    });
-    console.log(`[Gatekeeper/Repeater:${props.field.name}] Default item values:`, defaults);
+    }); 
     return defaults;
 });
 
 const addButtonLabel = computed(() => props.field.addButtonLabel || 'Adicionar Item');
 
 const handlePush = () => {
-    const newItem = defaultItemValues.value;
-    console.log(`[Gatekeeper/Repeater:${props.field.name}] Pushing new item:`, newItem);
+    const newItem = defaultItemValues.value; 
     push(newItem);
 }
 
-const handleRemove = (index: number) => {
-     console.log(`[Gatekeeper/Repeater:${props.field.name}] Removing item at index:`, index);
+const handleRemove = (index: number) => { 
      remove(index);
 }
 

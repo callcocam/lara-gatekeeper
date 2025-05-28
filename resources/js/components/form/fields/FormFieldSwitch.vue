@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { cn } from '../../../lib/utils'
+import { Label } from '@/components/ui/label' 
 
 const props = defineProps<{
   id: string;

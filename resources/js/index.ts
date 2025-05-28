@@ -55,7 +55,7 @@ const registerUIComponents = (app: App): void => {
 
     // Importação de componentes UI usando glob do Vite
     Object.entries<{ default: Component }>(
-        import.meta.glob<{ default: Component }>('./components/ui/**/*.vue', { eager: true })
+        import.meta.glob<{ default: Component }>('./components/**/*.vue', { eager: true })
     ).forEach(([path, definition]) => {
         const componentFileName = path.split('/').pop() || '';
         const originalName = componentFileName.replace(/\.\w+$/, '');

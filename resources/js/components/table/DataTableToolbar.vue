@@ -5,7 +5,7 @@ import { X } from 'lucide-vue-next'
 import DataTableFacetedFilter from './DataTableFacetedFilter.vue'
 import DataTableViewOptions from './DataTableViewOptions.vue'
 import type { Filter } from './types'
-
+import { Button } from '@/components/ui/button'
 interface DataTableToolbarProps {
     table: Table<any>
     filters?: Filter[]

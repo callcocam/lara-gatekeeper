@@ -1,7 +1,7 @@
 import { h, inject } from 'vue';
 import { format } from 'date-fns';
 // Ajustar caminho relativo para o Badge dentro do pacote
-import { Badge } from '../components/ui/badge'; 
+import { Badge } from '@/components/ui/badge'; 
 import { formatterRegistryKey } from '../injectionKeys';
 
 // --- Funções Helper de Formatação ---

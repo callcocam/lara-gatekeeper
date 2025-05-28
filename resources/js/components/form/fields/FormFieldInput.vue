@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 // TODO: Assumir Input como peer dependency de shadcn-vue ou copiar/recriar 
-
+import { Input } from '@/components/ui/input'
 // Define props expected from FormFieldWrapper (agora dentro do pacote)
 const props = defineProps<{
     id: string;

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue' 
 import { cn } from '../../../lib/utils' 
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 
 // Define props
 const props = defineProps<{
