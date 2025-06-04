@@ -34,6 +34,11 @@ abstract class AbstractController extends Controller
     protected string $routeNameBase = '';
     protected string $viewPrefix = 'Crud';
 
+
+
+
+    
+
     protected array $defaultBreadcrumbs = [];
     protected string $pageTitle = '';
 
