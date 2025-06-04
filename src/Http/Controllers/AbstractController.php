@@ -8,8 +8,7 @@ namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
 use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Illuminate\Routing\Controller;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Database\Eloquent\Model; 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -32,7 +31,7 @@ abstract class AbstractController extends Controller
     protected string $resourceName = '';
     protected string $pluralResourceName = '';
     protected string $routeNameBase = '';
-    protected string $viewPrefix = 'Crud';
+    protected string $viewPrefix = 'admin/crud';
 
 
 
@@ -227,6 +226,26 @@ abstract class AbstractController extends Controller
         return array_values($processedFields);
     }
 
+    protected function getViewIndex(): string
+    {
+        return "{$this->viewPrefix}/Index";
+    }
+
+    protected function getViewCreate(): string
+    {
+        return "{$this->viewPrefix}/Create";
+    }
+    
+    protected function getViewShow(): string
+    {
+        return "{$this->viewPrefix}/Show";
+    }
+    
+    protected function getViewEdit(): string
+    {
+        return "{$this->viewPrefix}/Edit";
+    }
+
     public function index(Request $request): Response
     {
         $this->authorize($this->getSidebarMenuPermission('index'));
@@ -322,7 +341,7 @@ abstract class AbstractController extends Controller
         }
 
         $paginator = $query->paginate($perPage)->withQueryString(); 
-        return Inertia::render("{$this->viewPrefix}/Index", [
+        return Inertia::render($this->getViewIndex(), [
             'data' => [
                 'data' => $paginator->items(),
                 'meta' => [
@@ -363,7 +382,7 @@ abstract class AbstractController extends Controller
         // Usar o método processFields
         $fields = $this->processFields();
 
-        return Inertia::render("{$this->viewPrefix}/Create", [
+        return Inertia::render($this->getViewCreate(), [
             'fields' => $fields,
             'initialValues' => new $this->model(),
             'pageTitle' => $this->generatePageTitle('create'),
@@ -396,7 +415,7 @@ abstract class AbstractController extends Controller
     {
         $this->authorize($this->getSidebarMenuPermission('show'));
         $modelInstance = $this->model::findOrFail($id);
-        return Inertia::render("{$this->viewPrefix}/Show", [
+        return Inertia::render($this->getViewShow(), [
             'model' => $modelInstance->toArray(),
             'pageTitle' => $this->generatePageTitle('show', $modelInstance),
             'pageDescription' => $this->generatePageDescription('show', $modelInstance),
@@ -417,7 +436,7 @@ abstract class AbstractController extends Controller
         // Verificar se há campos de upload
 
 
-        return Inertia::render("{$this->viewPrefix}/Edit", [
+        return Inertia::render($this->getViewEdit(), [
             'fields' => $fields,
             'initialValues' => $initialValues,
             'modelId' => $id,

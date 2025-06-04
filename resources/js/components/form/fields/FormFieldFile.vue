@@ -3,6 +3,7 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useDropZone } from '@vueuse/core'
 import { cn } from '../../../lib/utils' 
 import { UploadCloud, X, File as FileIcon, Image as ImageIcon } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
 
 // Define props
 const props = defineProps<{

@@ -9,15 +9,15 @@ import { defaultFieldComponents } from './components/form/fieldRegistry';
 import type { FieldRegistry } from './components/form/fieldRegistry';
 
 // --- Form Components --- 
-import DynamicForm from './components/form/DynamicForm.vue';
-import FormFieldWrapper from './components/form/FormFieldWrapper.vue';
+// import DynamicForm from './components/form/DynamicForm.vue';
+// import FormFieldWrapper from './components/form/FormFieldWrapper.vue';
 // Import *all* individual field components: 
 
 // --- Table Components --- 
-import ServerSideDataTable from './components/table/ServerSideDataTable.vue'; 
-import DataTableColumnHeader from './components/table/DataTableColumnHeader.vue';
-import DataTableViewOptions from './components/table/DataTableViewOptions.vue';
-import ConfirmationModal from './components/ConfirmationModal.vue';
+// import ServerSideDataTable from './components/table/ServerSideDataTable.vue'; 
+// import DataTableColumnHeader from './components/table/DataTableColumnHeader.vue';
+// import DataTableViewOptions from './components/table/DataTableViewOptions.vue';
+// import ConfirmationModal from './components/ConfirmationModal.vue';
 
 // Tipagem para as opções do plugin
 interface LaraGatekeeperPluginOptions {
@@ -45,13 +45,13 @@ const install = (app: App, options: LaraGatekeeperPluginOptions = {}): void => {
 
     // --- Registro de Componentes Globais Essenciais ---
     registerUIComponents(app);
-    app.component('DynamicForm', DynamicForm);
-    app.component('FormFieldWrapper', FormFieldWrapper);
-    app.component('ServerSideDataTable', ServerSideDataTable);
-    app.component('DataTableColumnHeader', DataTableColumnHeader);
-    app.component('DataTableViewOptions', DataTableViewOptions);
-    app.component('ConfirmationModal', ConfirmationModal);
-    console.log('[LaraGatekeeperPlugin] Essential components registered globally.');
+    // app.component('DynamicForm', DynamicForm);
+    // app.component('FormFieldWrapper', FormFieldWrapper);
+    // app.component('ServerSideDataTable', ServerSideDataTable);
+    // app.component('DataTableColumnHeader', DataTableColumnHeader);
+    // app.component('DataTableViewOptions', DataTableViewOptions);
+    // app.component('ConfirmationModal', ConfirmationModal);
+    // console.log('[LaraGatekeeperPlugin] Essential components registered globally.');
 }
 
 // Register Form Components
@@ -64,14 +64,14 @@ const registerUIComponents = (app: App): void => {
 
     // Importação de componentes UI usando glob do Vite
     Object.entries<{ default: Component }>(
-        import.meta.glob<{ default: Component }>('./components/ui/**/*.vue', { eager: true })
+        import.meta.glob<{ default: Component }>('./components/**/*.vue', { eager: true })
     ).forEach(([path, definition]) => {
         const componentFileName = path.split('/').pop() || '';
         const originalName = componentFileName.replace(/\.\w+$/, '');
         if (componentRegistry.indexOf(originalName) === -1) {
             app.component(originalName, definition.default);
             componentRegistry.push(originalName);
-            // console.log('originalName', originalName);
+            console.log('originalName', originalName);
         }
     });
 }

@@ -7,10 +7,10 @@
  */
 
 namespace Callcocam\LaraGatekeeper\Commands;
-
-use App\Enums\UserStatus;
+ 
 use App\Models\User; 
 use Callcocam\LaraGatekeeper\Enums\PermissionStatus;
+use Callcocam\LaraGatekeeper\Enums\UserStatus;
 use Callcocam\LaraGatekeeper\Models\Permission;
 use Callcocam\LaraGatekeeper\Models\Role;
 use Callcocam\LaraGatekeeper\Models\Tenant;
@@ -156,7 +156,7 @@ class LaraGatekeeperSetupCommand extends Command
 
         $name = $this->ask('Qual o nome do usuário?', 'Admin');
         $email = $this->ask('Qual o email do usuário?', sprintf('admin@%s', request()->getHost()));
-        $status = $this->choice('Qual o status do usuário?', ['published', 'draft'], UserStatus::Published->value);
+        $status = $this->choice('Qual o status do usuário?', UserStatus::getOptions(), UserStatus::Published->value);
 
         if (User::where('email', $email)->count()) {
             $this->error('Usuário já existe');

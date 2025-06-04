@@ -3,6 +3,8 @@ import { ref, computed, watch, shallowRef, defineAsyncComponent } from 'vue'
 // TODO: Assumir dependências como peer dependencies ou copiar/recriar 
 import { X } from 'lucide-vue-next'
 import { cn } from '../../../lib/utils' 
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 // Define props
 const props = defineProps<{

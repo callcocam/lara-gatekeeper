@@ -6,27 +6,18 @@
  */
 namespace Callcocam\LaraGatekeeper\Enums;
 
-enum DefaultStatus: string
+enum UserStatus: string
 {
-    case Draft = 'draft';
     case Published = 'published';
-
+    case Draft = 'draft';
+    
     public function label(): string
     {
         return match($this) {
-            self::Draft => 'Rascunho',
             self::Published => 'Publicado',
+            self::Draft => 'Rascunho',
         };
     }
-
-    public function color(): string
-    {
-        return match ($this) {
-            self::Draft => 'gray',
-            self::Published => 'green'
-        };
-    }
-
     
     public static function options(): array
     {
@@ -51,4 +42,4 @@ enum DefaultStatus: string
             static::Draft->value => 'secondary',
         ];
     }
-}
+} 

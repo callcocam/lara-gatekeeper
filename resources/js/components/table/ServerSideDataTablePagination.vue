@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue' 
 import { ChevronLeftIcon, ChevronRightIcon, ArrowLeftIcon, ArrowRightIcon } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 
 interface ServerSideDataTablePaginationProps {
     pageIndex: number // Current page (1-based)

@@ -2,7 +2,8 @@
 import type { Table } from '@tanstack/vue-table'
 import { computed, onMounted, watch } from 'vue'
 import { Settings2 } from 'lucide-vue-next'
- 
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 
 interface DataTableViewOptionsProps {
     table: Table<any>

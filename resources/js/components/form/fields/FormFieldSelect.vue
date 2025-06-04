@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue' 
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 
 // Define props expected from FormFieldWrapper (agora dentro do pacote)
 const props = defineProps<{

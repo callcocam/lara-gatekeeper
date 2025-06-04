@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { Check, ChevronsUpDown } from 'lucide-vue-next'
-
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from '@/components/ui/command'
+import { Button } from '@/components/ui/button'
 // TODO: Assumir dependências como peer dependencies ou copiar/recriar
 import { cn } from '../../../lib/utils' // Path relativo correto é um nível acima 
 

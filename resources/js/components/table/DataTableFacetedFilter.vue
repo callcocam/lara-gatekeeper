@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import type { Column } from '@tanstack/vue-table'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from '@/components/ui/command'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import { computed } from 'vue'
 import { CheckIcon, PlusCircleIcon } from 'lucide-vue-next'
 
