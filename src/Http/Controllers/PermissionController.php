@@ -20,6 +20,9 @@ class PermissionController extends AbstractController
 {
     protected ?string $model = Permission::class;
 
+    protected string $resourceName = 'Permissão';
+    protected string $pluralResourceName = 'Permissões'; 
+
     public function getSidebarMenuOrder(): int
     {
         return 15;
@@ -27,7 +30,7 @@ class PermissionController extends AbstractController
 
     public function getSidebarMenuIconName(): string
     {
-        return __('Permissões');
+        return 'KeyRound';
     }
 
     protected function getFields(?Model $model = null): array

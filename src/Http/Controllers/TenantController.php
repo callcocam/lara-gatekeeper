@@ -20,6 +20,9 @@ use Illuminate\Validation\Rule;
 class TenantController extends AbstractController
 {
     protected ?string $model = Tenant::class;
+    
+    protected string $resourceName = 'Empresa';
+    protected string $pluralResourceName = 'Empresas'; 
 
     public function getSidebarMenuOrder(): int
     {
@@ -28,8 +31,9 @@ class TenantController extends AbstractController
 
     public function getSidebarMenuIconName(): string
     {
-        return __('Inquilinos');
+        return 'Settings';
     }
+ 
 
     protected function getFields(?Model $model = null): array
     {

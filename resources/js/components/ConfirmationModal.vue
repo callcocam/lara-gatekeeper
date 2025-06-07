@@ -1,6 +1,7 @@
 <script setup lang="ts">
  
 import { useConfirmationModal } from '../composables/useConfirmationModal';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 const { isOpen, title, message, confirmText, cancelText, confirmAction, cancelAction } = useConfirmationModal();
 

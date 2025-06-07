@@ -21,6 +21,9 @@ class RoleController extends AbstractController
 {
     protected ?string $model = Role::class;
 
+    protected string $resourceName = 'Cargo';
+    protected string $pluralResourceName = 'Cargos'; 
+
     public function getSidebarMenuOrder(): int
     {
         return 10;
@@ -28,7 +31,7 @@ class RoleController extends AbstractController
 
     public function getSidebarMenuIconName(): string
     {
-        return __('Papéis');
+        return 'ShieldCheck';
     }
 
     protected function getFields(?Model $model = null): array

@@ -23,14 +23,19 @@ class UserController extends AbstractController
 {
     protected ?string $model = User::class;
 
+
+    
+    protected string $resourceName = 'Usuário';
+    protected string $pluralResourceName = 'Usuários'; 
+
     public function getSidebarMenuOrder(): int
     {
         return 20;
     }
-
+  
     public function getSidebarMenuIconName(): string
     {
-        return __('Usuários');
+        return 'User';
     }
 
     protected function getFields(?Model $model = null): array

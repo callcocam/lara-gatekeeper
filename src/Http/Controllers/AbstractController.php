@@ -31,12 +31,7 @@ abstract class AbstractController extends Controller
     protected string $resourceName = '';
     protected string $pluralResourceName = '';
     protected string $routeNameBase = '';
-    protected string $viewPrefix = 'admin/crud';
-
-
-
-
-    
+    protected string $viewPrefix = 'admin/crud'; 
 
     protected array $defaultBreadcrumbs = [];
     protected string $pageTitle = '';
@@ -51,9 +46,15 @@ abstract class AbstractController extends Controller
     {
         if ($this->model) {
             $baseName = class_basename($this->model);
-            $this->resourceName = Str::snake($baseName);
-            $this->pluralResourceName = Str::plural($this->resourceName);
-            $this->routeNameBase = 'admin.' . $this->pluralResourceName;
+            if($this->resourceName == ''){
+                $this->resourceName = Str::snake($baseName);
+            }
+            if($this->pluralResourceName == ''){
+                $this->pluralResourceName = Str::plural($this->resourceName);
+            }
+            if($this->routeNameBase == ''){
+                $this->routeNameBase = 'admin.' . str($baseName)->snake()->plural()->toString();
+            }
         } else {
             throw new \Exception('A propriedade $model deve ser definida no controller filho.');
         }
@@ -106,14 +107,14 @@ abstract class AbstractController extends Controller
 
     protected function generateDefaultBreadcrumbs(string $action, ?Model $modelInstance = null): array
     {
-        $pluralTitle = Str::ucfirst(str_replace('_', ' ', $this->getPluralResourceName()));
+        $pluralTitle = $this->getPluralResourceName();
         $singularTitle = Str::singular($pluralTitle);
         $indexRoute = route($this->getRouteNameBase() . '.index');
 
         $breadcrumbs = [
+            ['title' => 'Dashboard', 'href' => route('dashboard')],
             ['title' => $pluralTitle, 'href' => $indexRoute],
-        ];
-
+        ]; 
         switch ($action) {
             case 'create':
                 $breadcrumbs[] = ['title' => "Cadastrar Novo {$singularTitle}", 'href' => ''];
