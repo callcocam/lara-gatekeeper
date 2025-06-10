@@ -135,7 +135,9 @@ class Field
     public function resolveRelationship($modelInstance, $labelAttribute = 'name', $valueAttribute = 'id'): self
     {
         if ($this->relationship) {
-            $this->options = $modelInstance->{$this->relationship}->pluck($labelAttribute, $valueAttribute)->toArray();
+            if (method_exists($modelInstance, $this->relationship)) {
+                $this->options = $modelInstance->{$this->relationship}->pluck($labelAttribute, $valueAttribute)->toArray();
+            } 
         }
         return $this;
     }

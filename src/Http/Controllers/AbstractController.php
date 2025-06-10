@@ -8,7 +8,7 @@ namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
 use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Illuminate\Routing\Controller;
-use Illuminate\Database\Eloquent\Model; 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -31,7 +31,7 @@ abstract class AbstractController extends Controller
     protected string $resourceName = '';
     protected string $pluralResourceName = '';
     protected string $routeNameBase = '';
-    protected string $viewPrefix = 'admin/crud'; 
+    protected string $viewPrefix = 'admin/crud';
 
     protected array $defaultBreadcrumbs = [];
     protected string $pageTitle = '';
@@ -46,13 +46,13 @@ abstract class AbstractController extends Controller
     {
         if ($this->model) {
             $baseName = class_basename($this->model);
-            if($this->resourceName == ''){
+            if ($this->resourceName == '') {
                 $this->resourceName = Str::snake($baseName);
             }
-            if($this->pluralResourceName == ''){
+            if ($this->pluralResourceName == '') {
                 $this->pluralResourceName = Str::plural($this->resourceName);
             }
-            if($this->routeNameBase == ''){
+            if ($this->routeNameBase == '') {
                 $this->routeNameBase = 'admin.' . str($baseName)->snake()->plural()->toString();
             }
         } else {
@@ -114,7 +114,7 @@ abstract class AbstractController extends Controller
         $breadcrumbs = [
             ['title' => 'Dashboard', 'href' => route('dashboard')],
             ['title' => $pluralTitle, 'href' => $indexRoute],
-        ]; 
+        ];
         switch ($action) {
             case 'create':
                 $breadcrumbs[] = ['title' => "Cadastrar Novo {$singularTitle}", 'href' => ''];
@@ -142,9 +142,34 @@ abstract class AbstractController extends Controller
     abstract protected function getFilters(): array;
     abstract protected function getValidationRules(bool $isUpdate = false, ?Model $model = null): array;
     abstract protected function getSearchableColumns(): array;
+    protected function beforeStore(array $validatedData, Request $request): void
+    {
+        //
+    }
+    protected function afterStore(?Model $model, array $validatedData, Request $request): void
+    {
+        //
+    }
+    protected function beforeUpdate(array $validatedData, Request $request): void
+    {
+        //
+    }
+    protected function afterUpdate(?Model $model, array $validatedData, Request $request): void
+    {
+        //
+    }
+    protected function beforeDestroy(Model $modelInstance): void
+    {
+        //
+    }
+    protected function afterDestroy(Model $modelInstance): void
+    {
+        //
+    }
+
     protected function getImportOptions(): array
     {
-        return [ 
+        return [
             //
         ];
     }
@@ -176,8 +201,8 @@ abstract class AbstractController extends Controller
                 ->accessorKey('edit');
         }
         return $actions;
-    } 
-    
+    }
+
     protected function getActions(): array
     {
 
@@ -187,7 +212,6 @@ abstract class AbstractController extends Controller
         return collect($actions)->map(function ($action) {
             return $action->toArray();
         })->toArray();
-        
     }
     /**
      * Define os relacionamentos que devem ser carregados (eager loaded)
@@ -236,12 +260,12 @@ abstract class AbstractController extends Controller
     {
         return "{$this->viewPrefix}/Create";
     }
-    
+
     protected function getViewShow(): string
     {
         return "{$this->viewPrefix}/Show";
     }
-    
+
     protected function getViewEdit(): string
     {
         return "{$this->viewPrefix}/Edit";
@@ -341,7 +365,7 @@ abstract class AbstractController extends Controller
             }
         }
 
-        $paginator = $query->paginate($perPage)->withQueryString(); 
+        $paginator = $query->paginate($perPage)->withQueryString();
         return Inertia::render($this->getViewIndex(), [
             'data' => [
                 'data' => $paginator->items(),
@@ -406,8 +430,10 @@ abstract class AbstractController extends Controller
         if (!isset($validatedData['user_id'])) {
             $validatedData['user_id'] = $request->user()->id;
         }
-        $this->model::create($validatedData);
 
+        $this->beforeStore($validatedData, $request);
+        $model = $this->model::create($validatedData);
+        $this->afterStore($model, $validatedData, $request);
         return redirect()->route($this->getRouteNameBase() . '.index')
             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' criado(a) com sucesso.');
     }
@@ -469,7 +495,9 @@ abstract class AbstractController extends Controller
     {
         $options = [];
         if ($relationship) {
-            $options = $modelInstance->{$relationship}->pluck($valueAttribute)->toArray();
+            if (method_exists($modelInstance, $relationship)) {
+                $options = $modelInstance->{$relationship}->pluck($valueAttribute)->toArray();
+            }
         }
         return $options;
     }
@@ -485,8 +513,9 @@ abstract class AbstractController extends Controller
         } else {
             unset($validatedData['password']); // Remover senha se vazia para não sobrescrever
         }
-         
+        $this->beforeUpdate( $validatedData, $request);
         $modelInstance->update($validatedData);
+        $this->afterUpdate($modelInstance, $validatedData, $request);
 
         return redirect()->route($this->getRouteNameBase() . '.index')
             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' atualizado(a) com sucesso.');
@@ -497,7 +526,9 @@ abstract class AbstractController extends Controller
         $this->authorize($this->getSidebarMenuPermission('destroy'));
         $modelInstance = $this->model::findOrFail($id);
         // Adicionar verificação de permissão aqui (Gate::authorize)
+        $this->beforeDestroy($modelInstance);
         $modelInstance->delete();
+        $this->afterDestroy($modelInstance);
 
         return redirect()->route($this->getRouteNameBase() . '.index')
             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
