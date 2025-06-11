@@ -11,6 +11,8 @@ import FormFieldCheckboxList from './fields/FormFieldCheckboxList.vue';
 import FormFieldRepeater from './fields/FormFieldRepeater.vue';
 import FormFieldFilePond from './fields/FormFieldFilePond.vue';
 import FormFieldSwitch from './fields/FormFieldSwitch.vue';
+import FormFieldCheckbox from './fields/FormFieldCheckbox.vue';
+import FormFieldTags from './fields/FormFieldTags.vue';
 import FormFieldMultiLevelSelect from './fields/FormFieldMultiLevelSelect.vue';
 export const defaultFieldComponents = {
     text: FormFieldInput,
@@ -33,7 +35,9 @@ export const defaultFieldComponents = {
     radio: FormFieldRadioGroup,
     checkboxList: FormFieldCheckboxList,
     filepond: FormFieldFilePond,
-    switch: FormFieldSwitch, 
+    switch: FormFieldSwitch,
+    checkbox: FormFieldCheckbox,
+    tags: FormFieldTags,
     multiLevelSelect: FormFieldMultiLevelSelect,
     // avatarPreview: FormFieldAvatarPreview, // Remover mapeamento
     // Adicionar outros campos padrão aqui

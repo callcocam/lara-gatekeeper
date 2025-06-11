@@ -247,9 +247,9 @@ const getItemTitle = (item: any, index: number) => {
 
         <!-- Botão de adicionar -->
         <div v-if="canAddItem" class="flex justify-center mt-4">
-            <Button type="button" variant="outline" size="sm" @click="handleAddItem">
+            <Button type="button" variant="default" size="sm" @click="handleAddItem" class="flex items-center" >
                 <Plus class="h-4 w-4 mr-2" />
-            {{ addButtonLabel }}
+           <span>{{ addButtonLabel }}</span>
         </Button>
         </div>
 

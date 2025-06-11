@@ -26,7 +26,8 @@ class Field
     public ?string $relationship = null; // For related fields
     public ?string $labelAttribute = null; // For related fields
     public ?string $valueAttribute = null; // For related fields
-
+    public mixed $default = null; // For tags
+    
     protected function __construct(string $key, string $label)
     {
         $this->key = $key;
@@ -54,6 +55,17 @@ class Field
     public function colSpan(int $span): self
     {
         $this->colSpan = $span;
+        return $this;
+    }
+
+    public function tags(): self
+    {
+        $this->type('tags');
+        return $this;
+    }
+    public function default(mixed $default): self
+    {
+        $this->default = $default;
         return $this;
     }
 
