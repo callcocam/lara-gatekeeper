@@ -487,7 +487,7 @@ abstract class AbstractController extends Controller
             }
         }
         // Remover campos desnecessários se houver (ex: avatar_url que estava no UserController)
-        // unset($values['avatar_url']); 
+        // unset($values['avatar_url']);  
         return $values;
     }
 
