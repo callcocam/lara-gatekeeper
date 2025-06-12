@@ -36,7 +36,7 @@ class RoleController extends AbstractController
 
     protected function getFields(?Model $model = null): array
     {
-        $isUpdate = $model && $model->exists;
+     
 
         return [
             Field::make('name', 'Nome do Papel')
