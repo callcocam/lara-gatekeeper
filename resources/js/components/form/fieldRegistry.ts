@@ -13,6 +13,8 @@ import FormFieldFilePond from './fields/FormFieldFilePond.vue';
 import FormFieldSwitch from './fields/FormFieldSwitch.vue';
 import FormFieldCheckbox from './fields/FormFieldCheckbox.vue';
 import FormFieldTags from './fields/FormFieldTags.vue';
+import FormFieldSmartSelect from './fields/FormFieldSmartSelect.vue';
+import FormFieldWorkflowStepCalculator from './fields/FormFieldWorkflowStepCalculator.vue';
 import FormFieldMultiLevelSelect from './fields/FormFieldMultiLevelSelect.vue';
 export const defaultFieldComponents = {
     text: FormFieldInput,
@@ -38,6 +40,8 @@ export const defaultFieldComponents = {
     switch: FormFieldSwitch,
     checkbox: FormFieldCheckbox,
     tags: FormFieldTags,
+    smartSelect: FormFieldSmartSelect,
+    workflowStepCalculator: FormFieldWorkflowStepCalculator,
     multiLevelSelect: FormFieldMultiLevelSelect,
     // avatarPreview: FormFieldAvatarPreview, // Remover mapeamento
     // Adicionar outros campos padrão aqui

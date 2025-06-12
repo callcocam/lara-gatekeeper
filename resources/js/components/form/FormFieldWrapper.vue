@@ -12,7 +12,10 @@ const props = defineProps<{
     modelValue: any;
 }>()
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: any): void }>()
+const emit = defineEmits<{ 
+    (e: 'update:modelValue', value: any): void;
+    (e: 'fieldAction', action: string, data: any, fieldName: string): void;
+}>()
 
 const fieldRegistry = inject(fieldRegistryKey);
 const FieldComponent = computed(() => {
@@ -34,6 +37,14 @@ const fieldId = computed(() => `field-${props.field?.name}`);
 const updateModelValue = (value: any) => {
     emit('update:modelValue', value);
 };
+
+// Handler para eventos de ações de campo (SmartSelect, etc.)
+const handleFieldAction = (action: string, data: any) => {
+    console.log(`[FormFieldWrapper:${props.field?.name}] Field action:`, action, data);
+    
+    // Repassar evento para o formulário pai com informações do campo atual
+    emit('fieldAction', action, data, props.field?.name || '');
+};
 </script>
 
 <template>
@@ -45,7 +56,9 @@ const updateModelValue = (value: any) => {
 
         <component v-if="FieldComponent" :is="FieldComponent" :id="fieldId" :field="field"
             :inputProps="{ ...field.inputProps, 'aria-invalid': !!props.error, 'aria-describedby': props.error ? `${fieldId}-error` : undefined }"
-            :error="props.error" :modelValue="props.modelValue" @update:modelValue="updateModelValue" />
+            :error="props.error" :modelValue="props.modelValue" 
+            @update:modelValue="updateModelValue" 
+            @fieldAction="handleFieldAction" />
         <div v-else class="text-sm text-destructive bg-destructive/10 p-2 rounded">
             [Gatekeeper] Componente de campo não encontrado para o tipo: {{ field.type }}
         </div>

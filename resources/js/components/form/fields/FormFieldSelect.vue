@@ -33,9 +33,7 @@ watch(model, (newValue) => {
         <SelectTrigger :id="props.id" class="w-full" v-bind="props.inputProps">
             <SelectValue :placeholder="placeholder" />
         </SelectTrigger>
-        <SelectContent>
-            <!-- Empty/Placeholder option if needed (useful if not required) -->
-            <!-- <SelectItem v-if="!props.field.required && Object.keys(options).length > 0" :value="null">{{ placeholder }}</SelectItem> -->
+        <SelectContent> 
             
             <SelectItem
                 v-for="(label, value) in options"

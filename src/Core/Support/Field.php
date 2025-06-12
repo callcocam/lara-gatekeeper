@@ -27,6 +27,14 @@ class Field
     public ?string $labelAttribute = null; // For related fields
     public ?string $valueAttribute = null; // For related fields
     public mixed $default = null; // For tags
+    public ?bool $searchable = false; // For SmartSelect
+    // SmartSelect properties
+    public ?string $apiUrl = null; // For API-based options
+    public ?string $displayTemplate = null; // For custom display templates
+    public ?array $withActions = null; // For conditional actions
+    public ?string $templatesApiUrl = null; // For WorkflowStepCalculator
+    public ?int $stepOrder = null; // For WorkflowStepCalculator
+    public ?array $previousStepData = null; // For WorkflowStepCalculator
     
     protected function __construct(string $key, string $label)
     {
@@ -86,6 +94,51 @@ class Field
     public function placeholder(string $placeholder): self
     {
         $this->inputProps['placeholder'] = $placeholder;
+        return $this;
+    }
+
+    public function searchable(bool $searchable = true): self
+    {
+        $this->searchable = $searchable;
+        $this->inputProps['searchable'] = $searchable;
+        return $this;
+    }
+
+    // SmartSelect methods
+    public function apiUrl(string $url): self
+    {
+        $this->apiUrl = $url;
+        return $this;
+    }
+
+    public function displayTemplate(string $template): self
+    {
+        $this->displayTemplate = $template;
+        return $this;
+    }
+
+    public function withActions(array $actions): self
+    {
+        $this->withActions = $actions;
+        return $this;
+    }
+
+    // WorkflowStepCalculator methods
+    public function templatesApiUrl(string $url): self
+    {
+        $this->templatesApiUrl = $url;
+        return $this;
+    }
+
+    public function stepOrder(int $order): self
+    {
+        $this->stepOrder = $order;
+        return $this;
+    }
+
+    public function previousStepData(array $data): self
+    {
+        $this->previousStepData = $data;
         return $this;
     }
 
@@ -168,7 +221,16 @@ class Field
             'label' => $this->label,
             'type' => $this->type,
             'required' => $this->required,
+            'searchable' => $this->searchable,
         ];
+
+        // WorkflowStepCalculator properties
+        if ($this->templatesApiUrl !== null) {
+            $data['templatesApiUrl'] = $this->templatesApiUrl;
+        }
+        if ($this->stepOrder !== null) {
+            $data['stepOrder'] = $this->stepOrder;
+        }
 
         if ($this->apiEndpoint !== null) {
             $data['apiEndpoint'] = $this->apiEndpoint;
@@ -196,6 +258,17 @@ class Field
             $data['relationship'] = $this->relationship;
             $data['labelAttribute'] = $this->labelAttribute;
             $data['valueAttribute'] = $this->valueAttribute;
+         }
+
+         // SmartSelect properties
+         if ($this->apiUrl !== null) {
+             $data['apiUrl'] = $this->apiUrl;
+         }
+         if ($this->displayTemplate !== null) {
+             $data['displayTemplate'] = $this->displayTemplate;
+         }
+         if ($this->withActions !== null) {
+             $data['withActions'] = $this->withActions;
          }
 
         // Condition is resolved server-side, not passed to frontend

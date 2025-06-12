@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import FormFieldWrapper from '../FormFieldWrapper.vue' 
 import { Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-vue-next'
 import type { FieldConfig } from '../DynamicForm.vue'
+import { Button } from '@/components/ui/button'
 
 // Define props seguindo o padrão dos outros campos
 const props = defineProps<{
@@ -178,10 +179,153 @@ const getItemTitle = (item: any, index: number) => {
     return `Item ${index + 1}`;
 };
 
+// Função para enriquecer campos com contexto do workflow
+const enrichFieldWithWorkflowContext = (subField: any, itemIndex: number) => {
+    // Se não é um workflowStepCalculator, retorna o campo original
+    if (subField.type !== 'workflowStepCalculator') {
+        return subField;
+    }
+    
+    // Para workflowStepCalculator, adiciona contexto dinâmico
+    const enrichedField = { ...subField };
+    
+    // Define a ordem da etapa (1-based)
+    enrichedField.stepOrder = itemIndex + 1;
+    
+    // Define os dados da etapa anterior (se existir)
+    if (itemIndex > 0) {
+        const previousItem = currentValue.value[itemIndex - 1];
+        if (previousItem && previousItem[subField.name]) {
+            enrichedField.previousStepData = previousItem[subField.name];
+        } else {
+            enrichedField.previousStepData = null;
+        }
+    } else {
+        enrichedField.previousStepData = null;
+    }
+    
+    console.log(`[Gatekeeper/Repeater:${props.field.name}] Enriching workflow field [${itemIndex}]:`, {
+        stepOrder: enrichedField.stepOrder,
+        previousStepData: enrichedField.previousStepData
+    });
+    
+    return enrichedField;
+};
+
+// Computed para verificar se é um repeater de workflow
+const isWorkflowRepeater = computed(() => {
+    return props.field.subFields?.some(subField => subField.type === 'workflowStepCalculator');
+});
+
+// Computed para resumo das etapas do workflow
+const workflowSummary = computed(() => {
+    if (!isWorkflowRepeater.value) return null;
+    
+    const steps = currentValue.value.map((item, index) => {
+        const stepData = item[props.field.subFields?.[0]?.name];
+        return {
+            order: index + 1,
+            hasTemplate: stepData?.template_id ? true : false,
+            hasExpectedDate: stepData?.expected_date ? true : false,
+            hasCompletedDate: stepData?.completed_date ? true : false,
+            templateName: stepData?.template_name || null
+        };
+    });
+    
+    const totalSteps = steps.length;
+    const configuredSteps = steps.filter(step => step.hasTemplate).length;
+    const stepsWithDates = steps.filter(step => step.hasExpectedDate).length;
+    
+    return {
+        totalSteps,
+        configuredSteps,
+        stepsWithDates,
+        steps
+    };
+});
+
 </script>
 
 <template>
     <div class="space-y-4">
+        <!-- Timeline Header - Resumo Elegante do Workflow -->
+        <div v-if="isWorkflowRepeater && workflowSummary && workflowSummary.totalSteps > 0" 
+            class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 shadow-sm">
+            
+            <!-- Cabeçalho do Timeline -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Timeline do Workflow</h3>
+                        <p class="text-sm text-gray-600">Acompanhe o progresso das etapas</p>
+                    </div>
+                </div>
+                
+                <!-- Progress Ring -->
+                <div class="relative w-16 h-16">
+                    <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="4" fill="none" class="text-gray-200" />
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="4" fill="none" 
+                            class="text-blue-500" 
+                            :stroke-dasharray="`${(workflowSummary.configuredSteps / workflowSummary.totalSteps) * 175.93} 175.93`" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold text-gray-700">
+                            {{ Math.round((workflowSummary.configuredSteps / workflowSummary.totalSteps) * 100) }}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estatísticas -->
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="bg-white rounded-lg p-3 text-center shadow-sm border border-blue-100">
+                    <div class="text-2xl font-bold text-blue-600">{{ workflowSummary.totalSteps }}</div>
+                    <div class="text-xs text-gray-600 font-medium">Etapas Criadas</div>
+                </div>
+                <div class="bg-white rounded-lg p-3 text-center shadow-sm border border-green-100">
+                    <div class="text-2xl font-bold text-green-600">{{ workflowSummary.configuredSteps }}</div>
+                    <div class="text-xs text-gray-600 font-medium">Configuradas</div>
+                </div>
+                <div class="bg-white rounded-lg p-3 text-center shadow-sm border border-purple-100">
+                    <div class="text-2xl font-bold text-purple-600">{{ workflowSummary.stepsWithDates }}</div>
+                    <div class="text-xs text-gray-600 font-medium">Com Datas</div>
+                </div>
+            </div>
+            
+            <!-- Timeline Visual das Etapas -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2">
+                <div v-for="(step, index) in workflowSummary.steps" :key="step.order" class="flex items-center">
+                    <!-- Círculo da etapa -->
+                    <div class="flex flex-col items-center">
+                        <div :class="[
+                            'w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all',
+                            step.hasTemplate 
+                                ? 'bg-green-500 border-green-500 text-white shadow-lg' 
+                                : 'bg-white border-gray-300 text-gray-400'
+                        ]">
+                            <span v-if="step.hasTemplate">✓</span>
+                            <span v-else>{{ step.order }}</span>
+                        </div>
+                        <span class="text-xs text-gray-600 mt-1 font-medium">{{ step.order }}</span>
+                    </div>
+                    
+                    <!-- Linha conectora -->
+                    <div v-if="index < workflowSummary.steps.length - 1" 
+                        :class="[
+                            'w-8 h-0.5 mx-1',
+                            step.hasTemplate ? 'bg-green-300' : 'bg-gray-300'
+                        ]">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Items existentes -->
         <div v-for="(item, index) in currentValue" :key="`item-${index}`"
             class="border rounded-md bg-background shadow-sm">
@@ -230,7 +374,7 @@ const getItemTitle = (item: any, index: number) => {
                 <!-- Campos do item -->
             <div class="grid grid-cols-12 gap-x-4 gap-y-2 items-start">
                     <FormFieldWrapper v-for="subField in field.subFields" :key="`${index}-${subField.name}`"
-                        :field="subField" :model-value="getFieldValue(index, subField.name)"
+                        :field="enrichFieldWithWorkflowContext(subField, index)" :model-value="getFieldValue(index, subField.name)"
                         @update:model-value="handleFieldUpdate(index, subField.name, $event)" :class="[
                         'col-span-12',
                         subField.colSpan ? `md:col-span-${subField.colSpan}` : 'md:col-span-12'
