@@ -32,7 +32,7 @@ class Field
     public ?string $apiUrl = null; // For API-based options
     public ?string $displayTemplate = null; // For custom display templates
     public ?array $withActions = null; // For conditional actions
-    public ?string $templatesApiUrl = null; // For WorkflowStepCalculator
+    public ?array $templatesApiUrl = null; // For WorkflowStepCalculator
     public ?int $stepOrder = null; // For WorkflowStepCalculator
     public ?array $previousStepData = null; // For WorkflowStepCalculator
     
@@ -124,21 +124,21 @@ class Field
     }
 
     // WorkflowStepCalculator methods
-    public function templatesApiUrl(string $url): self
+    public function templatesApiUrl(array $urls): self
     {
-        $this->templatesApiUrl = $url;
+        $this->templatesApiUrl = $urls;
         return $this;
     }
 
     public function stepOrder(int $order): self
     {
-        $this->stepOrder = $order;
+        $this->inputProps['stepOrder'] = $order;
         return $this;
     }
 
     public function previousStepData(array $data): self
     {
-        $this->previousStepData = $data;
+        $this->inputProps['previousStepData'] = $data;
         return $this;
     }
 

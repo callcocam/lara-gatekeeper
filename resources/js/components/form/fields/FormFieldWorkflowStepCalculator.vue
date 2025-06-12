@@ -4,7 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, ArrowRight, Info, Plus, Trash2 } from 'lucide-vue-next'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar, Clock, ArrowRight, Info, Plus, Trash2, User, ChevronDown, Check } from 'lucide-vue-next'
 
 interface WorkflowTemplate {
     id: number;
@@ -17,8 +18,16 @@ interface WorkflowTemplate {
     suggested_order?: number;
 }
 
+interface User {
+    id: number;
+    name: string;
+    email?: string;
+    avatar?: string;
+}
+
 interface StepData {
     template_id: number | null;
+    responsible_user_id: number | null;
     expected_date: string | null;
     completed_date: string | null;
     estimated_duration_days: number;
@@ -36,7 +45,10 @@ const props = defineProps<{
         required?: boolean;
         placeholder?: string;
         // Configurações específicas do workflow
-        templatesApiUrl?: string;
+        templatesApiUrl?: string | {
+            templates: string;
+            responsible_users: string;
+        };
         minSteps?: number;
         maxSteps?: number;
         addButtonLabel?: string;
@@ -72,7 +84,11 @@ const stepsData = computed({
 
 // Estados internos
 const loading = ref(false)
+const loadingUsers = ref(false)
 const templates = ref<WorkflowTemplate[]>([])
+const users = ref<User[]>([])
+const openPopovers = ref<Record<number, boolean>>({})
+const userSearchQuery = ref<Record<number, string>>({})
 
 // Computed para resumo do workflow
 const workflowSummary = computed(() => {
@@ -178,7 +194,11 @@ const loadTemplates = async () => {
 
     loading.value = true
     try {
-        const response = await fetch(props.field.templatesApiUrl, {
+        const templatesUrl = typeof props.field.templatesApiUrl === 'object'
+            ? props.field.templatesApiUrl.templates
+            : props.field.templatesApiUrl
+
+        const response = await fetch(templatesUrl, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -196,6 +216,94 @@ const loadTemplates = async () => {
     } finally {
         loading.value = false
     }
+}
+
+// Carregar usuários via API
+const loadUsers = async () => {
+    if (!props.field.templatesApiUrl || typeof props.field.templatesApiUrl !== 'object') {
+        console.warn('[WorkflowStepCalculator] No users API URL provided')
+        return
+    }
+
+    loadingUsers.value = true
+    try {
+        const response = await fetch(props.field.templatesApiUrl.responsible_users, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+
+        if (!response.ok) throw new Error('Erro ao carregar usuários')
+
+        const data = await response.json()
+        users.value = data.data || data || []
+
+    } catch (error) {
+        console.error('[WorkflowStepCalculator] Users API Error:', error)
+        users.value = []
+    } finally {
+        loadingUsers.value = false
+    }
+}
+
+// Função para obter usuário por ID
+const getUser = (userId: number | null): User | null => {
+    if (!userId) return null
+    return users.value.find(u => u.id === userId) || null
+}
+
+// Computed para filtrar usuários baseado na busca
+const getFilteredUsers = (stepIndex: number) => {
+    const query = userSearchQuery.value[stepIndex]?.toLowerCase() || ''
+    if (!query) return users.value
+
+    return users.value.filter(user =>
+        user.name.toLowerCase().includes(query) ||
+        (user.email && user.email.toLowerCase().includes(query))
+    )
+}
+
+// Função para alternar popover
+const togglePopover = (stepIndex: number) => {
+    openPopovers.value = {
+        ...openPopovers.value,
+        [stepIndex]: !openPopovers.value[stepIndex]
+    }
+
+    // Carregar usuários se ainda não foram carregados
+    if (!users.value.length && !loadingUsers.value) {
+        loadUsers()
+    }
+}
+
+// Função para fechar popover
+const closePopover = (stepIndex: number) => {
+    openPopovers.value = {
+        ...openPopovers.value,
+        [stepIndex]: false
+    }
+    // Limpar busca ao fechar
+    userSearchQuery.value = {
+        ...userSearchQuery.value,
+        [stepIndex]: ''
+    }
+}
+
+// Função para selecionar usuário
+const selectUser = (stepIndex: number, userId: number) => {
+    const updatedSteps = [...stepsData.value]
+    updatedSteps[stepIndex].responsible_user_id = userId
+    stepsData.value = updatedSteps
+    closePopover(stepIndex)
+}
+
+// Função para limpar usuário responsável
+const clearUser = (stepIndex: number) => {
+    const updatedSteps = [...stepsData.value]
+    updatedSteps[stepIndex].responsible_user_id = null
+    stepsData.value = updatedSteps
+    closePopover(stepIndex)
 }
 
 // Calcular data de conclusão baseada na data esperada e duração
@@ -218,10 +326,17 @@ const addStep = () => {
 
     const newStep: StepData = {
         template_id: null,
+        responsible_user_id: null,
         expected_date: null,
         completed_date: null,
         estimated_duration_days: 0,
         step_order: stepsData.value.length + 1
+    }
+
+    // Garantir que o novo índice não tenha valor no selectValues
+    const newIndex = stepsData.value.length
+    if (selectValues.value[newIndex]) {
+        delete selectValues.value[newIndex]
     }
 
     stepsData.value = [...stepsData.value, newStep]
@@ -236,6 +351,24 @@ const removeStep = (index: number) => {
     newSteps.forEach((step, i) => {
         step.step_order = i + 1
     })
+
+    // Limpar e reindexar selectValues
+    const newSelectValues: Record<number, string> = {}
+    newSteps.forEach((step, i) => {
+        if (step.template_id) {
+            newSelectValues[i] = step.template_id.toString()
+        }
+    })
+    selectValues.value = newSelectValues
+
+    // Limpar popovers abertos para índices que não existem mais
+    const newOpenPopovers: Record<number, boolean> = {}
+    newSteps.forEach((_, i) => {
+        if (openPopovers.value[i]) {
+            newOpenPopovers[i] = openPopovers.value[i]
+        }
+    })
+    openPopovers.value = newOpenPopovers
 
     stepsData.value = newSteps
 }
@@ -385,6 +518,10 @@ const formatDate = (dateString: string | null | any): string => {
 onMounted(() => {
     if (props.field.templatesApiUrl) {
         loadTemplates()
+        // Carregar usuários se a URL for um objeto com responsible_users
+        if (typeof props.field.templatesApiUrl === 'object') {
+            loadUsers()
+        }
     }
 
     // Inicializar com pelo menos uma etapa se estiver vazio
@@ -400,20 +537,39 @@ watch(() => stepsData.value, (newSteps) => {
         step.step_order = index + 1
     })
 
+    // Sincronizar selectValues quando stepsData muda
+    syncSelectValues()
 }, { deep: true })
 
-// Debug computed para verificar templates
-const debugInfo = computed(() => {
-    return {
-        stepsCount: stepsData.value.length,
-        templatesCount: templates.value.length,
-        steps: stepsData.value.map((step, index) => ({
-            index,
-            template_id: step.template_id,
-            template_name: getTemplate(step.template_id)?.name || 'Not found'
-        }))
-    }
+// Computed para verificar templates já utilizados
+const usedTemplateIds = computed(() => {
+    return stepsData.value
+        .map(step => step.template_id)
+        .filter(id => id !== null && id !== undefined)
 })
+
+// Função para verificar se um template já está sendo usado em outra etapa
+const isTemplateUsed = (templateId: string | number, currentStepIndex: number): boolean => {
+    return stepsData.value.some((step, index) => {
+        // Permitir que a etapa atual mantenha seu próprio template
+        if (index === currentStepIndex) return false
+        // Verificar se o template está sendo usado em outra etapa
+        return step.template_id?.toString() === templateId.toString()
+    })
+}
+
+// Função para sincronizar selectValues com stepsData
+const syncSelectValues = () => {
+    const newSelectValues: Record<number, string> = {}
+    stepsData.value.forEach((step, index) => {
+        if (step.template_id) {
+            newSelectValues[index] = step.template_id.toString()
+        }
+    })
+    selectValues.value = newSelectValues
+}
+
+
 
 
 
@@ -574,6 +730,13 @@ watch(() => stepsData.value, (newSteps) => {
                                 Auto
                             </Badge>
 
+                            <!-- Badge do usuário responsável -->
+                            <Badge v-if="step.responsible_user_id" variant="outline"
+                                class="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                                <User class="h-3 w-3 mr-1" />
+                                {{ getUser(step.responsible_user_id)?.name }}
+                            </Badge>
+
                             <!-- Botão de remover etapa -->
                             <Button v-if="canRemoveStep" variant="ghost" size="icon" @click="removeStep(stepIndex)"
                                 class="h-6 w-6 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
@@ -601,11 +764,11 @@ watch(() => stepsData.value, (newSteps) => {
                     <!-- Campos do workflow em grid elegante -->
                     <div v-if="step.template_id || selectValues[stepIndex]" class="grid grid-cols-12 gap-4">
                         <!-- Template da Etapa -->
-                        <div class="col-span-4 space-y-2">
+                        <div class="col-span-3 space-y-2">
                             <label class="text-sm font-medium text-gray-700">Template da Etapa</label>
                             <Select :key="`select-${stepIndex}-${selectValues[stepIndex] || 'empty'}`"
                                 v-model="createSelectModel(stepIndex).value" :disabled="loading">
-                                <!-- Debug: {{ step.template_id }} -->
+
                                 <SelectTrigger class="w-full border-gray-300 focus:border-blue-500 mt-1">
                                     <SelectValue placeholder="Selecione um template de etapa">
                                         <div v-if="getTemplate(step.template_id)" class="flex items-center gap-2">
@@ -624,15 +787,29 @@ watch(() => stepsData.value, (newSteps) => {
                                     </div>
 
                                     <SelectItem v-for="template in templates" :key="template.id"
-                                        :value="template.id.toString()">
-                                        <div class="flex items-center gap-2 w-full">
+                                        :value="template.id.toString()"
+                                        :disabled="isTemplateUsed(template.id, stepIndex)"
+                                        :title="isTemplateUsed(template.id, stepIndex) ? 'Este template já está sendo usado em outra etapa' : ''">
+                                        <div class="flex items-center gap-2 w-full"
+                                            :class="{ 'opacity-50 cursor-not-allowed': isTemplateUsed(template.id, stepIndex) }">
                                             <Badge v-if="template.color" :variant="template.color as any"
                                                 class="w-3 h-3 rounded-full p-0" />
                                             <div class="flex-1">
-                                                <div class="font-medium">{{ template.name }}</div>
-                                                <div class="text-xs text-muted-foreground">                                                    
+                                                <div class="font-medium flex items-center gap-2">
+                                                    {{ template.name }}
+                                                    <Badge v-if="isTemplateUsed(template.id, stepIndex)"
+                                                        variant="secondary"
+                                                        class="text-xs px-1 py-0 bg-red-100 text-red-700">
+                                                        Em uso
+                                                    </Badge>
+                                                </div>
+                                                <div class="text-xs text-muted-foreground">
                                                     {{ template.description }} • {{ template.estimated_duration_days
-                                                        }} dia(s) • {{ template.suggested_order }}ª etapa
+                                                    }} dia(s) • {{ template.suggested_order }}ª etapa
+                                                    <span v-if="isTemplateUsed(template.id, stepIndex)"
+                                                        class="text-red-500 font-medium">
+                                                        • Já utilizado
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -642,7 +819,7 @@ watch(() => stepsData.value, (newSteps) => {
                         </div>
 
                         <!-- Data Esperada -->
-                        <div class="col-span-3 space-y-2">
+                        <div class="col-span-2 space-y-2">
                             <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
                                 <Calendar class="h-4 w-4 text-blue-500" />
                                 Data Esperada
@@ -672,13 +849,109 @@ watch(() => stepsData.value, (newSteps) => {
                             </div>
                         </div>
 
+                        <!-- Usuário Responsável -->
+                        <div class="col-span-3 space-y-2">
+                            <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                <User class="h-4 w-4 text-purple-500" />
+                                <span> Responsável </span>
+                            </label>
+                            <div class="relative">
+                                <Popover :open="openPopovers[stepIndex]"
+                                    @update:open="(open: boolean) => openPopovers[stepIndex] = open">
+                                    <PopoverTrigger as-child>
+                                        <Button variant="outline" role="combobox"
+                                            :aria-expanded="openPopovers[stepIndex]"
+                                            class="w-full justify-between border-gray-300 focus:border-purple-500"
+                                            @click="togglePopover(stepIndex)" type="button">
+                                            <div v-if="getUser(step.responsible_user_id)"
+                                                class="flex items-center gap-2 truncate">
+                                                <div
+                                                    class="w-5 h-5 bg-purple-100 rounded-full flex items-center justify-center">
+                                                    <User class="h-3 w-3 text-purple-600" />
+                                                </div>
+                                                <span class="text-sm truncate w-full">{{
+                                                    getUser(step.responsible_user_id)?.name }}</span>
+                                            </div>
+                                            <div v-else class="flex items-center gap-2 text-gray-500">
+                                                <div
+                                                    class="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
+                                                    <User class="h-3 w-3 text-gray-400" />
+                                                </div>
+                                                <span class="text-sm truncate w-full">Selecionar usuário</span>
+                                            </div>
+                                            <ChevronDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent class="w-80 p-0">
+                                        <div class="p-3">
+                                            <!-- Campo de busca -->
+                                            <div class="mb-3">
+                                                <Input v-model="userSearchQuery[stepIndex]"
+                                                    placeholder="Buscar usuário..." class="h-8 text-sm" />
+                                            </div>
+
+                                            <div v-if="loadingUsers" class="flex items-center justify-center py-4">
+                                                <div
+                                                    class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500">
+                                                </div>
+                                                <span class="ml-2 text-sm text-gray-600">Carregando usuários...</span>
+                                            </div>
+                                            <div v-else-if="users.length === 0"
+                                                class="py-4 text-center text-sm text-gray-500">
+                                                Nenhum usuário encontrado
+                                            </div>
+                                            <div v-else-if="getFilteredUsers(stepIndex).length === 0"
+                                                class="py-4 text-center text-sm text-gray-500">
+                                                Nenhum usuário encontrado para "{{ userSearchQuery[stepIndex] }}"
+                                            </div>
+                                            <div v-else class="max-h-48 overflow-y-auto space-y-1">
+                                                <!-- Opção para limpar seleção -->
+                                                <div v-if="step.responsible_user_id" @click="clearUser(stepIndex)"
+                                                    class="flex items-center gap-2 p-2 rounded-md hover:bg-red-50 cursor-pointer transition-colors border-b border-gray-100 mb-2">
+                                                    <div
+                                                        class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                                                        <Trash2 class="h-3 w-3 text-red-600" />
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <div class="text-sm font-medium text-red-700">Remover
+                                                            responsável</div>
+                                                        <div class="text-xs text-red-500">Limpar seleção atual</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Lista de usuários -->
+                                                <div v-for="user in getFilteredUsers(stepIndex)" :key="user.id"
+                                                    @click="selectUser(stepIndex, user.id)"
+                                                    class="flex items-center gap-2 p-2 rounded-md hover:bg-purple-50 cursor-pointer transition-colors"
+                                                    :class="{ 'bg-purple-100': step.responsible_user_id === user.id }">
+                                                    <div
+                                                        class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                                                        <User class="h-3 w-3 text-purple-600" />
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="text-sm font-medium text-gray-900 truncate">{{
+                                                            user.name }}</div>
+                                                        <div v-if="user.email" class="text-xs text-gray-500 truncate">{{
+                                                            user.email }}</div>
+                                                    </div>
+                                                    <Check v-if="step.responsible_user_id === user.id"
+                                                        class="h-4 w-4 text-purple-600" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+
 
 
                         <!-- Data de Conclusão Calculada -->
-                        <div v-if="step.completed_date" class="col-span-3 space-y-2">
-                            <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <div v-if="step.completed_date" class="col-span-2 space-y-2">
+                            <label class="text-sm font-medium text-gray-700 flex items-center gap-2"
+                                title="Data de conclusão calculada">
                                 <Calendar class="h-4 w-4 text-green-500" />
-                                Conclusão Prevista
+                                Conclusão
                             </label>
                             <div
                                 class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-2 rounded-lg">
@@ -717,15 +990,29 @@ watch(() => stepsData.value, (newSteps) => {
                                         </div>
 
                                         <SelectItem v-for="template in templates" :key="template.id"
-                                            :value="template.id.toString()">
-                                            <div class="flex items-center gap-2 w-full">
+                                            :value="template.id.toString()"
+                                            :disabled="isTemplateUsed(template.id, stepIndex)"
+                                            :title="isTemplateUsed(template.id, stepIndex) ? 'Este template já está sendo usado em outra etapa' : ''">
+                                            <div class="flex items-center gap-2 w-full"
+                                                :class="{ 'opacity-50 cursor-not-allowed': isTemplateUsed(template.id, stepIndex) }">
                                                 <Badge v-if="template.color" :variant="template.color as any"
                                                     class="w-3 h-3 rounded-full p-0" />
                                                 <div class="flex-1">
-                                                    <div class="font-medium">{{ template.name }}</div>
+                                                    <div class="font-medium flex items-center gap-2">
+                                                        {{ template.name }}
+                                                        <Badge v-if="isTemplateUsed(template.id, stepIndex)"
+                                                            variant="secondary"
+                                                            class="text-xs px-1 py-0 bg-red-100 text-red-700">
+                                                            Em uso
+                                                        </Badge>
+                                                    </div>
                                                     <div class="text-xs text-muted-foreground">
                                                         {{ template.description }} • {{ template.estimated_duration_days
                                                         }} dia(s) • {{ template.suggested_order }}ª etapa
+                                                        <span v-if="isTemplateUsed(template.id, stepIndex)"
+                                                            class="text-red-500 font-medium">
+                                                            • Já utilizado
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
