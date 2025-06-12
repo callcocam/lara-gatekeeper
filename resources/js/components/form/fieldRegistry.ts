@@ -41,7 +41,7 @@ export const defaultFieldComponents = {
     checkbox: FormFieldCheckbox,
     tags: FormFieldTags,
     smartSelect: FormFieldSmartSelect,
-    workflowStepCalculator: FormFieldWorkflowStepCalculator,
+    // workflowStepCalculator: FormFieldWorkflowStepCalculator,
     multiLevelSelect: FormFieldMultiLevelSelect,
     // avatarPreview: FormFieldAvatarPreview, // Remover mapeamento
     // Adicionar outros campos padrão aqui

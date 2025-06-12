@@ -268,6 +268,78 @@ const getUser = (userId: number | null): User | null => {
     return users.value.find(u => u.id === userId) || null
 }
 
+// Computed para garantir reatividade dos dados das etapas
+const reactiveStepsData = computed(() => {
+    return stepsData.value.map((step, index) => ({
+        ...step,
+        // Forçar reatividade dos campos que podem ser editados na modal
+        displayName: step.name || `Etapa ${index + 1}`,
+        hasCustomName: !!step.name,
+        statusDisplay: step.status || 'pending',
+        responsibleUser: getUser(step.responsible_user_id),
+        isRequired: step.is_required !== false, // default true
+        hasDescription: !!step.description,
+        hasNotes: !!step.notes
+    }))
+})
+
+// Computed para o valor do select de usuário na modal
+const modalUserSelectValue = computed({
+    get: () => {
+        const value = editingStepData.value?.responsible_user_id?.toString() || ''
+        console.log('[WorkflowStepCalculator] Modal user select get:', value)
+        return value
+    },
+    set: (value: string) => {
+        if (editingStepData.value) {
+            const numValue = value ? Number(value) : null
+            editingStepData.value.responsible_user_id = numValue
+            console.log('[WorkflowStepCalculator] Modal user select set:', numValue)
+        }
+    }
+})
+
+// Funções auxiliares para status
+const getStatusLabel = (status: string): string => {
+    const labels = {
+        'pending': 'Pendente',
+        'in_progress': 'Em Progresso',
+        'completed': 'Concluída',
+        'cancelled': 'Cancelada'
+    }
+    return labels[status as keyof typeof labels] || status
+}
+
+const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | null | undefined => {
+    const variants = {
+        'pending': 'outline' as const,
+        'in_progress': 'outline' as const,
+        'completed': 'outline' as const,
+        'cancelled': 'outline' as const
+    }
+    return variants[status as keyof typeof variants] || 'outline'
+}
+
+const getStatusClasses = (status: string): string => {
+    const classes = {
+        'pending': 'text-xs bg-gray-50 text-gray-700 border-gray-200',
+        'in_progress': 'text-xs bg-blue-50 text-blue-700 border-blue-200',
+        'completed': 'text-xs bg-green-50 text-green-700 border-green-200',
+        'cancelled': 'text-xs bg-red-50 text-red-700 border-red-200'
+    }
+    return classes[status as keyof typeof classes] || 'text-xs bg-gray-50 text-gray-700 border-gray-200'
+}
+
+const getStatusDotClasses = (status: string): string => {
+    const classes = {
+        'pending': 'bg-gray-400',
+        'in_progress': 'bg-blue-500',
+        'completed': 'bg-green-500',
+        'cancelled': 'bg-red-500'
+    }
+    return classes[status as keyof typeof classes] || 'bg-gray-400'
+}
+
 // Computed para filtrar usuários baseado na busca
 const getFilteredUsers = (stepIndex: number) => {
     const query = userSearchQuery.value[stepIndex]?.toLowerCase() || ''
@@ -322,10 +394,17 @@ const clearUser = (stepIndex: number) => {
 }
 
 // Funções da modal de edição
-const openEditModal = (stepIndex: number) => {
+const openEditModal = async (stepIndex: number) => {
     editingStepIndex.value = stepIndex
     const currentStep = stepsData.value[stepIndex]
-    
+
+    console.log('[WorkflowStepCalculator] Abrindo modal para etapa:', stepIndex, currentStep)
+
+    // Carregar usuários se ainda não foram carregados
+    if (!users.value.length && !loadingUsers.value) {
+        await loadUsers()
+    }
+
     // Criar cópia com valores padrão para campos opcionais
     editingStepData.value = {
         ...currentStep,
@@ -337,13 +416,14 @@ const openEditModal = (stepIndex: number) => {
         is_required: currentStep.is_required !== undefined ? currentStep.is_required : true,
         metadata: currentStep.metadata || {}
     }
-    
+
+    console.log('[WorkflowStepCalculator] Modal data set:', {
+        responsible_user_id: editingStepData.value.responsible_user_id,
+        user_found: getUser(editingStepData.value.responsible_user_id),
+        users_loaded: users.value.length
+    })
+
     editModalOpen.value = true
-    
-    // Carregar usuários se ainda não foram carregados
-    if (!users.value.length && !loadingUsers.value) {
-        loadUsers()
-    }
 }
 
 const closeEditModal = () => {
@@ -352,23 +432,31 @@ const closeEditModal = () => {
     editingStepData.value = null
 }
 
+// Função para forçar atualização da timeline
+const forceTimelineUpdate = () => {
+    // Forçar re-renderização criando uma nova referência
+    const currentSteps = [...stepsData.value]
+    stepsData.value = currentSteps
+    emit('update:modelValue', currentSteps)
+}
+
 const saveEditedStep = () => {
     if (editingStepIndex.value === null || !editingStepData.value) return
-    
+
     const stepIndex = editingStepIndex.value
     const editedData = editingStepData.value
-    
+
     // Validações básicas
     if (!editedData.template_id) {
         alert('Por favor, selecione um template para a etapa.')
         return
     }
-    
+
     if (!editedData.expected_date) {
         alert('Por favor, defina uma data esperada para a etapa.')
         return
     }
-    
+
     // Aplicar dados do template se foi alterado
     const template = getTemplate(editedData.template_id)
     if (template) {
@@ -376,50 +464,69 @@ const saveEditedStep = () => {
         if (!editedData.estimated_duration_days || editedData.estimated_duration_days === 0) {
             editedData.estimated_duration_days = Number(template.estimated_duration_days) || 1
         }
-        
+
         // Definir nome padrão se não foi personalizado
         if (!editedData.name) {
             editedData.name = template.name
         }
-        
+
         // Definir descrição padrão se não foi personalizada
         if (!editedData.description) {
             editedData.description = template.description
         }
-        
+
         // Definir status padrão se não foi definido
         if (!editedData.status) {
             editedData.status = 'pending'
         }
-        
+
         // Definir como obrigatória por padrão se não foi definido
         if (editedData.is_required === undefined) {
             editedData.is_required = true
         }
     }
-    
+
     // Calcular data de conclusão
     if (editedData.expected_date && editedData.estimated_duration_days) {
         editedData.completed_date = calculateCompletedDate(
-            editedData.expected_date, 
+            editedData.expected_date,
             editedData.estimated_duration_days
         )
     }
-    
-    // Atualizar etapa
+
+    // Atualizar etapa com reatividade forçada
     const updatedSteps = [...stepsData.value]
     updatedSteps[stepIndex] = { ...editedData }
+
+    // Forçar reatividade completa
     stepsData.value = updatedSteps
-    
+
+    // Emitir mudança para o componente pai
+    emit('update:modelValue', updatedSteps)
+
     // Atualizar selectValues para manter sincronização
     selectValues.value = {
         ...selectValues.value,
         [stepIndex]: editedData.template_id?.toString() || ''
     }
-    
-    // Recalcular etapas subsequentes se necessário
-    recalculateSubsequentSteps(stepIndex)
-    
+
+    // Usar nextTick para garantir que a UI seja atualizada antes de recalcular
+    nextTick(() => {
+        // Recalcular etapas subsequentes se necessário
+        recalculateSubsequentSteps(stepIndex)
+
+        // Forçar atualização da timeline
+        forceTimelineUpdate()
+
+        // Forçar atualização da UI
+        console.log('[WorkflowStepCalculator] Etapa salva e timeline atualizada:', {
+            stepIndex,
+            name: editedData.name,
+            status: editedData.status,
+            responsible_user_id: editedData.responsible_user_id
+        })
+    })
+
     closeEditModal()
 }
 
@@ -720,6 +827,30 @@ watch(() => stepsData.value, (newSteps) => {
         }
     })
 }, { deep: true, immediate: true })
+
+// Watcher específico para forçar reatividade dos campos novos
+watch(() => stepsData.value.map(step => ({
+    name: step.name,
+    status: step.status,
+    responsible_user_id: step.responsible_user_id,
+    is_required: step.is_required,
+    description: step.description,
+    notes: step.notes
+})), (newValues, oldValues) => {
+    // Log para debug
+    console.log('[WorkflowStepCalculator] Campos atualizados detectados:', newValues)
+}, { deep: true })
+
+// Watcher para debug da modal
+watch(() => editingStepData.value, (newData) => {
+    if (newData) {
+        console.log('[WorkflowStepCalculator] Modal data updated:', {
+            responsible_user_id: newData.responsible_user_id,
+            name: newData.name,
+            status: newData.status
+        })
+    }
+}, { deep: true })
 </script>
 
 <template>
@@ -728,19 +859,19 @@ watch(() => stepsData.value, (newSteps) => {
         <div v-if="workflowSummary.totalSteps > 0"
             class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 shadow-sm">
 
-            <!-- Cabeçalho do Timeline -->
-            <div class="flex items-center justify-between mb-4">
+            <!-- Cabeçalho do Timeline - Responsivo -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
                             </path>
                         </svg>
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <h3 class="text-lg font-semibold text-gray-900">Timeline do Workflow</h3>
-                        <p class="text-sm text-gray-600">Acompanhe o progresso das etapas</p>
+                        <p class="text-sm text-gray-600 hidden sm:block">Acompanhe o progresso das etapas</p>
                     </div>
                 </div>
 
@@ -761,8 +892,8 @@ watch(() => stepsData.value, (newSteps) => {
                 </div>
             </div>
 
-            <!-- Estatísticas -->
-            <div class="grid grid-cols-3 gap-4 mb-4">
+            <!-- Estatísticas - Responsivo -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div class="bg-white rounded-lg p-3 text-center shadow-sm border border-blue-100">
                     <div class="text-2xl font-bold text-blue-600">{{ workflowSummary.totalSteps }}</div>
                     <div class="text-xs text-gray-600 font-medium">Etapas Criadas</div>
@@ -805,7 +936,8 @@ watch(() => stepsData.value, (newSteps) => {
         </div>
 
         <!-- Etapas do Workflow -->
-        <div v-for="(step, stepIndex) in stepsData" :key="`step-${stepIndex}`" class="relative">
+        <div v-for="(step, stepIndex) in stepsData"
+            :key="`step-${stepIndex}-${step.name}-${step.status}-${step.responsible_user_id}`" class="relative">
             <!-- Timeline connector (linha vertical) -->
             <div v-if="!isFirstStep(stepIndex)"
                 class="absolute -top-4 left-6 w-0.5 h-4 bg-gradient-to-b from-blue-300 to-blue-500"></div>
@@ -830,15 +962,18 @@ watch(() => stepsData.value, (newSteps) => {
                 <div class="p-4 pl-8">
                     <!-- Cabeçalho da etapa -->
                     <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-3">
-                            <h3 class="font-semibold text-gray-900">
-                                Etapa {{ stepIndex + 1 }}
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 truncate">
+                                {{ step.name || `Etapa ${stepIndex + 1}` }}
                             </h3>
-                            <div v-if="getTemplate(step.template_id)" class="flex items-center gap-2">
+                            <div v-if="getTemplate(step.template_id)" class="flex items-center gap-2 flex-shrink-0">
                                 <Badge v-if="getTemplate(step.template_id)?.color"
                                     :variant="getTemplate(step.template_id)?.color as any"
                                     class="w-2 h-2 rounded-full p-0" />
-                                <span class="text-sm text-gray-600">{{ getTemplate(step.template_id)?.name }}</span>
+                                <span class="text-sm text-gray-600 hidden sm:inline">{{
+                                    getTemplate(step.template_id)?.name }}</span>
+                                <span class="text-sm text-gray-600 sm:hidden">{{
+                                    getTemplate(step.template_id)?.name?.substring(0, 10) }}...</span>
                             </div>
                         </div>
 
@@ -854,19 +989,42 @@ watch(() => stepsData.value, (newSteps) => {
                                 Auto
                             </Badge>
 
-                            <!-- Badge do usuário responsável -->
-                            <Badge v-if="step.responsible_user_id" variant="outline"
-                                class="text-xs bg-purple-50 text-purple-700 border-purple-200">
-                                <User class="h-3 w-3 mr-1" />
-                                {{ getUser(step.responsible_user_id)?.name }}
-                            </Badge>
-                                                         <!-- Botão de editar etapa -->
-                             <Button variant="ghost" size="icon" title="Editar etapa"
-                                 class="h-6 w-6 text-muted-foreground hover:bg-blue-50 hover:text-blue-700"
-                                 :aria-label="`Editar etapa ${stepIndex + 1}`" type="button"
-                                 @click="openEditModal(stepIndex)">
-                                 <Pencil class="h-4 w-4" />
-                             </Button>
+                            <!-- Badges informativos - Responsivo -->
+                            <div class="flex flex-wrap gap-1 items-center">
+                                <!-- Badge do usuário responsável -->
+                                <Badge v-if="step.responsible_user_id" variant="outline"
+                                    class="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                                    <User class="h-3 w-3 mr-1" />
+                                    <span class="hidden sm:inline">{{ getUser(step.responsible_user_id)?.name }}</span>
+                                    <span class="sm:hidden">{{ getUser(step.responsible_user_id)?.name?.split(' ')[0]
+                                        }}</span>
+                                </Badge>
+
+                                <!-- Badge de status -->
+                                <Badge v-if="step.status && step.status !== 'pending'"
+                                    :variant="getStatusVariant(step.status)" :class="getStatusClasses(step.status)">
+                                    <div :class="getStatusDotClasses(step.status)" class="w-2 h-2 rounded-full mr-1">
+                                    </div>
+                                    <span class="hidden sm:inline">{{ getStatusLabel(step.status) }}</span>
+                                    <span class="sm:hidden">{{ getStatusLabel(step.status).charAt(0) }}</span>
+                                </Badge>
+
+                                <!-- Badge de etapa obrigatória -->
+                                <Badge v-if="step.is_required" variant="outline"
+                                    class="text-xs bg-red-50 text-red-700 border-red-200">
+                                    <AlertCircle class="h-3 w-3 mr-1" />
+                                    <span class="hidden sm:inline">Obrigatória</span>
+                                    <span class="sm:hidden">!</span>
+                                </Badge>
+                            </div>
+
+                            <!-- Botão de editar etapa -->
+                            <Button variant="ghost" size="icon" title="Editar etapa"
+                                class="h-6 w-6 text-muted-foreground hover:bg-blue-50 hover:text-blue-700 flex-shrink-0"
+                                :aria-label="`Editar etapa ${stepIndex + 1}`" type="button"
+                                @click="openEditModal(stepIndex)">
+                                <Pencil class="h-4 w-4" />
+                            </Button>
                             <!-- Botão de remover etapa -->
                             <Button v-if="canRemoveStep" variant="ghost" size="icon" @click="removeStep(stepIndex)"
                                 class="h-6 w-6 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
@@ -892,9 +1050,10 @@ watch(() => stepsData.value, (newSteps) => {
 
 
                     <!-- Campos do workflow em grid elegante -->
-                    <div v-if="step.template_id || selectValues[stepIndex]" class="grid grid-cols-12 gap-4">
+                    <div v-if="step.template_id || selectValues[stepIndex]"
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
                         <!-- Template da Etapa -->
-                        <div class="col-span-3 space-y-2">
+                        <div class="sm:col-span-1 lg:col-span-3 space-y-2">
                             <label class="text-sm font-medium text-gray-700">Template da Etapa</label>
                             <Select :key="`select-${stepIndex}-${selectValues[stepIndex] || 'empty'}`"
                                 v-model="createSelectModel(stepIndex).value" :disabled="loading">
@@ -949,7 +1108,7 @@ watch(() => stepsData.value, (newSteps) => {
                         </div>
 
                         <!-- Data Esperada -->
-                        <div class="col-span-2 space-y-2">
+                        <div class="sm:col-span-1 lg:col-span-2 space-y-2">
                             <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
                                 <Calendar class="h-4 w-4 text-blue-500" />
                                 Data Esperada
@@ -965,7 +1124,7 @@ watch(() => stepsData.value, (newSteps) => {
                         </div>
 
                         <!-- Duração Estimada -->
-                        <div class="col-span-2 space-y-2">
+                        <div class="sm:col-span-1 lg:col-span-2 space-y-2">
                             <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
                                 <Clock class="h-4 w-4 text-orange-500" />
                                 Duração
@@ -980,7 +1139,7 @@ watch(() => stepsData.value, (newSteps) => {
                         </div>
 
                         <!-- Usuário Responsável -->
-                        <div class="col-span-3 space-y-2">
+                        <div class="sm:col-span-2 lg:col-span-3 space-y-2">
                             <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
                                 <User class="h-4 w-4 text-purple-500" />
                                 <span> Responsável </span>
@@ -1077,7 +1236,7 @@ watch(() => stepsData.value, (newSteps) => {
 
 
                         <!-- Data de Conclusão Calculada -->
-                        <div v-if="step.completed_date" class="col-span-2 space-y-2">
+                        <div v-if="step.completed_date" class="sm:col-span-2 lg:col-span-2 space-y-2">
                             <label class="text-sm font-medium text-gray-700 flex items-center gap-2"
                                 title="Data de conclusão calculada">
                                 <Calendar class="h-4 w-4 text-green-500" />
@@ -1192,7 +1351,9 @@ watch(() => stepsData.value, (newSteps) => {
                         <Calendar class="h-4 w-4 text-blue-500" />
                         Template da Etapa
                     </label>
-                                         <Select :model-value="editingStepData.template_id?.toString() || ''" @update:model-value="(value) => editingStepData!.template_id = value ? Number(value) : null" :disabled="loading">
+                    <Select :model-value="editingStepData.template_id?.toString() || ''"
+                        @update:model-value="(value) => editingStepData!.template_id = value ? Number(value) : null"
+                        :disabled="loading">
                         <SelectTrigger class="w-full border-gray-300 focus:border-blue-500">
                             <SelectValue placeholder="Selecione um template de etapa" />
                         </SelectTrigger>
@@ -1235,7 +1396,8 @@ watch(() => stepsData.value, (newSteps) => {
                         <div class="relative">
                             <Input type="number" min="1" v-model="editingStepData.estimated_duration_days"
                                 placeholder="Dias" class="w-full border-gray-300 focus:border-blue-500 pr-12" />
-                            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">dias</span>
+                            <span
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">dias</span>
                         </div>
                     </div>
                 </div>
@@ -1246,17 +1408,12 @@ watch(() => stepsData.value, (newSteps) => {
                         <User class="h-4 w-4 text-purple-500" />
                         Usuário Responsável
                     </label>
-                                         <Select :model-value="editingStepData.responsible_user_id?.toString() || 'null'" @update:model-value="(value) => editingStepData!.responsible_user_id = value === 'null' ? null : Number(value)">
+                    <Select :key="`user-select-${editingStepData.responsible_user_id || 'none'}`"
+                        v-model="modalUserSelectValue">
                         <SelectTrigger class="w-full border-gray-300 focus:border-purple-500">
                             <SelectValue placeholder="Selecionar usuário responsável" />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="null">
-                                <div class="flex items-center gap-2 text-gray-500">
-                                    <User class="h-4 w-4" />
-                                    Nenhum responsável
-                                </div>
-                            </SelectItem>
+                        <SelectContent> 
                             <SelectItem v-for="user in users" :key="user.id" :value="user.id.toString()">
                                 <div class="flex items-center gap-2">
                                     <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
@@ -1272,102 +1429,104 @@ watch(() => stepsData.value, (newSteps) => {
                     </Select>
                 </div>
 
-                                 <!-- Campos Adicionais -->
-                 <div class="grid grid-cols-2 gap-4">
-                     <!-- Nome da Etapa -->
-                     <div class="space-y-2">
-                         <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
-                             <FileText class="h-4 w-4 text-indigo-500" />
-                             Nome da Etapa
-                         </label>
-                         <Input v-model="editingStepData.name" placeholder="Nome personalizado da etapa"
-                             class="w-full border-gray-300 focus:border-indigo-500" />
-                     </div>
+                <!-- Campos Adicionais -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Nome da Etapa -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <FileText class="h-4 w-4 text-indigo-500" />
+                            Nome da Etapa
+                        </label>
+                        <Input :model-value="editingStepData.name || ''"
+                            @update:model-value="(value) => editingStepData!.name = value"
+                            placeholder="Nome personalizado da etapa"
+                            class="w-full border-gray-300 focus:border-indigo-500" />
+                    </div>
 
-                     <!-- Status -->
-                     <div class="space-y-2">
-                         <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
-                             <AlertCircle class="h-4 w-4 text-amber-500" />
-                             Status
-                         </label>
-                         <Select v-model="editingStepData.status">
-                             <SelectTrigger class="w-full border-gray-300 focus:border-amber-500">
-                                 <SelectValue placeholder="Selecionar status" />
-                             </SelectTrigger>
-                             <SelectContent>
-                                 <SelectItem value="pending">
-                                     <div class="flex items-center gap-2">
-                                         <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                         Pendente
-                                     </div>
-                                 </SelectItem>
-                                 <SelectItem value="in_progress">
-                                     <div class="flex items-center gap-2">
-                                         <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                         Em Progresso
-                                     </div>
-                                 </SelectItem>
-                                 <SelectItem value="completed">
-                                     <div class="flex items-center gap-2">
-                                         <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                         Concluída
-                                     </div>
-                                 </SelectItem>
-                                 <SelectItem value="cancelled">
-                                     <div class="flex items-center gap-2">
-                                         <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-                                         Cancelada
-                                     </div>
-                                 </SelectItem>
-                             </SelectContent>
-                         </Select>
-                     </div>
-                 </div>
+                    <!-- Status -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <AlertCircle class="h-4 w-4 text-amber-500" />
+                            Status
+                        </label>
+                        <Select :model-value="editingStepData.status || 'pending'"
+                            @update:model-value="(value) => editingStepData!.status = value as 'pending' | 'in_progress' | 'completed' | 'cancelled'">
+                            <SelectTrigger class="w-full border-gray-300 focus:border-amber-500">
+                                <SelectValue placeholder="Selecionar status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="pending">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                        Pendente
+                                    </div>
+                                </SelectItem>
+                                <SelectItem value="in_progress">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        Em Progresso
+                                    </div>
+                                </SelectItem>
+                                <SelectItem value="completed">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        Concluída
+                                    </div>
+                                </SelectItem>
+                                <SelectItem value="cancelled">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                                        Cancelada
+                                    </div>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
 
-                 <!-- Descrição -->
-                 <div class="space-y-2">
-                     <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
-                         <FileText class="h-4 w-4 text-slate-500" />
-                         Descrição
-                     </label>
-                     <Textarea v-model="editingStepData.description" 
-                         placeholder="Descrição detalhada da etapa..."
-                         class="w-full border-gray-300 focus:border-slate-500 min-h-[80px]" />
-                 </div>
+                <!-- Descrição -->
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <FileText class="h-4 w-4 text-slate-500" />
+                        Descrição
+                    </label>
+                    <Textarea v-model="editingStepData.description" placeholder="Descrição detalhada da etapa..."
+                        class="w-full border-gray-300 focus:border-slate-500 min-h-[80px]" />
+                </div>
 
-                 <!-- Observações -->
-                 <div class="space-y-2">
-                     <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
-                         <Info class="h-4 w-4 text-cyan-500" />
-                         Observações
-                     </label>
-                     <Textarea v-model="editingStepData.notes" 
-                         placeholder="Observações, comentários ou instruções especiais..."
-                         class="w-full border-gray-300 focus:border-cyan-500 min-h-[60px]" />
-                 </div>
+                <!-- Observações -->
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <Info class="h-4 w-4 text-cyan-500" />
+                        Observações
+                    </label>
+                    <Textarea v-model="editingStepData.notes"
+                        placeholder="Observações, comentários ou instruções especiais..."
+                        class="w-full border-gray-300 focus:border-cyan-500 min-h-[60px]" />
+                </div>
 
-                 <!-- Etapa Obrigatória -->
-                 <div class="flex items-center space-x-2">
-                     <Checkbox v-model:checked="editingStepData.is_required" id="is_required" />
-                     <label for="is_required" class="text-sm font-medium text-gray-700 flex items-center gap-2">
-                         <AlertCircle class="h-4 w-4 text-red-500" />
-                         Esta etapa é obrigatória
-                     </label>
-                 </div>
+                <!-- Etapa Obrigatória -->
+                <div class="flex items-center space-x-2">
+                    <Checkbox v-model:checked="editingStepData.is_required" id="is_required" />
+                    <label for="is_required" class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <AlertCircle class="h-4 w-4 text-red-500" />
+                        Esta etapa é obrigatória
+                    </label>
+                </div>
 
-                 <!-- Data de Conclusão (calculada) -->
-                 <div v-if="editingStepData.completed_date" class="space-y-2">
-                     <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
-                         <Calendar class="h-4 w-4 text-green-500" />
-                         Data de Conclusão Calculada
-                     </label>
-                     <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-3 rounded-lg">
-                         <div class="text-sm font-semibold text-green-800 flex items-center gap-2">
-                             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                             {{ formatDate(editingStepData.completed_date) }}
-                         </div>
-                     </div>
-                 </div>
+                <!-- Data de Conclusão (calculada) -->
+                <div v-if="editingStepData.completed_date" class="space-y-2">
+                    <label class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <Calendar class="h-4 w-4 text-green-500" />
+                        Data de Conclusão Calculada
+                    </label>
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-3 rounded-lg">
+                        <div class="text-sm font-semibold text-green-800 flex items-center gap-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            {{ formatDate(editingStepData.completed_date) }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Botões da Modal -->

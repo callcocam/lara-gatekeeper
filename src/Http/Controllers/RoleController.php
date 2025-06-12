@@ -115,7 +115,7 @@ class RoleController extends AbstractController
         $roleId = $model?->id;
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', $isUpdate ? Rule::unique('roles')->ignore($roleId) : Rule::unique('roles')],
+            'slug' => ['nullable', 'string', 'max:255', $isUpdate ? Rule::unique('roles')->ignore($roleId) : Rule::unique('roles')],
             'description' => ['nullable', 'string'],
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
@@ -136,6 +136,10 @@ class RoleController extends AbstractController
         $permissionIds = $validatedData['permissions'] ?? [];
 
         unset($validatedData['permissions']);
+
+        if (!$validatedData['slug']) {
+            $validatedData['slug'] = Str::slug($validatedData['name']);
+        }
 
         $role = $this->model::create($validatedData);
         if ($role && $permissionIds) {
