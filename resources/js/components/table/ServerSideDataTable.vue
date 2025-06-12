@@ -96,12 +96,7 @@ const initializeStateFromUrl = () => {
 
     const search = urlParams.get('search');
     internalSearchQuery.value = search || '';
-
-    console.log('[Gatekeeper/Table] Initial state from URL:', {
-        filters: columnFilters.value,
-        sorting: sorting.value,
-        search: internalSearchQuery.value
-    });
+ 
 };
 
 initializeStateFromUrl();
