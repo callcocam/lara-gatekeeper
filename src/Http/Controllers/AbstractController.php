@@ -142,17 +142,17 @@ abstract class AbstractController extends Controller
     abstract protected function getFilters(): array;
     abstract protected function getValidationRules(bool $isUpdate = false, ?Model $model = null): array;
     abstract protected function getSearchableColumns(): array;
-    protected function beforeStore(array $validatedData, Request $request): void
+    protected function beforeStore(array $validatedData, Request $request): array
     {
-        //
+        return $validatedData;
     }
     protected function afterStore(?Model $model, array $validatedData, Request $request): void
     {
         //
     }
-    protected function beforeUpdate(array $validatedData, Request $request): void
+    protected function beforeUpdate(array $validatedData, Request $request, ?Model $modelInstance = null): array
     {
-        //
+        return $validatedData;
     }
     protected function afterUpdate(?Model $model, array $validatedData, Request $request): void
     {
@@ -222,6 +222,11 @@ abstract class AbstractController extends Controller
     protected function getWithRelations(): array
     {
         return []; // Padrão: não carregar nenhum relacionamento
+    }
+
+    protected function getTableDefaultSortColumn(): ?string
+    {
+        return null;
     }
 
     protected function getDataToUpdate(array $validatedData, Model $modelInstance): array
@@ -351,11 +356,13 @@ abstract class AbstractController extends Controller
             }
         } else {
             // Tentar ordenar pela primeira coluna sortable ou created_at como padrão
-            $defaultSortColumn = null;
-            foreach ($tableColumns as $colDef) {
-                if ($colDef['sortable'] ?? false) {
-                    $defaultSortColumn = $colDef['accessorKey'] ?? $colDef['id'] ?? null;
-                    if ($defaultSortColumn) break;
+            $defaultSortColumn = $this->getTableDefaultSortColumn();
+            if (!$defaultSortColumn) {
+                foreach ($tableColumns as $colDef) {
+                    if ($colDef['sortable'] ?? false) {
+                        $defaultSortColumn = $colDef['accessorKey'] ?? $colDef['id'] ?? null;
+                        if ($defaultSortColumn) break;
+                    }
                 }
             }
             if ($defaultSortColumn) {
@@ -397,8 +404,14 @@ abstract class AbstractController extends Controller
                 'show_resource' => Gate::allows($this->getSidebarMenuPermission('show')),
                 'destroy_resource' => Gate::allows($this->getSidebarMenuPermission('destroy')),
             ],
+            'extraData' => $this->getExtraDataForIndex(),
             // Adicionar permissões (can) se necessário
         ]);
+    }
+
+    protected function getExtraDataForIndex(): array
+    {
+        return [];
     }
 
     public function create(): Response
@@ -414,13 +427,21 @@ abstract class AbstractController extends Controller
             'pageDescription' => $this->generatePageDescription('create'),
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('create'),
             'routeNameBase' => $this->getRouteNameBase(),
+            'extraData' => $this->getExtraDataForCreate(),
         ]);
+    }
+
+    protected function getExtraDataForCreate(): array
+    {
+        return [];
     }
 
     public function store(Request $request): RedirectResponse
     {
         $this->authorize($this->getSidebarMenuPermission('store'));
         $validatedData = $request->validate($this->getValidationRules());
+
+        // dd($validatedData);
 
         // Lógica para tratar senha, se existir
         if (isset($validatedData['password'])) {
@@ -431,8 +452,7 @@ abstract class AbstractController extends Controller
             $validatedData['user_id'] = $request->user()->id;
         }
 
-        $this->beforeStore($validatedData, $request);
-        $model = $this->model::create($validatedData);
+        $model = $this->model::create($this->beforeStore($validatedData, $request));
         $this->afterStore($model, $validatedData, $request);
         return redirect()->route($this->getRouteNameBase() . '.index')
             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' criado(a) com sucesso.');
@@ -451,6 +471,11 @@ abstract class AbstractController extends Controller
         ]);
     }
 
+    protected function getInitialValuesForCreate(Model $modelInstance, array $fields = []): array
+    {
+        return [];
+    }
+
     public function edit(string $id): Response
     {
         $this->authorize($this->getSidebarMenuPermission('edit'));
@@ -462,7 +487,6 @@ abstract class AbstractController extends Controller
 
         // Verificar se há campos de upload
 
-
         return Inertia::render($this->getViewEdit(), [
             'fields' => $fields,
             'initialValues' => $initialValues,
@@ -471,6 +495,7 @@ abstract class AbstractController extends Controller
             'pageDescription' => $this->generatePageDescription('edit', $modelInstance),
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('edit', $modelInstance),
             'routeNameBase' => $this->getRouteNameBase(),
+            'extraData' => $this->getExtraDataForEdit(),
         ]);
     }
 
@@ -502,6 +527,11 @@ abstract class AbstractController extends Controller
         return $options;
     }
 
+    protected function getExtraDataForEdit(): array
+    {
+        return [];
+    }
+
     public function update(Request $request, string $id): RedirectResponse
     {
         $this->authorize($this->getSidebarMenuPermission('update'));
@@ -513,8 +543,7 @@ abstract class AbstractController extends Controller
         } else {
             unset($validatedData['password']); // Remover senha se vazia para não sobrescrever
         }
-        $this->beforeUpdate( $validatedData, $request);
-        $modelInstance->update($validatedData);
+        $modelInstance->update($this->beforeUpdate($validatedData, $request, $modelInstance));
         $this->afterUpdate($modelInstance, $validatedData, $request);
 
         return redirect()->route($this->getRouteNameBase() . '.index')
