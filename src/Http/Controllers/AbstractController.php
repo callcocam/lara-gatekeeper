@@ -483,7 +483,7 @@ abstract class AbstractController extends Controller
         // Usar o método processFields
         $fields = $this->processFields($modelInstance);
         // Obter valores iniciais (lógica específica pode estar no controller filho)
-        $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields);
+        $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields); 
 
         // Verificar se há campos de upload
 

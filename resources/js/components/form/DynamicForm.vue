@@ -261,6 +261,7 @@ const handleCallback = (callbackName: string, value: any, option: any, sourceFie
                 /> 
             </div>
         </div>
+        <slot name="fields"></slot>
 
         <!-- O slot actions agora não precisa mais receber :submit -->
         <slot name="actions">

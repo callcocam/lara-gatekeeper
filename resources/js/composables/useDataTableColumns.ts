@@ -111,7 +111,7 @@ export function useDataTableColumns({
         console.log('[useDataTableColumns] Sort changed by external toggle:', currentSort.value);
     };
 
-    const tableColumns: ComputedRef<BackendColumnDef[]> = computed(() => {
+    const tableColumns: ComputedRef<BackendColumnDef[]> = computed(() => { 
         const processedColumns = backendColumns.value.map((col) => {
             const newCol = { ...col };
             const columnKey = newCol.accessorKey || newCol.id;
@@ -132,8 +132,7 @@ export function useDataTableColumns({
             // Processar coluna de ações (lógica mantida)
             if (newCol.id === 'actions') {
                 newCol.header = 'Ações';
-                newCol.cell = ({ row }) => {
-                    console.log(actions);
+                newCol.cell = ({ row }) => { 
                     const actionButtons = [] as any[];
                     // ].filter(button => button !== null) as any[];
 

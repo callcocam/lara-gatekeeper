@@ -35,7 +35,12 @@ class Field
     public ?array $templatesApiUrl = null; // For WorkflowStepCalculator
     public ?int $stepOrder = null; // For WorkflowStepCalculator
     public ?array $previousStepData = null; // For WorkflowStepCalculator
-    
+    public ?bool $hideLabel = false; // For hiding the label
+
+    public ?string $acceptedFileTypes = 'image/*';
+    public ?array $acceptedFormats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    public ?int $maxFileSize = 15;
+
     protected function __construct(string $key, string $label)
     {
         $this->key = $key;
@@ -74,6 +79,17 @@ class Field
     public function default(mixed $default): self
     {
         $this->default = $default;
+        return $this;
+    }
+
+    public function label(string $label): self
+    {
+        $this->label = $label;
+        return $this;
+    }
+    public function hideLabel(): self
+    {
+        $this->hideLabel = true;
         return $this;
     }
 
@@ -197,6 +213,18 @@ class Field
         return $this;
     }
 
+    public function maxFileSize(int $maxFileSize): self
+    {
+        $this->maxFileSize = $maxFileSize;
+        return $this;
+    }
+
+    public function acceptedFormats(array $acceptedFormats): self
+    {
+        $this->acceptedFormats = $acceptedFormats;
+        return $this;
+    }
+
     public function resolveRelationship($modelInstance, $labelAttribute = 'name', $valueAttribute = 'id'): self
     {
         if ($this->relationship) {
@@ -222,6 +250,7 @@ class Field
             'type' => $this->type,
             'required' => $this->required,
             'searchable' => $this->searchable,
+            'hideLabel' => $this->hideLabel,
         ];
 
         // WorkflowStepCalculator properties
@@ -269,6 +298,15 @@ class Field
          }
          if ($this->withActions !== null) {
              $data['withActions'] = $this->withActions;
+         }
+         if ($this->acceptedFileTypes !== null) {
+             $data['acceptedFileTypes'] = $this->acceptedFileTypes;
+         }
+         if ($this->maxFileSize !== null) {
+             $data['maxFileSize'] = $this->maxFileSize;
+         }
+         if ($this->acceptedFormats !== null) {
+             $data['acceptedFormats'] = $this->acceptedFormats;
          }
 
         // Condition is resolved server-side, not passed to frontend

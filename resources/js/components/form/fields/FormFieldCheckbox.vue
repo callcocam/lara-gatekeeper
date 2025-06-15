@@ -34,7 +34,7 @@ const modelValueForCheckbox = computed({
   <div :id="props.id" class="flex items-center gap-3 py-1">
     <Checkbox
       :id="props.id + '-checkbox'"
-      v-model:checked="modelValueForCheckbox"
+      v-model:modelValue="modelValueForCheckbox"
       :disabled="props.field.disabled"
       v-bind="props.inputProps"
     />

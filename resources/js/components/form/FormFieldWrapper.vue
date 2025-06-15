@@ -49,7 +49,7 @@ const handleFieldAction = (action: string, data: any) => {
 
 <template>
     <div class="space-y-2">
-        <Label v-if="props.field?.label" :for="fieldId" :class="cn(props.error && 'text-destructive')">
+        <Label v-if="!props.field?.hideLabel" :for="fieldId" :class="cn(props.error && 'text-destructive')">
             {{ field.label }}
             <span v-if="field.required" class="text-destructive"> *</span>
         </Label>
