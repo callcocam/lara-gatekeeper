@@ -43,12 +43,8 @@ class TenantController extends AbstractController
             Field::make('name', 'Nome do Inquilino')
                 ->type('text')
                 ->required()
-                ->colSpan(6),
-
-            Field::make('slug', 'Slug')
-                ->type('text')
-                ->required()
-                ->colSpan(6),
+                ->colSpan(12),
+ 
 
             Field::make('domain', 'Domínio')
                 ->type('text')
@@ -133,8 +129,7 @@ class TenantController extends AbstractController
     {
         $tenantId = $model?->id;
         $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', $isUpdate ? Rule::unique('tenants')->ignore($tenantId) : Rule::unique('tenants')],
+            'name' => ['required', 'string', 'max:255'], 
             'domain' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'string', 'email', 'max:255'],
             'description' => ['nullable', 'string'],
