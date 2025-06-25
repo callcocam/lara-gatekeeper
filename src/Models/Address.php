@@ -28,7 +28,10 @@ class Address extends Model
         'city',
         'state',
         'is_default',
-        'status'
+        'status',
+        'type',
+        'reference',
+        'additional_information'
     ];
     
     protected $casts = [
@@ -50,12 +53,12 @@ class Address extends Model
 
     public function scopePublished($query)
     {
-        return $query->where('status', AddressStatus::PUBLISHED);
+        return $query->where('status', AddressStatus::Published);
     }
 
     public function scopeDraft($query)
     {
-        return $query->where('status', AddressStatus::DRAFT);
+        return $query->where('status', AddressStatus::Draft);
     }
 
     // Mutators & Accessors
