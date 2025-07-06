@@ -30,6 +30,7 @@ class LaraGatekeeperServiceProvider extends PackageServiceProvider
         $package
             ->name('lara-gatekeeper')
             ->hasConfigFile()
+            ->hasConfigFile('routes')
             ->hasViews()
             ->hasMigrations(
                 'alter_users_table',
@@ -44,7 +45,7 @@ class LaraGatekeeperServiceProvider extends PackageServiceProvider
             ->hasCommand(LaraGatekeeperCommand::class)
             ->hasTranslations()
             ->hasAssets()
-            ->hasRoutes('web','api')
+            ->hasRoutes('web','api','landlord','tenant')
             ->hasCommand(LaraGatekeeperSetupCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
