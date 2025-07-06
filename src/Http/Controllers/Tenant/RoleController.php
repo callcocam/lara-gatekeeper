@@ -4,7 +4,7 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace Callcocam\LaraGatekeeper\Http\Controllers;
+namespace Callcocam\LaraGatekeeper\Http\Controllers\Tenant;
 
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;

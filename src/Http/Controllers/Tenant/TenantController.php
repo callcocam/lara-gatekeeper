@@ -4,7 +4,7 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace Callcocam\LaraGatekeeper\Http\Controllers;
+namespace Callcocam\LaraGatekeeper\Http\Controllers\Tenant;
 
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
@@ -202,9 +202,9 @@ class TenantController extends AbstractController
             }
             return redirect()->route($this->getRouteNameBase() . '.index')
                 ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
-        } else {
-            return redirect()->route($this->getRouteNameBase() . '.index')
-                ->with('error', 'Erro ao excluir ' . Str::singular($this->getResourceName()) . '.');
         }
+
+        return redirect()->route($this->getRouteNameBase() . '.index')
+            ->with('error', 'Erro ao excluir ' . Str::lower($this->getResourceName()) . '.');
     }
 } 
