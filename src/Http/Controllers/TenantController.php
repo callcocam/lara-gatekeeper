@@ -80,7 +80,7 @@ class TenantController extends AbstractController
                 ->hideable()
                 ->html()
                 ->cell(function (Tenant $row) {
-                    $url = $row->logo ? Storage::disk(config('filesystems.default'))->url($row->logo) : null;
+                    $url = $row->logo ? Storage::url($row->logo) : null;
                     return $url ? '<img src="' . $url . '" alt="Logo" class="h-8 w-8 rounded object-cover">' : '-';
                 }),
 
