@@ -36,7 +36,7 @@ class Field
     public ?int $stepOrder = null; // For WorkflowStepCalculator
     public ?array $previousStepData = null; // For WorkflowStepCalculator
     public ?bool $hideLabel = false; // For hiding the label
-
+    public ?array $fieldMappings = null; // For field mappings
     public ?string $acceptedFileTypes = 'image/*';
     public ?array $acceptedFormats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     public ?int $maxFileSize = 15;
@@ -90,6 +90,12 @@ class Field
     public function hideLabel(): self
     {
         $this->hideLabel = true;
+        return $this;
+    }
+
+    public function fieldMappings(array $mappings): self
+    {
+        $this->fieldMappings = $mappings;
         return $this;
     }
 
@@ -251,6 +257,7 @@ class Field
             'required' => $this->required,
             'searchable' => $this->searchable,
             'hideLabel' => $this->hideLabel,
+            'fieldMappings' => $this->fieldMappings,
         ];
 
         // WorkflowStepCalculator properties

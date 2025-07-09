@@ -18,7 +18,7 @@ const model = defineModel<string | number | null>()
 const modelValueForInput = computed({
   get: () => model.value ?? '',
   set: (value) => { 
-    console.log(`[Gatekeeper/Input:${props.field.name}] Setting value:`, value);
+    // console.log(`[Gatekeeper/Input:${props.field.name}] Setting value:`, value);
     model.value = value === '' ? null : value; 
   }
 });

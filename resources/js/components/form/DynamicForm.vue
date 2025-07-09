@@ -210,7 +210,7 @@ const handleLoadRelated = async (url: string, value: any, option: any, sourceFie
         if (!response.ok) throw new Error('Load related failed');
         
         const result = await response.json();
-        console.log(`[DynamicForm] Load related result:`, result);
+        // console.log(`[DynamicForm] Load related result:`, result);
         
         // Processar dados relacionados
         if (result.data && Array.isArray(result.data)) {
@@ -244,6 +244,13 @@ const handleCallback = (callbackName: string, value: any, option: any, sourceFie
     }
 };
 
+const handleFormValuesUpdate = (values: any) => {
+    console.log('[DynamicForm] Form values updated:', values);
+    Object.entries(values).forEach(([key, value]) => {
+        emit('updateField', key, value);
+    });
+};
+
 </script>
 
 <template>
@@ -258,6 +265,7 @@ const handleCallback = (callbackName: string, value: any, option: any, sourceFie
                     :error="inertiaForm.errors[field.name]"
                     @update:model-value="handleFieldUpdate(field.name, $event)"
                     @fieldAction="handleFieldAction"
+                    @update:form-values="handleFormValuesUpdate"
                 /> 
             </div>
         </div>

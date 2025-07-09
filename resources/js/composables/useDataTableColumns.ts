@@ -77,8 +77,7 @@ export function useDataTableColumns({
         }
         if (isHtml) {
             if (isHtml && fullRouteName) {
-                const params = row.original;
-                console.log('params', params, fullRouteName);
+                const params = row.original; 
                 (props as any).as = 'a';
                 (props as any).target = '_blank';
                 (props as any).rel = 'noopener noreferrer';
@@ -153,7 +152,7 @@ export function useDataTableColumns({
                         actionButtons.push(
                             createActionButton({
                                 permission: 'delete_resource',
-                                variant: 'destructive',
+                                variant: 'default',
                                 onClick: deleteItem,
                                 title: 'Excluir',
                                 icon: 'Trash2',

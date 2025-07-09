@@ -10,11 +10,11 @@ const props = defineProps<{
     field: FieldConfig;
     error?: string;
     modelValue: any;
-}>()
-
+}>() 
 const emit = defineEmits<{ 
     (e: 'update:modelValue', value: any): void;
     (e: 'fieldAction', action: string, data: any, fieldName: string): void;
+    (e: 'update:form-values', values: any): void;
 }>()
 
 const fieldRegistry = inject(fieldRegistryKey);
@@ -45,6 +45,10 @@ const handleFieldAction = (action: string, data: any) => {
     // Repassar evento para o formulário pai com informações do campo atual
     emit('fieldAction', action, data, props.field?.name || '');
 };
+
+const updateFormValues = (values: any) => {
+    emit('update:form-values', values);
+};
 </script>
 
 <template>
@@ -58,7 +62,8 @@ const handleFieldAction = (action: string, data: any) => {
             :inputProps="{ ...field.inputProps, 'aria-invalid': !!props.error, 'aria-describedby': props.error ? `${fieldId}-error` : undefined }"
             :error="props.error" :modelValue="props.modelValue" 
             @update:modelValue="updateModelValue" 
-            @fieldAction="handleFieldAction" />
+            @fieldAction="handleFieldAction"
+            @update:form-values="updateFormValues" />
         <div v-else class="text-sm text-destructive bg-destructive/10 p-2 rounded">
             [Gatekeeper] Componente de campo não encontrado para o tipo: {{ field.type }}
         </div>
