@@ -18,6 +18,7 @@ use Inertia\Inertia;
 use Callcocam\LaraGatekeeper\Traits\ManagesSidebarMenu;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -173,6 +174,12 @@ abstract class AbstractController extends Controller
             //
         ];
     }
+    protected function getExportOptions(): array
+    {
+        return [
+            //
+        ];
+    }
     /**
      * Define as ações padrão para a tabela.
      * Pode ser sobrescrito por controllers filhos para lógica customizada.
@@ -301,36 +308,12 @@ abstract class AbstractController extends Controller
         $tableColumns = array_values($tableColumns);
 
         // Aplicar filtros (usando $tableColumns processado se necessário para lógica futura)
-        foreach ($this->getFilters() as $filter) {
-            if ($request->filled($filter['column'])) {
-                // Assumindo filtro simples por 'where' por enquanto
-                $query->where($filter['column'], $request->input($filter['column']));
-            }
-        }
+        $this->applyFilters($query, $request);
+        $this->applyExtraFilters($query, $request);
+        $this->applySearch($query, $request);
 
         // Aplicar busca (usando $tableColumns processado)
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $searchableDbColumns = $this->getSearchableColumns(); // Obter colunas do novo método
 
-            if (!empty($searchableDbColumns)) {
-                $query->where(function ($q) use ($search, $searchableDbColumns) {
-                    foreach ($searchableDbColumns as $dbColumn) {
-                        // Assume que getSearchableColumns retorna nomes de coluna válidos do DB
-                        // Adicionar tratamento para relacionamentos se necessário (ex: 'relation.field')
-                        if (str_contains($dbColumn, '.')) {
-                            // Exemplo básico para relacionamento (pode precisar de joins)
-                            [$relation, $relatedColumn] = explode('.', $dbColumn, 2);
-                            $q->orWhereHas($relation, function ($relationQuery) use ($relatedColumn, $search) {
-                                $relationQuery->where($relatedColumn, 'like', "%{$search}%");
-                            });
-                        } else {
-                            $q->orWhere($dbColumn, 'like', "%{$search}%");
-                        }
-                    }
-                });
-            }
-        }
 
         // Aplicar ordenação (usando $tableColumns processado)
         if ($request->has('sort')) {
@@ -398,6 +381,7 @@ abstract class AbstractController extends Controller
             'routeNameBase' => $this->getRouteNameBase(),
             'actions' => $this->getActions(),
             'importOptions' => $this->getImportOptions(),
+            'exportOptions' => $this->getExportOptions(),
             'can' => [
                 'create_resource' => Gate::allows($this->getSidebarMenuPermission('create')),
                 'edit_resource' => Gate::allows($this->getSidebarMenuPermission('edit')),
@@ -407,6 +391,46 @@ abstract class AbstractController extends Controller
             'extraData' => $this->getExtraDataForIndex(),
             // Adicionar permissões (can) se necessário
         ]);
+    }
+
+    protected function applyFilters(Builder &$query, Request $request): void
+    {
+        foreach ($this->getFilters() as $filter) {
+            if ($request->filled($filter['column']) && !isset($filter['ignore'])) {
+                $query->where($filter['column'], $request->input($filter['column']));
+            }
+        }
+    }
+
+    protected function applySearch(Builder &$query, Request $request): void
+    {
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $searchableDbColumns = $this->getSearchableColumns(); // Obter colunas do novo método
+
+            if (!empty($searchableDbColumns)) {
+                $query->where(function ($q) use ($search, $searchableDbColumns) {
+                    foreach ($searchableDbColumns as $dbColumn) {
+                        // Assume que getSearchableColumns retorna nomes de coluna válidos do DB
+                        // Adicionar tratamento para relacionamentos se necessário (ex: 'relation.field')
+                        if (str_contains($dbColumn, '.')) {
+                            // Exemplo básico para relacionamento (pode precisar de joins)
+                            [$relation, $relatedColumn] = explode('.', $dbColumn, 2);
+                            $q->orWhereHas($relation, function ($relationQuery) use ($relatedColumn, $search) {
+                                $relationQuery->where($relatedColumn, 'like', "%{$search}%");
+                            });
+                        } else {
+                            $q->orWhere($dbColumn, 'like', "%{$search}%");
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    protected function applyExtraFilters(Builder &$query, Request $request): void
+    {
+        //
     }
 
     protected function getExtraDataForIndex(): array
@@ -483,7 +507,7 @@ abstract class AbstractController extends Controller
         // Usar o método processFields
         $fields = $this->processFields($modelInstance);
         // Obter valores iniciais (lógica específica pode estar no controller filho)
-        $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields); 
+        $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields);
 
         // Verificar se há campos de upload
 
