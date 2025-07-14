@@ -389,6 +389,15 @@ abstract class AbstractController extends Controller
                 'destroy_resource' => Gate::allows($this->getSidebarMenuPermission('destroy')),
             ],
             'extraData' => $this->getExtraDataForIndex(),
+            'useCustomFilters' => method_exists($this, 'useCustomFilters') ? $this->useCustomFilters() : false,
+            'resourceName' => $this->getResourceName(),
+            'debugCustomFilters' => [
+                'method_exists' => method_exists($this, 'useCustomFilters'),
+                'class' => get_class($this),
+                'result' => method_exists($this, 'useCustomFilters') ? $this->useCustomFilters() : false,
+                'method_result_direct' => method_exists($this, 'useCustomFilters') ? call_user_func([$this, 'useCustomFilters']) : 'method_not_exists',
+                'reflection_check' => (new \ReflectionClass($this))->hasMethod('useCustomFilters'),
+            ],
             // Adicionar permissões (can) se necessário
         ]);
     }
