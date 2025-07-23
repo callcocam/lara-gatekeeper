@@ -494,7 +494,7 @@ abstract class AbstractController extends Controller
     public function show(string $id): Response
     {
         $this->authorize($this->getSidebarMenuPermission('show'));
-        $modelInstance = $this->model::findOrFail($id);
+        $modelInstance = $this->model::findOrFail($id); 
         return Inertia::render($this->getViewShow(), [
             'model' => $modelInstance->toArray(),
             'pageTitle' => $this->generatePageTitle('show', $modelInstance),

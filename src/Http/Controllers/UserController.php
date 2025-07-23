@@ -1,15 +1,17 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use App\Models\User;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
-use Callcocam\LaraGatekeeper\Enums\DefaultStatus;
-use Callcocam\LaraGatekeeper\Models\Auth\User;
+use Callcocam\LaraGatekeeper\Enums\DefaultStatus; 
 use Callcocam\LaraGatekeeper\Models\Role;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -24,15 +26,15 @@ class UserController extends AbstractController
     protected ?string $model = User::class;
 
 
-    
+
     protected string $resourceName = 'Usuário';
-    protected string $pluralResourceName = 'Usuários'; 
+    protected string $pluralResourceName = 'Usuários';
 
     public function getSidebarMenuOrder(): int
     {
         return 20;
     }
-  
+
     public function getSidebarMenuIconName(): string
     {
         return 'User';
@@ -206,9 +208,9 @@ class UserController extends AbstractController
         } else {
             unset($validatedData['password']);
         }
-        
+
         $user->update($validatedData);
-        
+
         if ($roleIds) {
             $user->roles()->sync($roleIds);
         } else {
@@ -235,4 +237,10 @@ class UserController extends AbstractController
                 ->with('error', 'Erro ao excluir ' . Str::singular($this->getResourceName()) . '.');
         }
     }
-} 
+
+
+    protected function getViewShow(): string
+    {
+        return "admin/users/Show";
+    }
+}
