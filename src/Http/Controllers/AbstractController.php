@@ -101,6 +101,27 @@ abstract class AbstractController extends Controller
         return __($title);
     }
 
+
+    protected function getFullWidthCreateForm(): bool
+    {
+        return false;
+    }
+
+    protected function getFullWidthEditForm(): bool
+    {
+        return false;
+    }
+
+    protected function getFullWidthShowPage(): bool
+    {
+        return false;
+    }
+
+    protected function getFullWidthIndexPage(): bool
+    {
+        return false;
+    }
+
     protected function generatePageDescription(string $action, ?Model $modelInstance = null): string
     {
         return '';
@@ -398,6 +419,7 @@ abstract class AbstractController extends Controller
                 'method_result_direct' => method_exists($this, 'useCustomFilters') ? call_user_func([$this, 'useCustomFilters']) : 'method_not_exists',
                 'reflection_check' => (new \ReflectionClass($this))->hasMethod('useCustomFilters'),
             ],
+            'fullWidth' => $this->getFullWidthIndexPage() ?? false,
             // Adicionar permissões (can) se necessário
         ]);
     }
@@ -461,6 +483,7 @@ abstract class AbstractController extends Controller
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('create'),
             'routeNameBase' => $this->getRouteNameBase(),
             'extraData' => $this->getExtraDataForCreate(),
+            'fullWidth' => $this->getFullWidthCreateForm() ?? false,
         ]);
     }
 
@@ -495,12 +518,16 @@ abstract class AbstractController extends Controller
     {
         $this->authorize($this->getSidebarMenuPermission('show'));
         $modelInstance = $this->model::findOrFail($id); 
+        if($relationship = $this->getWithRelations()) {
+            $modelInstance->load($relationship);
+        }
         return Inertia::render($this->getViewShow(), [
             'model' => $modelInstance->toArray(),
             'pageTitle' => $this->generatePageTitle('show', $modelInstance),
             'pageDescription' => $this->generatePageDescription('show', $modelInstance),
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('show', $modelInstance),
             'routeNameBase' => $this->getRouteNameBase(),
+            'fullWidth' => $this->getFullWidthShowPage() ?? false,
         ]);
     }
 
@@ -514,8 +541,13 @@ abstract class AbstractController extends Controller
         $this->authorize($this->getSidebarMenuPermission('edit'));
         $modelInstance = $this->model::findOrFail($id);
         // Usar o método processFields
-        $fields = $this->processFields($modelInstance);
         // Obter valores iniciais (lógica específica pode estar no controller filho)
+       if($relationship = $this->getWithRelations()) {
+            $modelInstance->load($relationship);
+        }
+
+        $fields = $this->processFields($modelInstance);
+
         $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields);
 
         // Verificar se há campos de upload
@@ -529,6 +561,11 @@ abstract class AbstractController extends Controller
             'breadcrumbs' => $this->generateDefaultBreadcrumbs('edit', $modelInstance),
             'routeNameBase' => $this->getRouteNameBase(),
             'extraData' => $this->getExtraDataForEdit(),
+            'fullWidth' => $this->getFullWidthEditForm() ?? false,
+            'can' => [
+                'update_resource' => Gate::allows($this->getSidebarMenuPermission('update')),
+                'destroy_resource' => Gate::allows($this->getSidebarMenuPermission('destroy')),
+            ],
         ]);
     }
 
