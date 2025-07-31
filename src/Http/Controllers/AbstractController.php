@@ -6,6 +6,7 @@
 
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use Callcocam\LaraGatekeeper\Traits\SortableWithRelationships;
 use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Illuminate\Routing\Controller;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Log;
 
 abstract class AbstractController extends Controller
 {
-    use ManagesSidebarMenu, AuthorizesRequests;
+    use ManagesSidebarMenu, AuthorizesRequests, SortableWithRelationships;
 
     protected ?string $model = null;
     protected string $resourceName = '';
@@ -337,44 +338,9 @@ abstract class AbstractController extends Controller
 
 
         // Aplicar ordenação (usando $tableColumns processado)
-        if ($request->has('sort')) {
-            $direction = $request->input('direction', 'asc');
-            $columnKey = $request->input('sort'); // A chave da coluna (accessorKey ou id)
 
-            // Encontrar a definição da coluna solicitada
-            $sortColumnDef = null;
-            foreach ($tableColumns as $colDef) {
-                if (($colDef['accessorKey'] ?? $colDef['id'] ?? null) === $columnKey) {
-                    $sortColumnDef = $colDef;
-                    break;
-                }
-            }
-
-            // Verificar se a coluna existe e está marcada como sortable
-            if ($sortColumnDef && ($sortColumnDef['sortable'] ?? false)) {
-                // Usar accessorKey ou id como nome da coluna no DB
-                $dbColumn = $sortColumnDef['accessorKey'] ?? $sortColumnDef['id'] ?? null;
-                if ($dbColumn) {
-                    $query->orderBy($dbColumn, $direction);
-                }
-            }
-        } else {
-            // Tentar ordenar pela primeira coluna sortable ou created_at como padrão
-            $defaultSortColumn = $this->getTableDefaultSortColumn();
-            if (!$defaultSortColumn) {
-                foreach ($tableColumns as $colDef) {
-                    if ($colDef['sortable'] ?? false) {
-                        $defaultSortColumn = $colDef['accessorKey'] ?? $colDef['id'] ?? null;
-                        if ($defaultSortColumn) break;
-                    }
-                }
-            }
-            if ($defaultSortColumn) {
-                $query->orderBy($defaultSortColumn, 'asc');
-            } else {
-                $query->latest(); // Fallback para latest()
-            }
-        }
+        // Aplicar ordenação (incluindo relacionamentos)
+        $this->applySorting($query, $request, $tableColumns);
 
         $paginator = $query->paginate($perPage)->withQueryString();
         return Inertia::render($this->getViewIndex(), [
@@ -517,8 +483,8 @@ abstract class AbstractController extends Controller
     public function show(string $id): Response
     {
         $this->authorize($this->getSidebarMenuPermission('show'));
-        $modelInstance = $this->model::findOrFail($id); 
-        if($relationship = $this->getWithRelations()) {
+        $modelInstance = $this->model::findOrFail($id);
+        if ($relationship = $this->getWithRelations()) {
             $modelInstance->load($relationship);
         }
         return Inertia::render($this->getViewShow(), [
@@ -542,7 +508,7 @@ abstract class AbstractController extends Controller
         $modelInstance = $this->model::findOrFail($id);
         // Usar o método processFields
         // Obter valores iniciais (lógica específica pode estar no controller filho)
-       if($relationship = $this->getWithRelations()) {
+        if ($relationship = $this->getWithRelations()) {
             $modelInstance->load($relationship);
         }
 
