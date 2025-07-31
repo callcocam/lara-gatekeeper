@@ -69,7 +69,7 @@ const toItem = computed(() => {
                         <SelectValue :placeholder="`${pageSize}`" />
                     </SelectTrigger>
                     <SelectContent side="top">
-                        <SelectItem v-for="size in [10, 20, 30, 40, 50]" :key="size" :value="`${size}`">
+                        <SelectItem v-for="size in [10, 20, 30, 40, 50, 100, 500]" :key="size" :value="`${size}`">
                             {{ size }}
                         </SelectItem>
                     </SelectContent>
