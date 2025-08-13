@@ -75,7 +75,7 @@ trait SortableWithRelationships
             if (str_contains($dbColumn, '.')) {
                 $this->applySortingWithRelationship($query, $dbColumn, $direction);
             } else {
-                $query->orderBy($dbColumn, $direction);
+                $query->orderBy($dbColumn, $direction); 
             }
         } catch (\Exception $e) {
             // Log do erro para debug
@@ -145,7 +145,7 @@ trait SortableWithRelationships
     private function applySingleRelationshipSort($query, string $relationName, string $columnName, string $direction): void
     {
         $mapping = $this->getRelationshipMapping($relationName);
-        $joinAlias = $mapping['table'] . '_sort'; // Usar alias único para evitar conflitos
+        $joinAlias = $mapping['table'] ; // Usar alias único para evitar conflitos
 
         // Verificar se é uma coluna virtual/calculada que precisa de tratamento especial
         if ($this->isVirtualColumn($relationName, $columnName)) {

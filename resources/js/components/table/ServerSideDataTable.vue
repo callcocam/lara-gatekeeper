@@ -4,7 +4,7 @@ import type {
     ColumnFiltersState,
     SortingState,
     VisibilityState,
-} from '@tanstack/vue-table' 
+} from '@tanstack/vue-table'
 import type { Filter } from './types';
 
 import { valueUpdater } from './utils'
@@ -22,8 +22,8 @@ import DataTableToolbar from './DataTableToolbar.vue'
 import ServerSideDataTablePagination from './ServerSideDataTablePagination.vue'
 import { router } from '@inertiajs/vue3'
 import { debounce } from 'lodash'
-import { formatterRegistryKey } from '../../injectionKeys' 
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table' 
+import { formatterRegistryKey } from '../../injectionKeys'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
 // Declara route como global (assume Ziggy configurado na app principal)
 declare const route: any;
@@ -96,7 +96,7 @@ const initializeStateFromUrl = () => {
 
     const search = urlParams.get('search');
     internalSearchQuery.value = search || '';
- 
+
 };
 
 initializeStateFromUrl();
@@ -124,8 +124,8 @@ const tableColumns = computed(() => {
         // Determinar a função de callback da célula, PRIORIZANDO o formatter
         let cellCallback: ColumnDef<any>['cell'] = undefined;
         if (backendCol.formatter) { // PRIORIDADE 1: Formatador
-            cellCallback = (info: any) => { 
-                if (!formatterRegistry) { 
+            cellCallback = (info: any) => {
+                if (!formatterRegistry) {
                     const val = info.getValue();
                     return val === null || val === undefined ? '' : String(val);
                 }
@@ -135,23 +135,23 @@ const tableColumns = computed(() => {
                 if (formatterName && formatterRegistry[formatterName]) {
                     try {
                         return formatterRegistry[formatterName](value, formatterOptions, info);
-                    } catch (e) { 
+                    } catch (e) {
                         return value === null || value === undefined ? '' : String(value);
                     }
                 } else {
                     if (formatterName) {
-                         console.warn(`[LaraGatekeeper] Column formatter "${formatterName}" not found in registry.`);
+                        console.warn(`[LaraGatekeeper] Column formatter "${formatterName}" not found in registry.`);
                     }
                     return value === null || value === undefined ? '' : String(value);
                 }
             }
         } else if (backendCol.cell) { // PRIORIDADE 2: Célula pré-definida (do composable)
-            cellCallback = backendCol.cell; 
+            cellCallback = backendCol.cell;
         } else { // PRIORIDADE 3: Fallback (valor bruto ou vazio)
-            cellCallback = (info: any) => { 
+            cellCallback = (info: any) => {
                 const value = info.getValue();
                 // Renderizar valor bruto se houver chave, senão vazio
-                return columnKey ? h('span', value === null || value === undefined ? '' : String(value)) : ''; 
+                return columnKey ? h('span', value === null || value === undefined ? '' : String(value)) : '';
             }
         }
 
@@ -222,10 +222,14 @@ const table = useVueTable({
 })
 
 const navigate = (preservePage: boolean = false) => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const currentUrlParams = Object.fromEntries(urlParams.entries());
     console.log('[Gatekeeper/Table] Navigating with state:', {
         filters: extractFiltersForUrl(),
         sorting: extractSortingForUrl(),
-        search: internalSearchQuery.value
+        search: internalSearchQuery.value,
+        urlParams: currentUrlParams,
     });
 
     router.get(route(props.currentRoute).toString(),
@@ -233,6 +237,7 @@ const navigate = (preservePage: boolean = false) => {
             ...(preservePage ? { page: props.meta.current_page } : { page: 1 }),
             ...extractFiltersForUrl(),
             ...extractSortingForUrl(),
+            ...currentUrlParams,
             search: internalSearchQuery.value || undefined,
             per_page: props.meta.per_page
         },
@@ -283,13 +288,16 @@ const updateInternalSearch = (value: string) => {
 }
 
 const handlePageChange = (newPage: number) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUrlParams = Object.fromEntries(urlParams.entries());
     router.get(route(props.currentRoute).toString(),
         {
-            page: newPage,
             ...extractFiltersForUrl(),
             ...extractSortingForUrl(),
+            ...currentUrlParams,
             search: internalSearchQuery.value || undefined,
-            per_page: props.meta.per_page
+            per_page: props.meta.per_page,
+            page: newPage,
         },
         {
             preserveState: true,
@@ -300,15 +308,17 @@ const handlePageChange = (newPage: number) => {
 }
 
 const handlePageSizeChange = (newSize: number) => {
-    console.log(`[Gatekeeper/Table] Page size changed to: ${newSize}`);
     table.setPageSize(newSize);
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUrlParams = Object.fromEntries(urlParams.entries());
     router.get(route(props.currentRoute).toString(),
         {
-            per_page: newSize,
-            page: 1,
             ...extractFiltersForUrl(),
             ...extractSortingForUrl(),
+            ...currentUrlParams,
             search: internalSearchQuery.value || undefined,
+            per_page: newSize,
+            page: 1,
         },
         {
             preserveState: true,

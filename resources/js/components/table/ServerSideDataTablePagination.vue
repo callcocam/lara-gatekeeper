@@ -23,16 +23,15 @@ const emit = defineEmits<{
 const goToPage = (page: number) => {
     // Garante que a página está dentro dos limites
     const validPage = Math.max(1, Math.min(page, props.pageCount));
-    if (validPage !== props.pageIndex) { // Evita emitir se a página já for a atual
-      console.log(`[Gatekeeper/Pagination] Emitting pageChange: ${validPage}`);
+    if (validPage !== props.pageIndex) { // Evita emitir se a página já for a atual 
       emit('pageChange', validPage);
     }
 }
 
-const handlePageSizeChange = (value: string | number) => {
+const handlePageSizeChange = (value: any) => {
+    if (value === null) return;
     const newSize = Number(value);
-    if (!isNaN(newSize) && newSize > 0 && newSize !== props.pageSize) {
-        console.log(`[Gatekeeper/Pagination] Emitting pageSizeChange: ${newSize}`);
+    if (!isNaN(newSize) && newSize > 0 && newSize !== props.pageSize) { 
         emit('pageSizeChange', newSize);
     }
 }
@@ -64,7 +63,7 @@ const toItem = computed(() => {
                 <p class="text-sm font-medium">
                     Linhas por página
                 </p>
-                <Select :model-value="`${pageSize}`" @update:model-value="handlePageSizeChange">
+                <Select :model-value="`${pageSize}`" @update:modelValue="handlePageSizeChange">
                     <SelectTrigger class="h-8 w-[70px]">
                         <SelectValue :placeholder="`${pageSize}`" />
                     </SelectTrigger>

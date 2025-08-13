@@ -341,6 +341,7 @@ abstract class AbstractController extends Controller
 
         // Aplicar ordenação (incluindo relacionamentos)
         $this->applySorting($query, $request, $tableColumns);
+        
 
         $paginator = $query->paginate($perPage)->withQueryString();
         return Inertia::render($this->getViewIndex(), [
@@ -410,7 +411,7 @@ abstract class AbstractController extends Controller
                     foreach ($searchableDbColumns as $dbColumn) {
                         // Assume que getSearchableColumns retorna nomes de coluna válidos do DB
                         // Adicionar tratamento para relacionamentos se necessário (ex: 'relation.field')
-                        if (str_contains($dbColumn, '.')) {
+                        if (str_contains($dbColumn, '.')) { 
                             // Exemplo básico para relacionamento (pode precisar de joins)
                             [$relation, $relatedColumn] = explode('.', $dbColumn, 2);
                             $q->orWhereHas($relation, function ($relationQuery) use ($relatedColumn, $search) {
