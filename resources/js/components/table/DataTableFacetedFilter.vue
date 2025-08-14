@@ -23,8 +23,7 @@ interface DataTableFacetedFilterProps {
 
 const props = withDefaults(defineProps<DataTableFacetedFilterProps>(), {
   multiple: true // Por padrão permite seleção múltipla
-})
-console.log('[DataTableFacetedFilter] Props recebidas:', props);
+}) 
 const isOpen = ref(false)
 
 const facets = computed(() => props.column?.getFacetedUniqueValues());
@@ -34,7 +33,7 @@ const selectedValues = computed(() => {
 
   if (!props.multiple) {
     // Para seleção única, retorna um Set com apenas um valor
-    if (filterValue !== null && filterValue !== undefined) {
+    if (filterValue !== null && filterValue !== undefined && filterValue !== '') {
       return new Set([String(filterValue)]);
     }
     return new Set<string>();
@@ -42,14 +41,17 @@ const selectedValues = computed(() => {
 
   // Garante que é sempre um Set de strings para seleção múltipla
   if (Array.isArray(filterValue)) {
-    return new Set(filterValue.map(String));
-  } else if (filterValue !== null && filterValue !== undefined) {
+    const result = new Set(filterValue.map(String).filter(v => v && v !== ''));
+    return result;
+  } else if (filterValue !== null && filterValue !== undefined && filterValue !== '') {
     // Se for uma string separada por vírgulas, divide
     const stringValue = String(filterValue);
     if (stringValue.includes(',')) {
-      return new Set(stringValue.split(',').map(s => s.trim()));
+      const result = new Set(stringValue.split(',').map(s => s.trim()).filter(s => s));
+      return result;
     }
-    return new Set([stringValue]);
+    const result = new Set([stringValue]);
+    return result;
   }
   return new Set<string>();
 });
@@ -75,7 +77,7 @@ const handleSelect = (option: FilterOption) => {
   // Seleção múltipla - lógica original
   const currentFilter = props.column.getFilterValue();
   let currentSet = new Set<string>();
-
+  
   // Normaliza o valor atual para um Set
   if (Array.isArray(currentFilter)) {
     currentSet = new Set(currentFilter.map(String));
@@ -97,16 +99,16 @@ const handleSelect = (option: FilterOption) => {
   }
 
   const filterValues = Array.from(currentSet);
-
-  console.log('[DataTableFacetedFilter] Multiple select:', {
-    option: option.value,
-    isSelected,
-    currentSet: Array.from(currentSet),
-    filterValues
-  });
-
+ 
   // Sempre passa um array ou undefined (nunca null ou string)
-  props.column.setFilterValue(filterValues.length ? filterValues : undefined);
+  const finalValue = filterValues.length > 0 ? filterValues : undefined;
+  
+  // Se o valor final é undefined, vamos forçar a remoção do filtro
+  if (finalValue === undefined) {
+    props.column?.setFilterValue(undefined);
+  } else {
+    props.column?.setFilterValue(finalValue);
+  }
 }
 
 const clearFilters = () => {

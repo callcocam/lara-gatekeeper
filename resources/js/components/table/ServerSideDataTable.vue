@@ -228,42 +228,74 @@ const navigate = (preservePage: boolean = false) => {
     const urlParams = new URLSearchParams(window.location.search);
     const currentUrlParams = Object.fromEntries(urlParams.entries());
     
-    // Função para remover parâmetros undefined
-    const cleanParams = (params: Record<string, any>) => {
-        const cleaned: Record<string, any> = {};
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                cleaned[key] = value;
-            }
-        });
-        return cleaned;
-    };
-    
     const filters = extractFiltersForUrl();
     const sorting = extractSortingForUrl();
     
-    const finalParams = cleanParams({
-        ...(preservePage ? { page: props.meta.current_page } : { page: 1 }),
-        ...currentUrlParams, // URL params existentes primeiro
-        ...filters, // Filtros sobrescrever URL params
-        ...sorting, // Sorting sobrescrever tudo
-        search: internalSearchQuery.value || undefined,
-        per_page: props.meta.per_page
+    // Função para processar parâmetros e remover filtros vazios explicitamente
+    const processParams = (params: Record<string, any>) => {
+        const processed: Record<string, any> = {};
+        
+        Object.entries(params).forEach(([key, value]) => {
+            // Se é um filtro que deve ser removido, não incluir
+            if (filtersToRemove.includes(key)) { 
+                return;
+            }
+            
+            // Incluir apenas valores válidos
+            if (value !== null && value !== '' && value !== undefined) {
+                processed[key] = value; 
+            }
+        }); 
+        
+        return processed;
+    };
+    
+    // Identificar filtros que devem ser removidos (undefined)
+    const filtersToRemove: string[] = [];
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value === undefined) {
+            filtersToRemove.push(key);
+        }
+    });
+     
+    
+    // Criar parâmetros da URL atual sem os filtros que devem ser removidos
+    const cleanedCurrentParams: Record<string, any> = {};
+    Object.entries(currentUrlParams).forEach(([key, value]) => {
+        if (!filtersToRemove.includes(key)) {
+            cleanedCurrentParams[key] = value;
+        }
     });
     
-    console.log('[Gatekeeper/Table] Navigating with cleaned params:', {
-        filters,
-        sorting,
-        search: internalSearchQuery.value,
-        currentUrlParams,
-        finalParams,
-        route: route(props.currentRoute).toString()
+    // Criar os parâmetros básicos primeiro
+    const baseParams = {
+        ...(preservePage ? { page: props.meta.current_page } : { page: 1 }),
+        ...cleanedCurrentParams, // URL params limpos
+        search: internalSearchQuery.value || undefined,
+        per_page: props.meta.per_page
+    } as any;
+    
+    // Adicionar apenas filtros válidos (não undefined)
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+            baseParams[key] = value;
+        }
     });
+    
+    // Adicionar sorting
+    Object.entries(sorting).forEach(([key, value]) => {
+        if (value !== undefined) {
+            baseParams[key] = value;
+        }
+    });
+ 
+    
+    const finalParams = processParams(baseParams); 
 
     router.get(route(props.currentRoute).toString(), finalParams, {
         preserveState: true,
         preserveScroll: true,
-        replace: false, // Mudança para false para ver a URL sendo atualizada
+        replace: true,
     });
 }
 
@@ -273,30 +305,42 @@ const debouncedNavigatePreservePage = debounce(() => navigate(true), 400);
 const extractFiltersForUrl = (): Record<string, string | undefined> => {
     const urlFilters: Record<string, string | undefined> = {};
     
+    // Primeiro, identificar todos os filtros de coluna que EXISTEM atualmente
+    const currentFilterIds = columnFilters.value.map(f => f.id);
+    
+    // Pegar parâmetros atuais da URL para ver quais filtros estavam ativos
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUrlParams = Object.fromEntries(urlParams.entries());
+    
+    // Identificar filtros que estavam na URL mas não estão mais nos filtros ativos
+    Object.keys(currentUrlParams).forEach(paramKey => {
+        if (!['page', 'per_page', 'search', 'sort', 'direction'].includes(paramKey)) {
+            // Este é provavelmente um filtro
+            if (!currentFilterIds.includes(paramKey)) {
+                // Este filtro estava na URL mas não está mais ativo - marcar para remoção
+                urlFilters[paramKey] = undefined;
+            }
+        }
+    });
+    
+    // Processar filtros ativos
     columnFilters.value.forEach(filter => {
-        console.log('[Gatekeeper/Table] Processing filter for URL:', {
-            id: filter.id,
-            value: filter.value,
-            type: typeof filter.value,
-            isArray: Array.isArray(filter.value)
-        });
-        
         if (Array.isArray(filter.value)) {
             // Para arrays, só adiciona se tiver itens
             if (filter.value.length > 0) {
-                urlFilters[filter.id] = filter.value.join(',');
-                console.log('[Gatekeeper/Table] Array filter added to URL:', filter.id, '=', urlFilters[filter.id]);
+                urlFilters[filter.id] = filter.value.join(','); 
+            } else {
+                // Array vazio = marca para remoção
+                urlFilters[filter.id] = undefined; 
             }
         } else if (filter.value !== null && filter.value !== undefined && filter.value !== '') {
             // Para valores não-array, converte para string apenas se tiver valor
-            urlFilters[filter.id] = String(filter.value);
-            console.log('[Gatekeeper/Table] Single filter added to URL:', filter.id, '=', urlFilters[filter.id]);
+            urlFilters[filter.id] = String(filter.value); 
+        } else {
+            // Valor undefined/null/empty = marca para remoção
+            urlFilters[filter.id] = undefined; 
         }
-        // Não adiciona undefined para filtros vazios - isso remove da URL
     });
-    
-    // Debug para verificar o que está sendo enviado
-    console.log('[Gatekeeper/Table] Final filters for URL:', urlFilters);
     
     return urlFilters;
 }
@@ -313,12 +357,7 @@ watch(sorting, () => {
     navigate(false);
 }, { deep: true });
 
-watch(columnFilters, (newFilters, oldFilters) => {
-    console.log('[Gatekeeper/Table] Column filters changed:', {
-        newFilters,
-        oldFilters,
-        extractedForUrl: extractFiltersForUrl()
-    });
+watch(columnFilters, (newFilters, oldFilters) => { 
     debouncedNavigate();
 }, { deep: true });
 

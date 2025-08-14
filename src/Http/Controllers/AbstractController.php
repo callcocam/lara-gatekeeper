@@ -395,10 +395,15 @@ abstract class AbstractController extends Controller
     {
         foreach ($this->getFilters() as $filter) {
             if ($request->filled($filter['column']) && !isset($filter['ignore'])) {
-                $query->where($filter['column'], $request->input($filter['column']));
-            }
-        }
-    }
+               $value = $request->input($filter['column']);
+               if (isset($filter['multiple']) && $filter['multiple']) {
+                   $query->whereIn($filter['column'], explode(',', $value));
+               } else {
+                   $query->where($filter['column'], $value);
+               }
+           }
+       }
+   }
 
     protected function applySearch(Builder &$query, Request $request): void
     {
