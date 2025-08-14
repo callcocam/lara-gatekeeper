@@ -19,7 +19,7 @@ const isFiltered = computed(() => props.table.getState().columnFilters.length > 
 
 <template>
     <div class="flex items-center justify-between">
-        <div class="flex flex-1 items-center space-x-2">
+        <div class="flex flex-1 items-center space-x-2 flex-wrap gap-1">
             <slot name="search" :table="table" />
             <template v-if="filters && filters.length > 0">
                 <div v-for="filter in filters" :key="filter.column">

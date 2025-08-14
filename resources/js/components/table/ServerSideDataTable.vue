@@ -78,10 +78,13 @@ const initializeStateFromUrl = () => {
     props.filters.forEach(filterConfig => {
         const paramValue = urlParams.get(filterConfig.column);
         if (paramValue) {
+            // Verifica se o filtro é do tipo faceted (multi-seleção) ou tipo options
             const filterType = props.filters.find(f => f.column === filterConfig.column);
-            if (filterType?.options) {
+            if (filterType?.type === 'faceted' || filterType?.options) {
+                // Para filtros multi-seleção, sempre trata como array
                 initialFilters.push({ id: filterConfig.column, value: paramValue.split(',') });
             } else {
+                // Para filtros simples, mantém como string
                 initialFilters.push({ id: filterConfig.column, value: paramValue });
             }
         }
@@ -223,30 +226,45 @@ const table = useVueTable({
 
 const navigate = (preservePage: boolean = false) => {
     const urlParams = new URLSearchParams(window.location.search);
-
     const currentUrlParams = Object.fromEntries(urlParams.entries());
-    console.log('[Gatekeeper/Table] Navigating with state:', {
-        filters: extractFiltersForUrl(),
-        sorting: extractSortingForUrl(),
+    
+    // Função para remover parâmetros undefined
+    const cleanParams = (params: Record<string, any>) => {
+        const cleaned: Record<string, any> = {};
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                cleaned[key] = value;
+            }
+        });
+        return cleaned;
+    };
+    
+    const filters = extractFiltersForUrl();
+    const sorting = extractSortingForUrl();
+    
+    const finalParams = cleanParams({
+        ...(preservePage ? { page: props.meta.current_page } : { page: 1 }),
+        ...currentUrlParams, // URL params existentes primeiro
+        ...filters, // Filtros sobrescrever URL params
+        ...sorting, // Sorting sobrescrever tudo
+        search: internalSearchQuery.value || undefined,
+        per_page: props.meta.per_page
+    });
+    
+    console.log('[Gatekeeper/Table] Navigating with cleaned params:', {
+        filters,
+        sorting,
         search: internalSearchQuery.value,
-        urlParams: currentUrlParams,
+        currentUrlParams,
+        finalParams,
+        route: route(props.currentRoute).toString()
     });
 
-    router.get(route(props.currentRoute).toString(),
-        {
-            ...(preservePage ? { page: props.meta.current_page } : { page: 1 }),
-            ...extractFiltersForUrl(),
-            ...extractSortingForUrl(),
-            ...currentUrlParams,
-            search: internalSearchQuery.value || undefined,
-            per_page: props.meta.per_page
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        }
-    )
+    router.get(route(props.currentRoute).toString(), finalParams, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: false, // Mudança para false para ver a URL sendo atualizada
+    });
 }
 
 const debouncedNavigate = debounce(() => navigate(false), 400);
@@ -254,15 +272,32 @@ const debouncedNavigatePreservePage = debounce(() => navigate(true), 400);
 
 const extractFiltersForUrl = (): Record<string, string | undefined> => {
     const urlFilters: Record<string, string | undefined> = {};
+    
     columnFilters.value.forEach(filter => {
-        if (Array.isArray(filter.value) && filter.value.length > 0) {
-            urlFilters[filter.id] = filter.value.join(',');
-        } else if (!Array.isArray(filter.value) && filter.value) {
+        console.log('[Gatekeeper/Table] Processing filter for URL:', {
+            id: filter.id,
+            value: filter.value,
+            type: typeof filter.value,
+            isArray: Array.isArray(filter.value)
+        });
+        
+        if (Array.isArray(filter.value)) {
+            // Para arrays, só adiciona se tiver itens
+            if (filter.value.length > 0) {
+                urlFilters[filter.id] = filter.value.join(',');
+                console.log('[Gatekeeper/Table] Array filter added to URL:', filter.id, '=', urlFilters[filter.id]);
+            }
+        } else if (filter.value !== null && filter.value !== undefined && filter.value !== '') {
+            // Para valores não-array, converte para string apenas se tiver valor
             urlFilters[filter.id] = String(filter.value);
-        } else {
-            urlFilters[filter.id] = undefined;
+            console.log('[Gatekeeper/Table] Single filter added to URL:', filter.id, '=', urlFilters[filter.id]);
         }
+        // Não adiciona undefined para filtros vazios - isso remove da URL
     });
+    
+    // Debug para verificar o que está sendo enviado
+    console.log('[Gatekeeper/Table] Final filters for URL:', urlFilters);
+    
     return urlFilters;
 }
 
@@ -278,7 +313,12 @@ watch(sorting, () => {
     navigate(false);
 }, { deep: true });
 
-watch(columnFilters, () => {
+watch(columnFilters, (newFilters, oldFilters) => {
+    console.log('[Gatekeeper/Table] Column filters changed:', {
+        newFilters,
+        oldFilters,
+        extractedForUrl: extractFiltersForUrl()
+    });
     debouncedNavigate();
 }, { deep: true });
 
@@ -333,8 +373,10 @@ const handlePageSizeChange = (newSize: number) => {
     <div class="space-y-4">
         <DataTableToolbar :table="table" :filters="props.filters" :table-name="props.tableName">
             <template #search="{ table }">
-                <slot name="search" :table="table" :searchQuery="internalSearchQuery"
+              <div class="w-64">
+                  <slot name="search" :table="table" :searchQuery="internalSearchQuery"
                     :handleSearchInput="updateInternalSearch" />
+              </div>
             </template>
             <template #filters="{ table }">
                 <slot name="filters" :table="table" />
