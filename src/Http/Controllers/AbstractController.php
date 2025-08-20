@@ -341,7 +341,7 @@ abstract class AbstractController extends Controller
 
         // Aplicar ordenação (incluindo relacionamentos)
         $this->applySorting($query, $request, $tableColumns);
-        
+
 
         $paginator = $query->paginate($perPage)->withQueryString();
         return Inertia::render($this->getViewIndex(), [
@@ -361,7 +361,7 @@ abstract class AbstractController extends Controller
                 ],
             ],
             'columns' => $tableColumns, // <-- Passar colunas processadas
-            'filters' => $request->only(array_merge(['search', 'sort', 'direction', 'per_page'], array_column($this->getFilters(), 'column'))), // Corrigir 'key' para 'column' aqui?
+            'filters' => $this->getQueryParams($request), // Corrigir 'key' para 'column' aqui?
             'filterOptions' => $this->getFilters(),
             'pageTitle' => $this->generatePageTitle('index'),
             'pageDescription' => $this->generatePageDescription('index'),
@@ -391,19 +391,24 @@ abstract class AbstractController extends Controller
         ]);
     }
 
+    protected function getQueryParams(Request $request): array
+    {
+        return $request->only(array_merge(['search', 'sort', 'direction', 'per_page'], array_column($this->getFilters(), 'column')));
+    }
+
     protected function applyFilters(Builder &$query, Request $request): void
     {
         foreach ($this->getFilters() as $filter) {
             if ($request->filled($filter['column']) && !isset($filter['ignore'])) {
-               $value = $request->input($filter['column']);
-               if (isset($filter['multiple']) && $filter['multiple']) {
-                   $query->whereIn($filter['column'], explode(',', $value));
-               } else {
-                   $query->where($filter['column'], $value);
-               }
-           }
-       }
-   }
+                $value = $request->input($filter['column']);
+                if (isset($filter['multiple']) && $filter['multiple']) {
+                    $query->whereIn($filter['column'], explode(',', $value));
+                } else {
+                    $query->where($filter['column'], $value);
+                }
+            }
+        }
+    }
 
     protected function applySearch(Builder &$query, Request $request): void
     {
@@ -416,7 +421,7 @@ abstract class AbstractController extends Controller
                     foreach ($searchableDbColumns as $dbColumn) {
                         // Assume que getSearchableColumns retorna nomes de coluna válidos do DB
                         // Adicionar tratamento para relacionamentos se necessário (ex: 'relation.field')
-                        if (str_contains($dbColumn, '.')) { 
+                        if (str_contains($dbColumn, '.')) {
                             // Exemplo básico para relacionamento (pode precisar de joins)
                             [$relation, $relatedColumn] = explode('.', $dbColumn, 2);
                             $q->orWhereHas($relation, function ($relationQuery) use ($relatedColumn, $search) {
