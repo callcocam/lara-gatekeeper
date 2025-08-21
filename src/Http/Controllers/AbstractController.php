@@ -387,6 +387,7 @@ abstract class AbstractController extends Controller
                 'reflection_check' => (new \ReflectionClass($this))->hasMethod('useCustomFilters'),
             ],
             'fullWidth' => $this->getFullWidthIndexPage() ?? false,
+            'currentFilters' => $request->query()
             // Adicionar permissões (can) se necessário
         ]);
     }

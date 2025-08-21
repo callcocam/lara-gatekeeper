@@ -59,6 +59,7 @@ interface ServerSideDataTableProps {
     baseRoute: string;
     currentRoute: string;
     columnFiltersProp?: Record<string, string>;
+    currentFilters?: Record<string, any>;
 }
 
 const props = defineProps<ServerSideDataTableProps>()
@@ -89,6 +90,7 @@ const initializeStateFromUrl = () => {
             }
         }
     });
+    initialFilters.push(...(props.currentFilters ? Object.entries(props.currentFilters).map(([id, value]) => ({ id, value })) : []));
     columnFilters.value = initialFilters;
 
     const sortBy = urlParams.get('sort');
