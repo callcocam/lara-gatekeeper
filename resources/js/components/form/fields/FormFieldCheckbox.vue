@@ -20,12 +20,16 @@ const model = defineModel<boolean | null>()
 
 const labelText = computed(() => props.field.label || props.field.name)
 
+const emit = defineEmits<{
+  (e: 'reactive', value: boolean | null): void;
+}>();
+
 // Computed para lidar com valores null/undefined para o checkbox
 const modelValueForCheckbox = computed({
   get: () => model.value ?? false,
   set: (value) => {
-    console.log(`[Gatekeeper/Checkbox:${props.field.name}] Setting value:`, value);
     model.value = value;
+    emit('reactive', value);
   }
 });
 </script>

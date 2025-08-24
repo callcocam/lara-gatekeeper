@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaraGatekeeper\Traits;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 trait ManagesSidebarMenu
@@ -78,7 +79,7 @@ trait ManagesSidebarMenu
         // Verifica se a rota realmente existe
         if (!\Illuminate\Support\Facades\Route::has($routeName)) {
             // Logar um aviso ou simplesmente não adicionar ao menu
-             \Illuminate\Support\Facades\Log::warning("Sidebar Menu: Rota '{$routeName}' não encontrada para controller " . get_class($this));
+            \Illuminate\Support\Facades\Log::warning("Sidebar Menu: Rota '{$routeName}' não encontrada para controller " . get_class($this));
             return null;
         }
 
@@ -87,6 +88,13 @@ trait ManagesSidebarMenu
             'href' => route($routeName),
             'iconName' => $this->getSidebarMenuIconName(),
             'order' => $this->getSidebarMenuOrder(),
+            'can' => [
+                'create_resource' => Gate::allows($this->getSidebarMenuPermission('create')),
+                'edit_resource' => Gate::allows($this->getSidebarMenuPermission('edit')),
+                'show_resource' => Gate::allows($this->getSidebarMenuPermission('show')),
+                'destroy_resource' => Gate::allows($this->getSidebarMenuPermission('destroy')),
+                'update_resource' => Gate::allows($this->getSidebarMenuPermission('update')),
+            ],
         ];
     }
 
@@ -95,4 +103,4 @@ trait ManagesSidebarMenu
         $routeName = $this->getRouteNameBase() . '.' . $action;
         return $routeName;
     }
-} 
+}

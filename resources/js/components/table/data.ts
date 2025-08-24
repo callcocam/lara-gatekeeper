@@ -10,7 +10,7 @@ export * from '@/composables/useStatus'
 export const statuses = userStatuses
 
 // Helper para gerar filtros padrão para um tipo específico de dados
-export function getFiltersForEntity(entityType: 'users' | 'products' | 'orders') {
+export function filtersForEntity(entityType: 'users' | 'products' | 'orders') {
     switch (entityType) {
         case 'users':
             return [

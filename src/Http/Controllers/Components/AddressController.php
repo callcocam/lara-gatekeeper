@@ -32,7 +32,7 @@ class AddressController extends AbstractController
         return __('Endereços');
     }
 
-    protected function getFields(?Model $model = null): array
+    protected function fields(?Model $model = null): array
     {
         $isUpdate = $model && $model->exists;
 
@@ -96,7 +96,7 @@ class AddressController extends AbstractController
         ];
     }
 
-    protected function getTableColumns(): array
+    protected function columns(): array
     {
         $columns = [
             Column::make('Logradouro', 'street')->sortable(),
@@ -143,7 +143,7 @@ class AddressController extends AbstractController
         return ['street', 'neighborhood', 'city', 'state', 'zip_code'];
     }
 
-    protected function getFilters(): array
+    protected function filters(): array
     {
         return [
             [

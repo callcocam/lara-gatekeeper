@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'  
+import { ref, computed, onMounted, watch } from 'vue'
+import axios from 'axios'
 import { Combobox, ComboboxItem } from '@/components/ui/combobox'
 import { Label } from '@/components/ui/label'
 
@@ -22,6 +22,9 @@ const props = defineProps<{
 const model = defineModel<string | number | null>()
 const loading = ref(false)
 const options = ref<{ value: string | number, label: string }[]>([])
+const emit = defineEmits<{
+  (e: 'reactive', value: string | number | null): void;
+}>();
 
 const labelText = computed(() => props.field.label || props.field.name)
 
@@ -48,6 +51,10 @@ async function fetchOptions() {
   }
 }
 
+watch(model, (newValue: any) => {
+  emit('reactive', newValue);
+});
+
 onMounted(() => {
   if (props.field.options) {
     options.value = normalizeOptions(props.field.options)
@@ -69,24 +76,13 @@ function onFocus() {
       {{ labelText }}
       <span v-if="props.field.required" class="text-red-500 ml-1">*</span>
     </Label>
-    <Combobox
-      :id="props.id + '-combobox'"
-      v-model="model"
-      :disabled="props.field.disabled"
-      v-bind="props.inputProps"
-      @focus="onFocus"
-      class="w-full"
-    >
+    <Combobox :id="props.id + '-combobox'" v-model="model" :disabled="props.field.disabled" v-bind="props.inputProps"
+      @focus="onFocus" class="w-full">
       <template v-if="loading">
         <ComboboxItem disabled value="" label="Carregando..." />
       </template>
       <template v-else>
-        <ComboboxItem
-          v-for="opt in options"
-          :key="opt.value"
-          :value="opt.value"
-          :label="opt.label"
-        >
+        <ComboboxItem v-for="opt in options" :key="opt.value" :value="opt.value" :label="opt.label">
           {{ opt.label }}
         </ComboboxItem>
         <ComboboxItem v-if="!options.length" disabled value="" label="Nenhuma opção encontrada" />
@@ -94,4 +90,4 @@ function onFocus() {
     </Combobox>
     <span v-if="props.field.description" class="text-xs text-gray-500 ml-2">{{ props.field.description }}</span>
   </div>
-</template> 
+</template>

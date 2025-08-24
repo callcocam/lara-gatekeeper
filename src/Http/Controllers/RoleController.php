@@ -34,7 +34,7 @@ class RoleController extends AbstractController
         return 'ShieldCheck';
     }
 
-    protected function getFields(?Model $model = null): array
+    protected function fields(?Model $model = null): array
     {
      
 
@@ -68,7 +68,7 @@ class RoleController extends AbstractController
         ];
     }
 
-    protected function getTableColumns(): array
+    protected function columns(): array
     {
         $columns = [
             Column::make('Nome', 'name')->sortable(),
@@ -98,7 +98,7 @@ class RoleController extends AbstractController
         return ['name', 'slug', 'description'];
     }
 
-    protected function getFilters(): array
+    protected function filters(): array
     {
         return [
             [

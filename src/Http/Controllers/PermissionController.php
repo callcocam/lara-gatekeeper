@@ -33,7 +33,7 @@ class PermissionController extends AbstractController
         return 'KeyRound';
     }
 
-    protected function getFields(?Model $model = null): array
+    protected function fields(?Model $model = null): array
     {
         $isUpdate = $model && $model->exists;
 
@@ -60,7 +60,7 @@ class PermissionController extends AbstractController
         ];
     }
 
-    protected function getTableColumns(): array
+    protected function columns(): array
     {
         $columns = [
             Column::make('Nome', 'name')->sortable(),
@@ -90,7 +90,7 @@ class PermissionController extends AbstractController
         return ['name', 'slug', 'description'];
     }
 
-    protected function getFilters(): array
+    protected function filters(): array
     {
         return [
             [

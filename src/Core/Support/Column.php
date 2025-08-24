@@ -2,41 +2,57 @@
 
 namespace Callcocam\LaraGatekeeper\Core\Support;
 
+use Callcocam\LaraGatekeeper\Core\Cast\CastRegistry;
+use Callcocam\LaraGatekeeper\Core\Concerns;
+use Callcocam\LaraGatekeeper\Core\Concerns\EvaluatesClosures;
+use Callcocam\LaraGatekeeper\Core\Support\Table\Concerns\HasSearchable;
+use Callcocam\LaraGatekeeper\Core\Support\Table\Concerns\HasSortable;
 use Closure;
 
 class Column
 {
-    public string $id;
+    use EvaluatesClosures;
+    use Concerns\BelongsToLabel;
+    use Concerns\BelongsToName;
+    use Concerns\BelongsToId;
+    use HasSortable;
+    use HasSearchable;
+
     public ?string $accessorKey = null;
-    public string $header;
-    public bool $sortable = false;
-    public bool $enableHiding = true;
-    public ?string $formatter = null;
-    public mixed $formatterOptions = null;
-    public ?Closure $cellCallback = null;
     public bool $isHtml = false; // Para indicar se a célula retorna HTML bruto
 
-    protected function __construct(string $header, ?string $accessorKey = null)
+    /**
+     * Formatação da coluna
+     *
+     * @var Closure|string|null
+     */
+    protected Closure|string|null $formatUsing = null;
+
+    /** 
+     * @var string|null
+     */
+    protected ?string $castUsing = null;
+
+    /**
+     * Actions
+     */
+    protected array $actions = [];
+
+
+
+    protected function __construct(string $label, ?string $accessorKey = null)
     {
-        $this->header = $header;
-        $this->accessorKey = $accessorKey ?? strtolower(str_replace(' ', '_', $header));
-        $this->id = $this->accessorKey; // ID padrão baseado na chave de acesso
+        $this->label = $label;
+        $this->accessorKey = $accessorKey ?? strtolower(str_replace(' ', '_', $label));
+        $this->id($this->accessorKey);
+        $this->name($this->accessorKey);
     }
 
-    public static function make(string $header, ?string $accessorKey = null): self
+    public static function make(string $label, ?string $accessorKey = null): self
     {
-        return new static($header, $accessorKey);
+        return new static($label, $accessorKey);
     }
 
-    public function id(string $id): self
-    {
-        $this->id = $id;
-        // Se accessorKey não foi definido explicitamente e id não é 'actions', usar id como accessorKey
-        if ($this->accessorKey === strtolower(str_replace(' ', '_', $this->header)) && $id !== 'actions') {
-             $this->accessorKey = $id;
-        }
-        return $this;
-    }
 
     public function accessorKey(?string $key): self
     {
@@ -44,10 +60,9 @@ class Column
         return $this;
     }
 
-    public function sortable(bool $sortable = true): self
+    public function getAccessorKey(): ?string
     {
-        $this->sortable = $sortable;
-        return $this;
+        return $this->accessorKey;
     }
 
     public function hideable(bool $enableHiding = true): self
@@ -80,55 +95,139 @@ class Column
         return $this;
     }
 
-    // Atalho para a coluna de Ações
-    public static function actions(): self
-    {
-        return static::make('Ações')
-            ->id('actions') // Define ID específico
-            ->accessorKey(null) // Ações não têm accessorKey
-            ->sortable(false)
-            ->hideable(false);
-    }
 
     public function toArray(): array
     {
         $data = [
             'id' => $this->id,
-            'accessorKey' => $this->accessorKey,
-            'header' => $this->header,
-            'sortable' => $this->sortable,
-            'enableHiding' => $this->enableHiding,
+            'accessorKey' => $this->getAccessorKey(),
+            'label' => $this->getLabel(),
+            'header' => $this->getLabel(), // Deprecated use 'label' instead
+            'sortable' => $this->isSortable(),
+            'searchable' => $this->isSearchable(),
         ];
-
-        if ($this->formatter) {
-            $data['formatter'] = $this->formatter;
-            if ($this->formatterOptions !== null) {
-                $data['formatterOptions'] = $this->formatterOptions;
-            }
-        }
-
-        // A célula só é enviada se houver um callback E não for um formatador padrão
-        // Ou se for explicitamente HTML (para casos como o avatar)
-        // A lógica de renderização padrão/formatador agora está no frontend
-        if ($this->cellCallback && !$this->formatter) {
-             // Não podemos serializar Closures diretamente para JSON.
-             // O frontend não usará mais a 'cell' do backend para lógica complexa,
-             // exceto talvez para HTML simples ou se a lógica de formatação estiver aqui.
-             // Por enquanto, vamos omitir a serialização da closure.
-             // Se precisar passar HTML formatado, use ->html() e formate aqui.
-             // $data['cell'] = 'Closure defined'; // Placeholder ou omitir
-             if ($this->isHtml) {
-                 // Potencialmente, poderíamos executar o callback aqui se soubéssemos o $row,
-                 // mas isso complica a definição. Melhor deixar a lógica de cell complexa
-                 // para ser definida no frontend ou usar formatters.
-                 $data['html'] = true; // Sinaliza para o frontend que a renderização é customizada
-             }
-        } elseif ($this->isHtml) {
-            // Se é HTML mas não tem callback (ex: header HTML simples)
-             $data['html'] = true;
-        }
-
 
         return $data;
     }
-} 
+    /**
+     * Define a formatação da coluna
+     *
+     * @param Closure|string $callback
+     * @return static
+     * @throws \Exception
+     */
+    public function formatUsing(Closure|string $callback): static
+    {
+        $this->formatUsing = $callback;
+        return $this;
+    }
+
+    /**
+     * Retorna a formatação da coluna
+     *
+     * @return Closure|string|null
+     */
+    public function getFormatUsing(): Closure|string|null
+    {
+        return $this->formatUsing;
+    }
+    /**
+     * Verifica se a coluna está formatada
+     *
+     * @return bool
+     */
+    public function isFormatted(): bool
+    {
+        return !is_null($this->formatUsing);
+    }
+    /**
+     * Formata o valor da coluna
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    public function format(mixed $value): mixed
+    {
+
+        if ($this->isFormatted()) {
+            return $this->evaluate($this->getFormatUsing(), ['value' => $value]);
+        }
+        return $value;
+    }
+    /**
+     * Define o cast da coluna
+     *
+     * @param string $cast
+     * @param int $priority
+     * @return static
+     */
+    public function castUsing(string $cast, int $priority = 99): static
+    {
+        CastRegistry::registerFieldCast(
+            $this->getName(),
+            $cast,
+            $priority
+        );
+        return $this;
+    }
+    /**
+     * Retorna o cast da coluna
+     *
+     * @return string|null
+     */
+    public function getCastUsing(): ?string
+    {
+        return $this->castUsing;
+    }
+    /**
+     * Verifica se a coluna está com cast definido
+     *
+     * @return bool
+     */
+    public function isCasted(): bool
+    {
+        return !is_null($this->castUsing);
+    }
+    /**
+     * Formata o valor da coluna usando o cast
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    public function cast(mixed $value): mixed
+    {
+        if ($this->isCasted()) {
+            return app($this->getCastUsing())->setValue($value)->format();
+        }
+        return $value;
+    }
+
+
+    public function setActions(array $actions = []): self
+    {
+        $this->actions = $actions;
+        return $this;
+    }
+
+    // Atalho para a coluna de Ações
+    public static function actions(array $actions = []): self
+    {
+        return static::make('Ações')
+            ->id('actions') // Define ID específico
+            ->name('actions')
+            ->accessorKey('actions') // Ações não têm accessorKey
+            ->sortable(false)
+            ->hideable(false)
+            ->setActions($actions);
+    }
+
+    public function getActions(): array
+    {
+        return $this->actions;
+    }
+
+    public function hasActions(): bool
+    {
+        return !empty($this->actions);
+    }
+}

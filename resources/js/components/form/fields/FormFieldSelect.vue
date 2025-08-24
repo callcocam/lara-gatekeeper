@@ -19,14 +19,16 @@ const model = defineModel<string | number | null>()
 
 const options = computed(() => props.field.options || {});
 const placeholder = computed(() => props.inputProps?.placeholder || 'Selecione...');
+const emit = defineEmits<{
+    (e: 'reactive', value: string | number | null): void;
+}>();
 
 // Watch model changes for debugging
 import { watch } from 'vue';
 import { Input } from '@/components/ui/input';
-watch(model, (newValue) => {
-    console.log(`[Gatekeeper/Select:${props.field.name}] Model updated:`, newValue);
+watch(model, (newValue: any) => {
+    emit('reactive', newValue);
 });
-console.log(options.value);
 
 const computedOptions = computed(() => {
     const computedOptions: { value: string; label: string }[] = [];
@@ -34,8 +36,7 @@ const computedOptions = computed(() => {
         if (key) {
             computedOptions.push({ value: key.toString(), label: options.value[key] });
         }
-    }
-    console.log(computedOptions);
+    } 
     return computedOptions;
 });
 </script>

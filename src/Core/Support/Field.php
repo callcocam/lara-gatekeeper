@@ -2,18 +2,21 @@
 
 namespace Callcocam\LaraGatekeeper\Core\Support;
 
+use Callcocam\LaraGatekeeper\Core;
 use Closure;
 
 class Field
 {
+    use Core\Concerns\EvaluatesClosures;
+    use Core\Concerns\BelongsToLabel;
+    use Core\Concerns\BelongsToName;
+    use Core\Concerns\BelongsToOptions;
+    use Core\Concerns\BelongsToType;
     use Concerns\HasTypes;
     use Concerns\HasOptions;
     use Concerns\HasTextarea;
     use Concerns\HasCombobox;
-    public string $key;
-    public string $name;
-    public string $label;
-    public string $type = 'text'; // Default type
+    public string $key;  
     public bool $required = false;
     public ?int $colSpan = null; // Default to full width if not specified
     public array $options = [];

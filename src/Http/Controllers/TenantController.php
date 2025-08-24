@@ -35,7 +35,7 @@ class TenantController extends AbstractController
     }
  
 
-    protected function getFields(?Model $model = null): array
+    protected function fields(?Model $model = null): array
     {
         $isUpdate = $model && $model->exists;
 
@@ -71,7 +71,7 @@ class TenantController extends AbstractController
         ];
     }
 
-    protected function getTableColumns(): array
+    protected function columns(): array
     {
         $columns = [
             Column::make('Logo')
@@ -113,7 +113,7 @@ class TenantController extends AbstractController
         return ['name', 'slug', 'domain', 'email'];
     }
 
-    protected function getFilters(): array
+    protected function filters(): array
     {
         return [
             [

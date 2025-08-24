@@ -120,7 +120,7 @@ class Repeater extends Field
     /**
      * Retorna todos os campos filhos
      */
-    public function getFields(): array
+    public function fields(): array
     {
         return $this->fields;
     }

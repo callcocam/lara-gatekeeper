@@ -71,7 +71,7 @@ const registerUIComponents = (app: App): void => {
         if (componentRegistry.indexOf(originalName) === -1) {
             app.component(originalName, definition.default);
             componentRegistry.push(originalName);
-            // console.log('originalName', originalName);
+            console.log('originalName', originalName);
         }
     });
 }

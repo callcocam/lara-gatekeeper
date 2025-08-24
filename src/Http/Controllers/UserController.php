@@ -40,7 +40,7 @@ class UserController extends AbstractController
         return 'User';
     }
 
-    protected function getFields(?Model $model = null): array
+    protected function fields(?Model $model = null): array
     {
         $isUpdate = $model && $model->exists;
 
@@ -86,7 +86,7 @@ class UserController extends AbstractController
         ];
     }
 
-    protected function getTableColumns(): array
+    protected function columns(): array
     {
         $columns = [
             Column::make('Avatar')
@@ -124,7 +124,7 @@ class UserController extends AbstractController
         return ['name', 'email'];
     }
 
-    protected function getFilters(): array
+    protected function filters(): array
     {
         return [
             [

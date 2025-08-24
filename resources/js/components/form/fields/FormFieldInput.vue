@@ -12,14 +12,17 @@ const props = defineProps<{
 
 // Use defineModel for v-model binding (Vue 3.4+)
 const model = defineModel<string | number | null>()
-
+const emit = defineEmits<{
+  (e: 'reactive', value: string | number | null): void;
+}>();
 // Computed property to handle null/undefined for input binding
 // Needed because native <input> doesn't handle null well
 const modelValueForInput = computed({
   get: () => model.value ?? '',
   set: (value) => { 
     // console.log(`[Gatekeeper/Input:${props.field.name}] Setting value:`, value);
-    model.value = value === '' ? null : value; 
+    model.value = value === '' ? null : value;
+    emit('reactive', model.value);
   }
 });
 
