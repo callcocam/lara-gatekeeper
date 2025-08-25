@@ -67,7 +67,8 @@ interface Props {
     routeNameBase: string;
     actions?: any[];
     can?: CanPermissions;
-    importOptions?: ImportOptions;
+    import?: ImportOptions;
+    export?: ImportOptions;
     fullWidth?: boolean;
 }
 
@@ -82,7 +83,6 @@ const {
     routeNameBase,
     actions,
     can,
-    importOptions,
     fullWidth
 } = toRefs(props);
 
@@ -101,20 +101,24 @@ const getClassName = () => {
                 <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="mb-4 flex justify-end gap-2">
+                             
                             <!-- Botão de Criar (usa can.create_resource ou um nome mais específico se passado) -->
                             <template v-if="actions && actions.length">
                                 <ActionRenderer v-for="action in actions" :key="action.id" :action="action" />
                             </template>
                         </div>
-                        <GtDataTable :items="data.data" :columns="columns" :meta="data.meta" :query-params="queryParams">
+                        <GtDataTable :items="data.data" :columns="columns" :meta="data.meta"
+                            :query-params="queryParams">
                             <template #toolbar>
-                                <GtDataTableToolbar :filters="filters" :query-params="queryParams" :searchable-columns="searchableColumns" />
+                                <GtDataTableToolbar :filters="filters" :query-params="queryParams"
+                                    :searchable-columns="searchableColumns" />
                             </template>
                             <template #pagination="{ meta }">
                                 <GtPagination :meta="meta" />
                             </template>
                         </GtDataTable>
-                        <pre class="whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm dark:bg-gray-700">{{ JSON.stringify(queryParams, null, 2) }}
+                        <pre class="whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm dark:bg-gray-700">{{ JSON.stringify(actions, null,
+                            2) }}
 </pre>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ use Illuminate\Routing\Route as RoutingRoute;
 
 class Action
 {
+    use Core\Concerns\FactoryPattern;
     use Table\Concerns\HasAction;
     use Core\Concerns\EvaluatesClosures;
     use Core\Concerns\BelongsToId;
@@ -45,12 +46,6 @@ class Action
         $this->id($this->accessorKey);
         $this->name($this->accessorKey);
     }
-
-    public static function make(string $accessorKey, ?string $header = null): self
-    {
-        return new static($accessorKey, $header);
-    }
-
     public function component(string $component): self
     {
         $this->component = $component;

@@ -39,6 +39,9 @@ trait ProvidesExtraData
      */
     protected function getImportOptions(): array
     {
+        if (method_exists($this, 'getImport')) {
+            return $this->getImport();
+        }
         return [];
     }
 
@@ -47,8 +50,9 @@ trait ProvidesExtraData
      */
     protected function getExportOptions(): array
     {
+        if (method_exists($this, 'getExport')) {
+            return $this->getExport();
+        }
         return [];
     }
-
-    
 }

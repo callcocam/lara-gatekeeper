@@ -228,4 +228,58 @@ abstract class AbstractController extends Controller
         return redirect()->route($this->getRouteNameBase() . '.index')
             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
     }
+
+    // ==================== Métodos adicionais ====================
+
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $this->authorize($this->getSidebarMenuPermission('bulk-action'));
+
+        $action = $request->input('action');
+        $selectedIds = $request->input('selectedIds', []);
+
+        if (empty($action) || empty($selectedIds) || !is_array($selectedIds)) {
+            return redirect()->back()->with('error', 'Ação ou IDs inválidos para ação em massa.');
+        }
+
+        $models = $this->model::whereIn('id', $selectedIds)->get();
+
+        foreach ($models as $model) {
+            // Verifica permissão para cada modelo individualmente
+            if (Gate::allows($this->getSidebarMenuPermission('bulk-action'), $model)) {
+                // Chama o método correspondente à ação, se existir
+                if (method_exists($this, $action)) {
+                    $this->$action($model);
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', 'Ação em massa executada com sucesso.');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $this->authorize($this->getSidebarMenuPermission('import'));
+
+        $file = $request->file('file');
+
+        if (!$file || !$file->isValid()) {
+            return redirect()->back()->with('error', 'Arquivo inválido.');
+        }
+
+        // Lógica para importar o arquivo
+        // ...
+
+        return redirect()->back()->with('success', 'Importação realizada com sucesso.');
+    }
+
+    public function export(Request $request): RedirectResponse
+    {
+        $this->authorize($this->getSidebarMenuPermission('export'));
+
+        // Lógica para exportar os dados
+        // ...
+
+        return redirect()->back()->with('success', 'Exportação realizada com sucesso.');
+    }
 }

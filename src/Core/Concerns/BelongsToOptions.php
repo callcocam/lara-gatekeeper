@@ -17,7 +17,7 @@ trait BelongsToOptions
      *
      * @var array
      */
-    protected array $options = [];
+    protected Closure|array $options = [];
 
 
     protected Closure|bool|null $multiple = false;
@@ -28,7 +28,7 @@ trait BelongsToOptions
      * @param array $options
      * @return static
      */
-    public function options(array $options): static
+    public function options(Closure|array $options): static
     {
         $this->options = $options;
         return $this;
@@ -40,7 +40,9 @@ trait BelongsToOptions
      */
     public function getOptions(): array
     {
-        return $this->evaluate($this->options);
+        return $this->evaluate($this->options, [
+            'request' => request()
+        ]);
     }
 
     public function multiple(bool|Closure $multiple = true): static

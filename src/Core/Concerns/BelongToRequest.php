@@ -38,6 +38,9 @@ trait BelongToRequest
      */
     public function getRequest()
     {
+        if (!$this->request) {
+            $this->request = request();
+        }
         return $this->request;
     }
 

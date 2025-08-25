@@ -12,6 +12,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Callcocam\LaraGatekeeper\Commands\LaraGatekeeperCommand;
 use Callcocam\LaraGatekeeper\Commands\LaraGatekeeperSetupCommand;
+use Illuminate\Routing\ResourceRegistrar;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 
 class LaraGatekeeperServiceProvider extends PackageServiceProvider
@@ -40,7 +41,7 @@ class LaraGatekeeperServiceProvider extends PackageServiceProvider
             ->hasCommand(LaraGatekeeperCommand::class)
             ->hasTranslations()
             ->hasAssets()
-            ->hasRoutes('web','api')
+            ->hasRoutes('web', 'api')
             ->hasCommand(LaraGatekeeperSetupCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
@@ -61,5 +62,11 @@ class LaraGatekeeperServiceProvider extends PackageServiceProvider
     {
         $this->app->register(\Callcocam\LaraGatekeeper\Core\Shinobi\ShinobiServiceProvider::class);
         $this->app->register(\Callcocam\LaraGatekeeper\Core\Landlord\LandlordServiceProvider::class);
+
+        $this->app->bind(ResourceRegistrar::class, BulkResourceRegistrar::class);
+
+        $this->app->bind(ResourceRegistrar::class, ImportResourceRegistrar::class);
+
+        $this->app->bind(ResourceRegistrar::class, ExportResourceRegistrar::class);
     }
 }

@@ -91,7 +91,7 @@ trait ProcessesFieldsAndColumns
      */
     protected function getTableActions(): array
     {
-        $actions = $this->getDefaultTableActions();
+        $actions = array_merge($this->getImportOptions(), $this->getExportOptions(), $this->getDefaultTableActions());
 
         $this->actions = $actions;
 

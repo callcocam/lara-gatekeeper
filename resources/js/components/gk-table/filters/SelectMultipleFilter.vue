@@ -31,8 +31,8 @@
                         </CommandItem>
                     </CommandGroup>
                     <CommandSeparator />
-                    <CommandGroup>
-                        <CommandItem :value="'_clear_'" class="justify-center text-center">
+                    <CommandGroup v-if="countSelected > 0">
+                        <CommandItem :value="'_clear_'" class="justify-center text-center" @select="clearFilters">
                             Limpar filtros
                         </CommandItem>
                     </CommandGroup>
@@ -80,16 +80,22 @@ const isSelected = (value: string | number) => {
 
 if (modelValue.value) {
     selectedValues.value = modelValue.value?.split(',');
-} else {
-    selectedValues.value = [];
 }
 const handleSelect = (option: Option) => {
     if (isSelected(option.value)) {
         selectedValues.value = selectedValues.value.filter(v => v !== option.value.toString());
+        if (selectedValues.value.length) {
+            selectedValues.value = [];
+            console.log('Selected values:', selectedValues.value);
+        }
     } else {
         selectedValues.value.push(option.value.toString());
     }
     emit('update:modelValue', selectedValues.value);
 };
 
+const clearFilters = () => {
+    selectedValues.value = [];
+    emit('update:modelValue', undefined);
+};
 </script>

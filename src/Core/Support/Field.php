@@ -19,19 +19,18 @@ class Field
     use Core\Concerns\BelongsToOptions;
     use Core\Concerns\BelongsToType;
     use Concerns\HasTypes;
-    use Concerns\HasOptions;
+    // use Concerns\HasOptions;
     use Concerns\HasTextarea;
     use Concerns\HasCombobox;
     public string $key;
     public bool $required = false;
-    public ?int $colSpan = null; // Default to full width if not specified
-    public array $options = [];
+    public ?int $colSpan = null; // Default to full width if not specified 
     public array $inputProps = [];
     public mixed $condition = true; // Can be boolean or Closure
     public ?int $gridCols = null; // For checkboxList, radioGroup layouts
     public ?string $description = null;
     public ?string $accept = null; // For file inputs
-    public ?bool $multiple = false; // For file inputs
+    // public ?bool $multiple = false; // For file inputs
     public ?string $relationship = null; // For related fields
     public ?string $labelAttribute = null; // For related fields
     public ?string $valueAttribute = null; // For related fields
