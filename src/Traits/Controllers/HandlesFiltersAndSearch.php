@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 trait HandlesFiltersAndSearch
 {
-   
+
 
     /**
      * Aplica filtros à query
@@ -15,13 +15,21 @@ trait HandlesFiltersAndSearch
     protected function applyFilters(Builder &$query, Request $request): void
     {
         foreach ($this->filters() as $filter) {
-            if ($request->filled($filter['column']) && !isset($filter['ignore'])) {
-                $value = $request->input($filter['column']);
-                
-                if (isset($filter['multiple']) && $filter['multiple']) {
-                    $query->whereIn($filter['column'], explode(',', $value));
+            $name = $filter->getName();
+            if ($request->filled($name)) {
+                $value = $request->input($name);
+                if ($filter->isFormatted()) {
+                    $value = $filter->applyFormat($query, $value);
                 } else {
-                    $query->where($filter['column'], $value);
+                    if ($filter->isMultiple()) {
+                        if (is_array($value)) {
+                            $query->whereIn($name, $value);
+                        } else {
+                            $query->whereIn($name, explode(',', $value));
+                        }
+                    } else {
+                        $query->where($name, $value);
+                    }
                 }
             }
         }
@@ -30,11 +38,11 @@ trait HandlesFiltersAndSearch
     /**
      * Aplica busca à query
      */
-    protected function applySearch(Builder &$query, Request $request): void
+    protected function applySearch(Builder &$query, Request $request): array
     {
+        $searchableDbColumns = $this->getSearchableColumns();
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $searchableDbColumns = $this->getSearchableColumns(); 
             if (!empty($searchableDbColumns)) {
                 $query->where(function ($q) use ($search, $searchableDbColumns) {
                     foreach ($searchableDbColumns as $dbColumn) {
@@ -51,6 +59,8 @@ trait HandlesFiltersAndSearch
                 });
             }
         }
+
+        return $searchableDbColumns;
     }
 
     /**
@@ -69,5 +79,4 @@ trait HandlesFiltersAndSearch
     {
         return []; // Padrão: não carregar nenhum relacionamento
     }
- 
 }

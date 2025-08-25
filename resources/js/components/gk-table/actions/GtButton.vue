@@ -1,19 +1,16 @@
 <template>
     <div>
-        <Button @click="handleClick" class="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <Button @click="handleClick" v-bind="attributes(action)">
             <template v-if="action.icon && action.iconPosition === 'left'">
                 <Icon :name="action.icon" />
             </template>
-            <span>{{ action.label }}</span>
+            <span :class="cn({
+                'sr-only': action.size == 'icon',
+            })">{{ action.label }}</span>
             <template v-if="action.icon && action.iconPosition === 'right'">
                 <Icon :name="action.icon" />
             </template>
         </Button>
-        <!-- Modal de Confirmação -->
-        <ConfirmModal :show="showConfirmModal" :title="action.confirm?.title || 'Ação Personalizada'"
-            :description="action.confirm?.description || 'Você tem certeza que deseja realizar esta ação personalizada?'"
-            confirm-text="Sim, fazer isso" cancel-text="Não, cancelar" variant="warning" @confirm="confirmAction"
-            @cancel="cancelAction" />
     </div>
 </template>
 
@@ -21,7 +18,7 @@
 import { ref } from 'vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
-import ConfirmModal from './ConfirmModal.vue';
+import { cn } from '@/lib/utils';
 
 interface ActionProps {
     action: {
@@ -31,36 +28,41 @@ interface ActionProps {
         color?: string;
         routeName?: string;
         iconPosition?: string;
+        size: "default" | "sm" | "lg" | "icon" | null | undefined;
+        variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
         confirm?: {
             title: string;
             description: string;
         };
     };
 }
-
-const props = defineProps<ActionProps>();
+defineProps<ActionProps>();
 const emit = defineEmits<{
     click: [];
 }>();
 
-const showConfirmModal = ref(false);
-
 const handleClick = () => {
-    // Se a ação tem confirmação, mostra o modal
-    if (props.action.confirm) {
-        showConfirmModal.value = true;
-    } else {
-        // Executa a ação diretamente
-        emit('click');
-    }
-};
-
-const confirmAction = () => {
-    showConfirmModal.value = false;
     emit('click');
 };
 
-const cancelAction = () => {
-    showConfirmModal.value = false;
+const attributes = (action: any) => {
+    // Map your color or custom logic to allowed variants
+    const allowedVariants = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'];
+    // Example: use 'default' if color is set, otherwise 'secondary'
+    const variant = action.variant && allowedVariants.includes(action.variant) ? action.variant : 'default';
+
+    if (variant) {
+        return {
+            variant,
+            size: action.size ?? 'sm',
+            class: cn('flex items-center gap-2', action?.class),
+        }
+    }
+
+    return {
+        variant,
+        class: cn('flex items-center gap-2', action?.class),
+        style: action?.style ?? { background: 'linear-gradient(to right, #1e293b, #a8ff3e)', color: 'white' }
+    };
 };
 </script>

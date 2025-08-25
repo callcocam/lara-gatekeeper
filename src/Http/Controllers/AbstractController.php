@@ -86,23 +86,26 @@ abstract class AbstractController extends Controller
         // Processar colunas usando a trait
         $tableColumns = $this->processTableColumns();
         $actions = $this->getTableActions();
+        $filters = array_map(fn($filter) => $filter->toArray(), $this->filters());
 
         // Aplicar filtros, busca e ordenação
         $this->applyFilters($this->query, $request);
         $this->applyExtraFilters($this->query, $request);
-        $this->applySearch($this->query, $request);
+        $searchableColumns = $this->applySearch($this->query, $request);
         $this->applySorting($this->query, $request, $tableColumns);
 
         return Inertia::render($this->getViewIndex(), [
             ...$this->toArray(),
             'columns' => $tableColumns,
-            'filterOptions' => $this->filters(),
+            'filters' => $filters,
             'actions' => $actions,
             'importOptions' => $this->getImportOptions(),
             'exportOptions' => $this->getExportOptions(),
             'extraData' => $this->getExtraDataForIndex(),
             'fullWidth' => $this->getFullWidthIndexPage() ?? false,
             'currentFilters' => $request->query(),
+            'queryParams' => $request->query(),
+            'searchableColumns' => $searchableColumns,
             ...$this->getToArrayManagesResources(),
             ...$this->getToArrayHasDebugCustomFilters(),
             ...$this->getToArrayHasScreen()

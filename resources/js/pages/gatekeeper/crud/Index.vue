@@ -60,7 +60,8 @@ interface Props {
     data: PaginatedData<any>;
     columns: BackendColumnDef[];
     filters: Record<string, string>;
-    filterOptions: FilterOption[];
+    queryParams: FilterOption;
+    searchableColumns: string[];
     pageTitle: string;
     breadcrumbs: BreadcrumbItem[];
     routeNameBase: string;
@@ -75,7 +76,7 @@ const {
     data,
     columns,
     filters,
-    filterOptions,
+    queryParams,
     pageTitle,
     breadcrumbs,
     routeNameBase,
@@ -105,8 +106,15 @@ const getClassName = () => {
                                 <ActionRenderer v-for="action in actions" :key="action.id" :action="action" />
                             </template>
                         </div>
-                        <GtDataTable :items="data.data" :columns="columns" />
-                        <pre class="whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm dark:bg-gray-700">{{ JSON.stringify(data, null, 2) }}
+                        <GtDataTable :items="data.data" :columns="columns" :meta="data.meta" :query-params="queryParams">
+                            <template #toolbar>
+                                <GtDataTableToolbar :filters="filters" :query-params="queryParams" :searchable-columns="searchableColumns" />
+                            </template>
+                            <template #pagination="{ meta }">
+                                <GtPagination :meta="meta" />
+                            </template>
+                        </GtDataTable>
+                        <pre class="whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm dark:bg-gray-700">{{ JSON.stringify(queryParams, null, 2) }}
 </pre>
                     </div>
                 </div>

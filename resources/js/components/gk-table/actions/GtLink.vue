@@ -1,30 +1,24 @@
 <template>
     <div>
-        <Button @click="handleClick" variant="ghost" class="flex items-center gap-2 !text-white border-none shadow-none"
-            :style="{ background: 'linear-gradient(to right, #1e293b, #a8ff3e)', color: 'white' }">
+        <Button :href="action.url" v-bind="attributes(action)" :as="Link">
             <template v-if="action.icon && action.iconPosition === 'left'">
-                <Icon :name="action.icon" />
+                <Icon :name="action.icon" class="w-6 h-6" />
             </template>
-            <span>{{ action.label }}</span>
+            <span :class="cn({
+                'sr-only': action.size == 'icon',
+            })">{{ action.label }}</span>
             <template v-if="action.icon && action.iconPosition === 'right'">
                 <Icon :name="action.icon" />
             </template>
         </Button>
-
-        <!-- Modal de Confirmação -->
-        <ConfirmModal :show="showConfirmModal" :title="action.confirm?.title || 'Ação Personalizada'"
-            :description="action.confirm?.description || 'Você tem certeza que deseja realizar esta ação personalizada?'"
-            confirm-text="Sim, fazer isso" cancel-text="Não, cancelar" variant="warning" @confirm="confirmAction"
-            @cancel="cancelAction" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
-import { router } from '@inertiajs/vue3';
-import ConfirmModal from './ConfirmModal.vue';
+import { cn } from '../../../lib/utils';
+import { Link } from '@inertiajs/vue3';
 
 interface ActionProps {
     action: {
@@ -32,8 +26,10 @@ interface ActionProps {
         label: string;
         icon?: string;
         color?: string;
-        url: string;
+        url?: string;
         iconPosition?: string;
+        size: "default" | "sm" | "lg" | "icon" | null | undefined;
+        variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
         confirm?: {
             title: string;
             description: string;
@@ -43,24 +39,26 @@ interface ActionProps {
 
 const props = defineProps<ActionProps>();
 
-const showConfirmModal = ref(false);
 
-const handleClick = () => {
-    // Se a ação tem confirmação, mostra o modal
-    if (props.action.confirm) {
-        showConfirmModal.value = true;
-    } else {
-        // Navega diretamente
-        router.visit(props.action.url);
+const attributes = (action: any) => {
+    // Map your color or custom logic to allowed variants
+    const allowedVariants = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link']; 
+    // Example: use 'default' if color is set, otherwise 'secondary'
+    const variant = action.variant && allowedVariants.includes(action.variant) ? action.variant : null;
+    if (variant) {
+        return {
+            variant,
+            size: action.size ?? 'sm',
+            class: cn('flex items-center', action?.class),
+        }
     }
+
+    return {
+        variant,
+        size: action.size ?? 'sm',
+        class: cn('flex items-center gap-1', action?.class),
+        style: action?.style ?? { background: 'linear-gradient(to right, #1e293b, #a8ff3e)', color: 'white' }
+    };
 };
 
-const confirmAction = () => {
-    showConfirmModal.value = false;
-    router.visit(props.action.url);
-};
-
-const cancelAction = () => {
-    showConfirmModal.value = false;
-};
 </script>

@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Created by Claudio Campos.
+ * User: callcocam@gmail.com, contato@sigasmart.com.br
+ * https://www.sigasmart.com.br
+ */
+
 namespace Callcocam\LaraGatekeeper\Core\Support;
 
 use Callcocam\LaraGatekeeper\Core;
@@ -21,6 +27,7 @@ class Action
     protected string $component = 'Link';
     public string $accessorKey;
     public ?string $variant = null;
+    protected ?string $method = 'GET';
     public ?string $routeSuffix = null;
     public ?string $routeNameBase = null;
     public ?string $permission = null;
@@ -50,8 +57,20 @@ class Action
         return $this;
     }
 
+    public function method(?string $method): self
+    {
+        $this->method = $method;
+        return $this;
+    }
+
+    public function getMethod(): ?string
+    {
+        return $this->method;
+    }
+
     public function confirm(Closure $callback): self
     {
+        $this->component('ConfirmModal');
         $this->confirmCallback = $callback;
         return $this;
     }
@@ -147,6 +166,11 @@ class Action
         }
 
         return true;
+    }
+
+    public function getVariant(): ?string
+    {
+        return $this->variant;
     }
 
     /**
@@ -249,9 +273,11 @@ class Action
             'accessorKey' => $this->accessorKey,
             'component' => $this->component,
             'label' => $this->getLabel(),
-            'variant' => $this->variant,
+            'method' => $this->getMethod(),
+            'variant' => $this->getVariant(),
             'icon' => $this->getIcon(),
             'iconPosition' => $this->getIconPosition(),
+            'size' => $this->getSize(),
             'url' => $this->generateUrl($item),
             'visible' => $this->isVisible($item),
             'confirm' => $this->confirmCallback ? $this->evaluate($this->confirmCallback, ['record' => $item]) : null

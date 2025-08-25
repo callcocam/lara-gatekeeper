@@ -16,6 +16,8 @@ trait BelongsToIcon
 
     protected Closure|string $iconPosition = 'left';
 
+    protected Closure|string $size = 'sm';
+
     /**
      * Define o ícone da ação
      */
@@ -65,5 +67,21 @@ trait BelongsToIcon
     {
         return $this->evaluate($this->iconPosition);
     }
- 
+
+    /**
+     * Define o tamanho do ícone
+     */
+    public function size(Closure|string $size): static
+    {
+        $this->size = $size;
+        return $this;
+    }
+
+    /**
+     * Obtém o tamanho do ícone
+     */
+    public function getSize(): string
+    {
+        return $this->evaluate($this->size);
+    }
 }

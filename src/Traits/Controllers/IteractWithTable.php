@@ -29,7 +29,7 @@ trait IteractWithTable
             return;
         }
 
-        $modelClass = is_string($this->model) ? $this->model : get_class($this->model); 
+        $modelClass = is_string($this->model) ? $this->model : get_class($this->model);
 
         try {
             // Introspecção simplificada
@@ -72,7 +72,9 @@ trait IteractWithTable
     protected function processTableData(): array
     {
 
-        $paginator = $this->query->paginate($this->getPerPage())->withQueryString();
+        $paginator = $this->query->paginate($this->getPerPage())
+            ->onEachSide(2)
+            ->withQueryString();
 
 
         return [
@@ -87,10 +89,11 @@ trait IteractWithTable
                     'to' => $paginator->lastItem(),
                     'total' => $paginator->total(),
                     'per_page' => $paginator->perPage(),
-                ],
-                'links' => [
-                    'prev' => $paginator->previousPageUrl(),
                     'next' => $paginator->nextPageUrl(),
+                    'prev' => $paginator->previousPageUrl(),
+                    'links' => $paginator->linkCollection()->toArray(),
+                    'path' => $paginator->path(),
+                    'select_per_page' => $this->selectPerPageOptions()
                 ],
             ]
         ];
@@ -131,11 +134,11 @@ trait IteractWithTable
         return $this->request;
     }
 
-     /**
+    /**
      * Configura colunas pesquisáveis baseado nas colunas da tabela
      */
     protected function configureSearchableColumns(): void
-    { 
+    {
         foreach ($this->columns() as $column) {
             if ($column->isSearchable()) {
                 $this->searchableColumns[] = $column->getName();
@@ -143,4 +146,8 @@ trait IteractWithTable
         }
     }
 
+    protected function selectPerPageOptions(): array
+    {
+        return [5, 10, 25, 50, 100];
+    }
 }

@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Created by Claudio Campos.
+ * User: callcocam@gmail.com, contato@sigasmart.com.br
+ * https://www.sigasmart.com.br
+ */
+
 namespace Callcocam\LaraGatekeeper\Core\Support;
 
 use Callcocam\LaraGatekeeper\Core;
@@ -16,7 +22,7 @@ class Field
     use Concerns\HasOptions;
     use Concerns\HasTextarea;
     use Concerns\HasCombobox;
-    public string $key;  
+    public string $key;
     public bool $required = false;
     public ?int $colSpan = null; // Default to full width if not specified
     public array $options = [];
@@ -167,12 +173,12 @@ class Field
         return $this;
     }
 
-     // Shortcut for accept attribute (file types)
-     public function accept(string $accept): self
-     {
-        $this->accept = $accept; 
+    // Shortcut for accept attribute (file types)
+    public function accept(string $accept): self
+    {
+        $this->accept = $accept;
         return $this;
-     }
+    }
 
     // Set display condition (can be a boolean or a Closure)
     public function when(mixed $condition): self
@@ -239,7 +245,7 @@ class Field
         if ($this->relationship) {
             if (method_exists($modelInstance, $this->relationship)) {
                 $this->options = $modelInstance->{$this->relationship}->pluck($labelAttribute, $valueAttribute)->toArray();
-            } 
+            }
         }
         return $this;
     }
@@ -290,38 +296,38 @@ class Field
         if ($this->description !== null) {
             $data['description'] = $this->description;
         }
-         if ($this->accept !== null) {
-             $data['accept'] = $this->accept;
-         }
-         if ($this->relationship !== null) {
+        if ($this->accept !== null) {
+            $data['accept'] = $this->accept;
+        }
+        if ($this->relationship !== null) {
             $data['relationship'] = $this->relationship;
             $data['labelAttribute'] = $this->labelAttribute;
             $data['valueAttribute'] = $this->valueAttribute;
-         }
+        }
 
-         // SmartSelect properties
-         if ($this->apiUrl !== null) {
-             $data['apiUrl'] = $this->apiUrl;
-         }
-         if ($this->displayTemplate !== null) {
-             $data['displayTemplate'] = $this->displayTemplate;
-         }
-         if ($this->withActions !== null) {
-             $data['withActions'] = $this->withActions;
-         }
-         if ($this->acceptedFileTypes !== null) {
-             $data['acceptedFileTypes'] = $this->acceptedFileTypes;
-         }
-         if ($this->maxFileSize !== null) {
-             $data['maxFileSize'] = $this->maxFileSize;
-         }
-         if ($this->acceptedFormats !== null) {
-             $data['acceptedFormats'] = $this->acceptedFormats;
-         }
+        // SmartSelect properties
+        if ($this->apiUrl !== null) {
+            $data['apiUrl'] = $this->apiUrl;
+        }
+        if ($this->displayTemplate !== null) {
+            $data['displayTemplate'] = $this->displayTemplate;
+        }
+        if ($this->withActions !== null) {
+            $data['withActions'] = $this->withActions;
+        }
+        if ($this->acceptedFileTypes !== null) {
+            $data['acceptedFileTypes'] = $this->acceptedFileTypes;
+        }
+        if ($this->maxFileSize !== null) {
+            $data['maxFileSize'] = $this->maxFileSize;
+        }
+        if ($this->acceptedFormats !== null) {
+            $data['acceptedFormats'] = $this->acceptedFormats;
+        }
 
         // Condition is resolved server-side, not passed to frontend
         // $data['condition'] = $this->condition; 
 
         return $data;
     }
-} 
+}

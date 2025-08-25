@@ -1,19 +1,21 @@
 <template>
-    <div>
+    <div class="flex flex-col w-full">
+        <slot name="toolbar" />
         <Table>
-            <TableCaption>A list of your recent invoices.</TableCaption>
+            <TableCaption v-if="!items.length">Nenhum registro encontrado.</TableCaption>
             <TableHeader>
-                <TableRow>
-                    <TableHead v-for="column in columns" :key="column.id">{{ column.label }}</TableHead>
-                </TableRow>
+                <template v-for="column in columns" :key="column.id">
+                    <GtHeading v-if="column.sortable" :column="column" :query-params="queryParams" />
+                    <TableHead v-else>{{ column.label }}</TableHead>
+                </template>
             </TableHeader>
             <TableBody>
                 <TableRow v-for="item in items" :key="item.id">
                     <TableCell v-for="column in columns" :key="column.id">
                         <template v-if="column.id === 'actions' && item.actions">
-                            <TableCell v-for="action in item.actions" :key="action.id">
-                                <ActionRenderer :action="action" />
-                            </TableCell>
+                            <div class="flex items-center space-x-1 justify-start">
+                                <ActionRenderer v-for="action in item.actions" :key="action.id" :action="action" />
+                            </div>
                         </template>
                         <template v-else>
                             <span v-html="item[column.accessorKey]"></span>
@@ -22,6 +24,7 @@
                 </TableRow>
             </TableBody>
         </Table>
+        <slot name="pagination" :meta="meta" />
     </div>
 </template>
 <script setup lang="ts">
@@ -34,21 +37,40 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table' 
 import { ref } from 'vue';
+import GtHeading from './GtHeading.vue';
 
 const props = defineProps({
+    queryParams: {
+        type: Object as () => {
+            [key: string]: any;
+        },
+        required: true
+    },
     columns: {
         type: Array as () => Array<{
             id: string;
             label: string;
             accessorKey: string;
             isAction: boolean;
+            sortable: boolean;
         }>,
         required: true
     },
     items: {
         type: Array as () => Array<Record<string, any>>,
+        required: true
+    },
+    meta: {
+        type: Object as () => {
+            total: number;
+            per_page: number;
+            current_page: number;
+            last_page: number;
+            from: number;
+            to: number;
+        },
         required: true
     }
 });

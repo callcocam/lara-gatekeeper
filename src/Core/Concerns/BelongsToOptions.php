@@ -20,7 +20,7 @@ trait BelongsToOptions
     protected array $options = [];
 
 
-    protected Closure|bool|null $multiple = null;
+    protected Closure|bool|null $multiple = false;
 
     /**
      * Set the options for the filter.
@@ -46,6 +46,7 @@ trait BelongsToOptions
     public function multiple(bool|Closure $multiple = true): static
     {
         $this->multiple = $multiple;
+        $this->component('SelectMultipleFilter');
         return $this;
     }
 
