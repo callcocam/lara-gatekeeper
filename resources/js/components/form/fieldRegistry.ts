@@ -13,8 +13,7 @@ import FormFieldFilePond from './fields/FormFieldFilePond.vue';
 import FormFieldSwitch from './fields/FormFieldSwitch.vue';
 import FormFieldCheckbox from './fields/FormFieldCheckbox.vue';
 import FormFieldTags from './fields/FormFieldTags.vue';
-import FormFieldSmartSelect from './fields/FormFieldSmartSelect.vue';
-import FormFieldWorkflowStepCalculator from './fields/FormFieldWorkflowStepCalculator.vue';
+import FormFieldSmartSelect from './fields/FormFieldSmartSelect.vue'; 
 import FormFieldMultiLevelSelect from './fields/FormFieldMultiLevelSelect.vue';
 export const defaultFieldComponents = {
     text: FormFieldInput,
@@ -30,7 +29,7 @@ export const defaultFieldComponents = {
     select: FormFieldSelect,
     combobox: FormFieldCombobox,
     richtext: FormFieldRichText,
-    file: FormFieldFile,  
+    file: FormFieldFile,
     image: FormFieldFile, // 'image' ainda usa FormFieldFile?
     repeater: FormFieldRepeater,
     modalSelect: FormFieldModalSelect,
@@ -49,5 +48,4 @@ export const defaultFieldComponents = {
 
 // Tipar para garantir consistência (Opcional, mas bom)
 import type { Component } from 'vue';
-import { date } from 'zod';
 export type FieldRegistry = Record<string, Component>; 

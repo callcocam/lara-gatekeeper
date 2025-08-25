@@ -35,7 +35,7 @@ class Action
     public ?string $fullRouteName = null;
     public array $routeParameters = [];
     public ?Closure $visibilityCallback = null;
-    public ?Closure $urlCallback = null;
+    public Closure|string|null $urlCallback = null;
     public ?Closure $confirmCallback = null;
 
 
@@ -112,7 +112,7 @@ class Action
         return $this;
     }
 
-    public function url(Closure $callback): self
+    public function url(Closure|string $callback): self
     {
         $this->urlCallback = $callback;
         return $this;

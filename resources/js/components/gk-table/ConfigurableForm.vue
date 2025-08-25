@@ -2,7 +2,7 @@
     <div v-for="(rowFields, rowIndex) in groupedFields" :key="`row-${rowIndex}`"
         class="grid grid-cols-12 gap-x-4 gap-y-4 items-start">
         <div v-for="field in rowFields" :key="field.name" :class="getColSpanClass(field)">
-            <FormFieldWrapper :field="field" :model-value="inertiaForm[field.name]"
+            <FormFieldTableWrapper :field="field" :model-value="inertiaForm[field.name]"
                 :error="inertiaForm.errors[field.name]" @update:model-value="handleFieldUpdate(field.name, $event)"
                 @fieldAction="handleFieldAction" />
         </div>
@@ -12,28 +12,8 @@
 
 import type { InertiaForm } from '@inertiajs/vue3' // Tipo correto
 import { computed } from 'vue';
+import { FieldConfig, FormValues } from '../../types/field';
 
-// DEFINE and EXPORT types locally (ou mover para um arquivo types.ts dentro do pacote)
-export interface FieldConfig {
-    name: string;
-    label: string;
-    type: string;
-    required?: boolean;
-    description?: string;
-    options?: Record<string, string>;
-    row?: number;
-    colSpan?: number;
-    // Allow any other props needed by specific field components
-    [key: string]: any;
-}
-
-export interface FormErrors {
-    [key: string]: string; // Erros do Inertia são string, não array
-}
-
-export interface FormValues {
-    [key: string]: any;
-}
 
 const props = defineProps<{
     fields: FieldConfig[];
@@ -63,6 +43,7 @@ const getColSpanClass = (field: FieldConfig) => {
 // Lidar com update do FormFieldWrapper para atualizar o form.data
 const handleFieldUpdate = (fieldName: string, newValue: any) => {
     // Emitir evento para o pai atualizar o form
+    console.log(`[DynamicForm] Field "${fieldName}" updated to:`, newValue);
     emit('updateField', fieldName, newValue);
 };
 

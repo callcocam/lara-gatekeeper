@@ -261,12 +261,15 @@ abstract class AbstractController extends Controller
     {
         $this->authorize($this->getSidebarMenuPermission('import'));
 
-        $file = $request->file('file');
+        $action = $this->getAction('import');
+
+        $file = $request->file($action->getFileName());
 
         if (!$file || !$file->isValid()) {
             return redirect()->back()->with('error', 'Arquivo inválido.');
         }
 
+        dd($file->getClientOriginalName());
         // Lógica para importar o arquivo
         // ...
 

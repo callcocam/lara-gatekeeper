@@ -63,10 +63,7 @@ class LaraGatekeeperServiceProvider extends PackageServiceProvider
         $this->app->register(\Callcocam\LaraGatekeeper\Core\Shinobi\ShinobiServiceProvider::class);
         $this->app->register(\Callcocam\LaraGatekeeper\Core\Landlord\LandlordServiceProvider::class);
 
-        $this->app->bind(ResourceRegistrar::class, BulkResourceRegistrar::class);
-
-        $this->app->bind(ResourceRegistrar::class, ImportResourceRegistrar::class);
-
-        $this->app->bind(ResourceRegistrar::class, ExportResourceRegistrar::class);
+        // Usar o registrar estendido que permite configuração flexível
+        $this->app->bind(ResourceRegistrar::class, CompositeResourceRegistrar::class);
     }
 }

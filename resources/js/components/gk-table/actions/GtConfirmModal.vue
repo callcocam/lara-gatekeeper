@@ -57,31 +57,9 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { cn } from '../../../lib/utils';
-
-interface ActionProps {
-    action: {
-        id: string;
-        label: string;
-        icon?: string;
-        color?: string;
-        url?: string;
-        iconPosition?: string;
-        size: "default" | "sm" | "lg" | "icon" | null | undefined;
-        variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-        method?: "GET" | "POST" | "PUT" | "DELETE";
-        confirm?: {
-            title: string;
-            description: string;
-            confirmButtonText: string;
-            cancelButtonText: string;
-            confirmIcon?: string;
-            cancelIcon?: string;
-        };
-    };
-}
+import { ActionProps } from '../../../types/field';
 
 const props = defineProps<ActionProps>();
-
 
 const attributes = (action: any) => {
     // Map your color or custom logic to allowed variants

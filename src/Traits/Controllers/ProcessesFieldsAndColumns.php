@@ -30,6 +30,12 @@ trait ProcessesFieldsAndColumns
         return $this->actions;
     }
 
+    public function getAction(string $name): ?Action
+    {
+        $action = collect($this->actions)->firstWhere('name', $name);
+        return $action;
+    }
+
     /**
      * Processa os campos definidos pelo método fields.
      * Converte objetos Field em arrays e filtra os nulos (condicionais não atendidas).
@@ -96,7 +102,7 @@ trait ProcessesFieldsAndColumns
         $this->actions = $actions;
 
         // Adicionar ações padrão se não estiverem definidas
-        return collect($actions)->map(function ($action) {
+        return collect($actions)->map(function ($action) { 
             return $action->toArray();
         })->toArray();
     }

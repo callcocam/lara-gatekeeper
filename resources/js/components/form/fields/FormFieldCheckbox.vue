@@ -24,21 +24,20 @@ const emit = defineEmits<{
   (e: 'reactive', value: boolean | null): void;
 }>();
 
-// Computed para lidar com valores null/undefined para o checkbox
-const modelValueForCheckbox = computed({
-  get: () => model.value ?? false,
-  set: (value) => {
-    model.value = value;
-    emit('reactive', value);
-  }
-});
+// Função para lidar com mudanças do checkbox
+const handleChange = (checked: boolean | 'indeterminate') => {
+  const value = checked === 'indeterminate' ? false : Boolean(checked);
+  model.value = value;
+  emit('reactive', value);
+};
 </script>
 
 <template>
   <div :id="props.id" class="flex items-center gap-3 py-1">
     <Checkbox
       :id="props.id + '-checkbox'"
-      v-model:modelValue="modelValueForCheckbox"
+      :checked="Boolean(model)"
+      @update:model-value="handleChange"
       :disabled="props.field.disabled"
       v-bind="props.inputProps"
     />

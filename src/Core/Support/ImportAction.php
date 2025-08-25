@@ -19,6 +19,8 @@ class ImportAction extends Action
     use Core\Concerns\BelongsToModal;
 
     protected string $component = 'ImportAction';
+
+    protected Closure|string|null $fileName = 'file';
     /**
      * Formatação da coluna
      *
@@ -26,11 +28,22 @@ class ImportAction extends Action
      */
     protected Closure|string|null $formatUsing = null;
 
+    public function fieldName(Closure|string|null $name): self
+    {
+        $this->fileName = $name;
+        return $this;
+    }
+
+    public function getFieldName(): ?string
+    {
+        return $this->evaluate($this->fileName);
+    }
+
     public function toArray($item = null): array
     {
         return array_merge(parent::toArray($item), [
             'type' => $this->getType(),
-            'modal' => $this->getModal(),            
+            'modal' => $this->getModal(),
         ]);
     }
 }

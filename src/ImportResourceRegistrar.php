@@ -18,6 +18,7 @@ class ImportResourceRegistrar extends ResourceRegistrar
     public function register($name, $controller, array $options = [])
     {
         parent::register($name, $controller, $options);
+        dd($name);
 
         // Adiciona rota de importação automaticamente
         $this->router->post("{$name}/import", [$controller, 'import'])
