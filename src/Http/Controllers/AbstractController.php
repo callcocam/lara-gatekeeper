@@ -264,11 +264,11 @@ abstract class AbstractController extends Controller
     {
         $this->authorize($this->getSidebarMenuPermission('import'));
 
-        $this->getTableActions(); 
+        $this->getTableActions();
 
-        $action = $this->getAction('import'); 
+        $action = $this->getAction('import');
 
-        $result = $this->evaluate($action->getCallback(), ['request' => $request]); 
+        $result = $this->evaluate($action->getCallback(), ['request' => $request]);
         if ($result instanceof RedirectResponse) {
             return $result;
         }
@@ -279,9 +279,23 @@ abstract class AbstractController extends Controller
     {
         $this->authorize($this->getSidebarMenuPermission('export'));
 
-        // Lógica para exportar os dados
-        // ...
+        $this->getTableActions();
 
-        return redirect()->back()->with('success', 'Exportação realizada com sucesso.');
+        $action = $this->getAction('export');
+
+        $query = $this->model::query();
+
+        $this->applyFilters($query, $request);
+
+        $this->applySearch($query, $request);
+
+        $this->applyExtraFilters($query, $request);
+
+        $result = $this->evaluate($action->getCallback(), ['query' => $query]);
+
+        if ($result instanceof RedirectResponse) {
+            return $result;
+        }
+        return redirect()->back()->with('error', 'Export action did not return a valid response.');
     }
 }

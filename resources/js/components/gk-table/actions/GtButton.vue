@@ -19,23 +19,8 @@ import { ref } from 'vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-interface ActionProps {
-    action: {
-        id: string;
-        label: string;
-        icon?: string;
-        color?: string;
-        routeName?: string;
-        iconPosition?: string;
-        size: "default" | "sm" | "lg" | "icon" | null | undefined;
-        variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-        confirm?: {
-            title: string;
-            description: string;
-        };
-    };
-}
+import { ActionProps } from '../../../types/field';
+ 
 defineProps<ActionProps>();
 const emit = defineEmits<{
     click: [];

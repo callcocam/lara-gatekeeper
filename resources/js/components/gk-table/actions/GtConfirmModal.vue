@@ -57,9 +57,10 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { cn } from '../../../lib/utils';
-import { ActionProps } from '../../../types/field';
+import { ActionProps } from '../../../types/field'; 
 
 const props = defineProps<ActionProps>();
+console.log(props.action);
 
 const attributes = (action: any) => {
     // Map your color or custom logic to allowed variants
@@ -81,8 +82,7 @@ const attributes = (action: any) => {
     };
 };
 
-const confirmAction = () => {
-    console.log('Action confirmed:', props.action.url);
+const confirmAction = () => { 
     if (props.action.url) {
         switch (props.action.method) {
             case 'POST':
