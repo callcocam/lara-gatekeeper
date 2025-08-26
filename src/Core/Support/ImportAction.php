@@ -34,6 +34,8 @@ class ImportAction extends Action
             // Lógica para processar o arquivo de importação 
             return redirect()->back()->with('success', 'Ação de importação basica, você pode personalizar. não esqueça de implementar a lógica de importação.');
         });
+
+        $this->modalDescription('Selecione um arquivo para importar a estrutura mercadológica.');
     }
     /**
      * Formatação da coluna
