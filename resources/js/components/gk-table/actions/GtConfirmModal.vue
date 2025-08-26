@@ -59,9 +59,14 @@ import {
 import { cn } from '../../../lib/utils';
 import { ActionProps } from '../../../types/field';
 
-const props = defineProps<ActionProps>(); 
+const props = defineProps<ActionProps & {
+    callback?: (action: any) => void;
+}>();
 
- 
+const emit = defineEmits<{
+    (e: 'action:success', response: any): void;
+    (e: 'action:error', error: any): void;
+}>();
 
 const attributes = (action: any) => {
     // Map your color or custom logic to allowed variants
@@ -85,33 +90,43 @@ const attributes = (action: any) => {
 };
 
 const confirmAction = () => {
-    if (props.action.url) {
-        switch (props.action.method) {
-            case 'POST':
-                router.post(props.action.url, {}, {
-                    preserveState: true,
-                    replace: true,
-                });
-                break;
-            case 'PUT':
-                router.put(props.action.url, {}, {
-                    preserveState: true,
-                    replace: true,
-                });
-                break;
-            case 'DELETE':
-                router.delete(props.action.url, {
-                    preserveState: true,
-                    replace: true,
-                });
-                break;
-            case 'GET':
-            default:
-                router.visit(props.action.url, {
-                    preserveState: true,
-                    replace: true,
-                });
-                break;
+    if (props.callback) {
+        props.callback(props.action);
+    } else {
+        if (props.action.url) {
+            switch (props.action.method) {
+                case 'POST':
+                    router.post(props.action.url, {}, {
+                        preserveState: true,
+                        replace: true,
+                        onSuccess: (response) => {
+                            emit('action:success', response);
+                        },
+                        onError: (error) => {
+                            emit('action:error', error);
+                        },
+                    });
+                    break;
+                case 'PUT':
+                    router.put(props.action.url, {}, {
+                        preserveState: true,
+                        replace: true,
+                    });
+                    break;
+                case 'DELETE':
+                    router.delete(props.action.url, {
+                        preserveState: true,
+                        replace: true,
+                    });
+                    break;
+                case 'GET':
+                default:
+                    router.visit(props.action.url, {
+                        preserveState: true,
+                        replace: true,
+                    });
+                    break;
+            }
         }
     }
 };

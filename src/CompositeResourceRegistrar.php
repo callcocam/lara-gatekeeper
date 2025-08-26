@@ -80,7 +80,11 @@ class CompositeResourceRegistrar extends ResourceRegistrar
             // Export todos os registros
 
             // Export registros selecionados
-            $this->router->post("{$name}/export/file", [
+            // $this->router->post("{$name}/export/file", [
+            //     'uses' => "{$controller}@export",
+            //     'as' => "{$name}.export"
+            // ]);
+            $this->router->get("{$name}/export/file", [
                 'uses' => "{$controller}@export",
                 'as' => "{$name}.export"
             ]);
