@@ -83,6 +83,7 @@ interface Option {
 }
 
 interface FilterProps {
+    modelValue: any;
     filter: {
         id: string;
         label: string;
@@ -95,14 +96,13 @@ interface FilterProps {
 
 const props = defineProps<FilterProps>();
 
-const modelValue = defineModel<any>('modelValue');
 const emit = defineEmits(['update:modelValue']);
 
 const isOpen = ref(false);
 
 // Computed para normalizar valores selecionados como array
 const selectedValues = computed(() => {
-    const value = modelValue.value;
+    const value = props.modelValue;
 
     if (props.filter.multiple) {
         if (Array.isArray(value)) {

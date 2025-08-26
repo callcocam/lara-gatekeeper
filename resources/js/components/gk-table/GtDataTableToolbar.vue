@@ -37,22 +37,8 @@ watch(searchQuery, (newValue) => {
     updateFilters();
 });
 
-const updateFilterValue = (payload: { name: string; value: string | number | object }) => {
-    if (typeof payload.value === 'object' && payload.value !== null) {
-        // Se é um objeto (como range de datas), verifica se tem conteúdo
-        if (Object.keys(payload.value).length && Object.values(payload.value).some(v => v !== null && v !== undefined && v !== '')) {
-            queryParams.value[payload.name] = JSON.stringify(payload.value);
-        } else {
-            // Remove filtro se objeto vazio ou só com valores nulos
-            delete queryParams.value[payload.name];
-        }
-    } else {
-        if (payload.value !== undefined && payload.value !== null && payload.value !== '') { 
-            queryParams.value[payload.name] = payload.value;
-        } else {
-            delete queryParams.value[payload.name];
-        }
-    }
+const updateFilterValue = (payload: { name: string; value: any }) => {
+    queryParams.value[payload.name] = payload.value;
     updateFilters();
 };
 

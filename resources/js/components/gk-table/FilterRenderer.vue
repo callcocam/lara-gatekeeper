@@ -1,7 +1,7 @@
 <template>
     <div class="flex items-center space-x-2">
-        <component :is="filter.component" :filter="filter" v-model="queryParams[filter.name]"
-            @update:modelValue="$emit('update:modelValue', { name: filter.name, value: $event })" />
+        <component :is="filter.component" :filter="filter" :modelValue="queryParams[filter.name]"
+            @update:modelValue="updateQueryParams($event)" />
     </div>
 </template>
 <script lang="ts" setup>
@@ -21,5 +21,16 @@ interface FilterProps {
 const props = defineProps<FilterProps>();
 
 const emit = defineEmits(['update:modelValue']);
+
+const updateQueryParams = (value: any) => {
+    if (typeof value === 'object') {
+        emit('update:modelValue', value);
+    } else {
+        emit('update:modelValue', {
+            name: props.filter.name,
+            value
+        });
+    }
+}
 
 </script>

@@ -19,6 +19,7 @@ class SelectFilter extends Filter
     protected ?string $relationshipTitleColumn = null;
     protected ?string $relationshipValueColumn = null;
     protected Closure|string|null $modelClassUnsure = null;
+    protected ?array $fields = [];
 
     public function __construct(string $label, ?string $name = null)
     {
@@ -137,6 +138,27 @@ class SelectFilter extends Filter
         return $this;
     }
 
+    public function fields(array $fields): static
+    {
+        $this->fields = $fields;
+
+        if (empty($this->fields)) {
+            return $this;
+        } 
+
+        $this->component('SelectFilterWithFields');
+
+        return $this;
+    }
+
+    public function getFields(): ?array
+    {
+       
+        return array_map(function ($field) {
+            return $field->toArray();
+        }, $this->fields);
+    }
+
     public function toArray(): array
     {
         $options = $this->getOptions();
@@ -148,6 +170,7 @@ class SelectFilter extends Filter
         return array_merge(parent::toArray(), [
             'options' => $options,
             'relationship' => $this->relationshipName,
+            'fields' => $this->getFields(),
         ]);
     }
 }

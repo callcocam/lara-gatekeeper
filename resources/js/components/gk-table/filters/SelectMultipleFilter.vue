@@ -56,6 +56,7 @@ interface Option {
 }
 
 interface FilterProps {
+    modelValue: any;
     filter: {
         id: string;
         label: string;
@@ -64,9 +65,8 @@ interface FilterProps {
         options: Option[];
     };
 }
-defineProps<FilterProps>();
+const props = defineProps<FilterProps>();
 
-const modelValue = defineModel<any>('modelValue');
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -78,20 +78,22 @@ const isSelected = (value: string | number) => {
     return selectedValues.value.includes(value.toString());
 };
 
-if (modelValue.value) {
-    selectedValues.value = modelValue.value?.split(',');
+if (props.modelValue) {
+    selectedValues.value = props.modelValue?.split(',');
 }
 const handleSelect = (option: Option) => {
     if (isSelected(option.value)) {
         selectedValues.value = selectedValues.value.filter(v => v !== option.value.toString());
-        if (selectedValues.value.length) {
+        if (!selectedValues.value.length) {
             selectedValues.value = [];
-            console.log('Selected values:', selectedValues.value);
         }
     } else {
         selectedValues.value.push(option.value.toString());
     }
-    emit('update:modelValue', selectedValues.value);
+    emit('update:modelValue', {
+        name: props.filter.name,
+        value: selectedValues.value.join(',')
+    });
 };
 
 const clearFilters = () => {

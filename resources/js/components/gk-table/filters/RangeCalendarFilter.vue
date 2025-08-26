@@ -54,6 +54,7 @@ interface Option {
 }
 
 interface FilterProps {
+    modelValue: any;
     filter: {
         id: string;
         label: string;
@@ -68,8 +69,7 @@ const df = new DateFormatter("pt-BR", {
     dateStyle: "medium",
 })
 
-const modelValue = defineModel<any>('modelValue');
-
+ 
 const emit = defineEmits(['update:modelValue']); 
 
 const initialStart: [number, number, number] | null = props.filter.options.start
@@ -97,6 +97,6 @@ const clearDates = () => {
 watch(value, (newValue) => {
     const startDate = newValue.start?.toDate(getLocalTimeZone()).toLocaleDateString().replace(/\//g, '-');
     const endDate = newValue.end?.toDate(getLocalTimeZone()).toLocaleDateString().replace(/\//g, '-');
-    emit('update:modelValue',  { start: startDate, end: endDate });
+    emit('update:modelValue',  { name: props.filter.name, value: JSON.stringify({ start: startDate, end: endDate }) });
 });
 </script>
