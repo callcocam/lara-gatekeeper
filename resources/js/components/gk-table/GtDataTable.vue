@@ -5,7 +5,7 @@
             <TableCaption v-if="!items.length">Nenhum registro encontrado.</TableCaption>
             <TableHeader>
                 <template v-for="column in columns" :key="column.id">
-                    <GtHeading v-if="column.sortable" :column="column" :query-params="queryParams" />
+                    <GtHeading v-if="column.sortable === true" :column="{ ...column, sortable: column.sortable === true }" :query-params="queryParams" />
                     <TableHead v-else>{{ column.label }}</TableHead>
                 </template>
             </TableHeader>
@@ -18,7 +18,7 @@
                             </div>
                         </template>
                         <template v-else>
-                            <span v-html="item[column.accessorKey]"></span>
+                            <CellRenderer :item="item" :column="column" />
                         </template>
                     </TableCell>
                 </TableRow>
@@ -37,9 +37,10 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table' 
+} from '@/components/ui/table'
 import { ref } from 'vue';
-import GtHeading from './GtHeading.vue';
+import GtHeading from './GtHeading.vue'; 
+import { BackendColumnDef } from '../../types/tables';
 
 const props = defineProps({
     queryParams: {
@@ -49,13 +50,7 @@ const props = defineProps({
         required: true
     },
     columns: {
-        type: Array as () => Array<{
-            id: string;
-            label: string;
-            accessorKey: string;
-            isAction: boolean;
-            sortable: boolean;
-        }>,
+        type: Array as () => Array<BackendColumnDef>,
         required: true
     },
     items: {

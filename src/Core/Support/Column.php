@@ -21,6 +21,7 @@ class Column
     use Concerns\BelongsToLabel;
     use Concerns\BelongsToName;
     use Concerns\BelongsToId;
+    use Concerns\BelongsToOptions;
     use HasSortable;
     use HasSearchable;
 
@@ -39,12 +40,8 @@ class Column
      */
     protected ?string $castUsing = null;
 
-    /**
-     * Actions
-     */
-    protected array $actions = [];
 
-
+    protected Closure|string|null $component = "TextColumn";
 
     protected function __construct(string $label, ?string $accessorKey = null)
     {
@@ -71,6 +68,17 @@ class Column
         return $this->accessorKey;
     }
 
+    public function component(Closure|string $component): self
+    {
+        $this->component = $component;
+        return $this;
+    }
+
+    public function getComponent(): ?string
+    {
+        return $this->component;
+    }
+
     public function hideable(bool $enableHiding = true): self
     {
         $this->enableHiding = $enableHiding;
@@ -83,11 +91,6 @@ class Column
         return $this;
     }
 
-    public function options(mixed $options): self
-    {
-        $this->formatterOptions = $options;
-        return $this;
-    }
 
     public function cell(Closure $callback): self
     {
@@ -111,6 +114,8 @@ class Column
             'header' => $this->getLabel(), // Deprecated use 'label' instead
             'sortable' => $this->isSortable(),
             'searchable' => $this->isSearchable(),
+            'component' => $this->getComponent(),
+            'options' => $this->getOptions()
         ];
 
         return $data;

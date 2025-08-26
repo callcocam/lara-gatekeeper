@@ -1,4 +1,8 @@
 export interface BackendColumnDef {
+    id: string;
+    name: string;
+    label: string;
+    component?: string;
     accessorKey: string;
     header: string;
     sortable?: boolean;
@@ -7,10 +11,16 @@ export interface BackendColumnDef {
     formatter?: string;
     formatterOptions?: any;
     html?: boolean;
+    options?: any;
     meta?: {
         formatter?: string;
         formatterOptions?: any;
         html?: boolean;
         [key: string]: any;
     };
-} 
+}
+
+export interface TableCellProps {
+    item: Record<string, any>;
+    column: BackendColumnDef;
+}
