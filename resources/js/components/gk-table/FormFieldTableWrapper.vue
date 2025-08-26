@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, computed, inject } from 'vue'
-import { cn } from '../../lib/utils' 
+import { cn } from '../../lib/utils'
 import { fieldRegistryKey } from '../../injectionKeys';
 import type { FieldRegistry } from './../form/fieldRegistry';
 import { Label } from '@/components/ui/label'
@@ -10,8 +10,8 @@ const props = defineProps<{
     field: FieldConfig;
     error?: string;
     modelValue: any;
-}>() 
-const emit = defineEmits<{ 
+}>()
+const emit = defineEmits<{
     (e: 'update:modelValue', value: any): void;
     (e: 'fieldAction', action: string, data: any, fieldName: string): void;
     (e: 'update:form-values', values: any): void;
@@ -41,7 +41,7 @@ const updateModelValue = (value: any) => {
 // Handler para eventos de ações de campo (SmartSelect, etc.)
 const handleFieldAction = (action: string, data: any) => {
     console.log(`[FormFieldWrapper:${props.field?.name}] Field action:`, action, data);
-    
+
     // Repassar evento para o formulário pai com informações do campo atual
     emit('fieldAction', action, data, props.field?.name || '');
 };
@@ -57,13 +57,10 @@ const updateFormValues = (values: any) => {
             {{ field.label }}
             <span v-if="field.required" class="text-destructive"> *</span>
         </Label>
-
         <component v-if="FieldComponent" :is="FieldComponent" :id="fieldId" :field="field"
             :inputProps="{ ...field.inputProps, 'aria-invalid': !!props.error, 'aria-describedby': props.error ? `${fieldId}-error` : undefined }"
-            :error="props.error" :modelValue="props.modelValue" 
-            @update:modelValue="updateModelValue" 
-            @fieldAction="handleFieldAction"
-            @update:form-values="updateFormValues" />
+            :error="props.error" :modelValue="props.modelValue" @update:modelValue="updateModelValue"
+            @fieldAction="handleFieldAction" @update:form-values="updateFormValues" />
         <div v-else class="text-sm text-destructive bg-destructive/10 p-2 rounded">
             [Gatekeeper] Componente de campo não encontrado para o tipo: {{ field.type }}
         </div>
@@ -74,4 +71,4 @@ const updateFormValues = (values: any) => {
             {{ props.error }}
         </p>
     </div>
-</template> 
+</template>

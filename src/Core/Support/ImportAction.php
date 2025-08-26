@@ -10,6 +10,7 @@ namespace Callcocam\LaraGatekeeper\Core\Support;
 
 use Callcocam\LaraGatekeeper\Core;
 use Closure;
+use Illuminate\Http\Request;
 
 class ImportAction extends Action
 {
@@ -21,6 +22,19 @@ class ImportAction extends Action
     protected string $component = 'ImportAction';
 
     protected Closure|string|null $fileName = 'file';
+
+    public function __construct(string $name, ?string $header = null)
+    {
+        parent::__construct($name, $header);
+        $this->type('import');
+        $this->modalHeading($header);
+
+        $this->action(function (Request $request) {
+            $file = $request->file($this->getFieldName());
+            // Lógica para processar o arquivo de importação 
+            return redirect()->back()->with('success', 'Ação de importação basica, você pode personalizar. não esqueça de implementar a lógica de importação.');
+        });
+    }
     /**
      * Formatação da coluna
      *

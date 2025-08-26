@@ -6,6 +6,7 @@
 
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use Callcocam\LaraGatekeeper\Core\Concerns\EvaluatesClosures;
 use Callcocam\LaraGatekeeper\Traits\SortableWithRelationships;
 use Illuminate\Routing\Controller;
 use Illuminate\Database\Eloquent\Model;
@@ -29,7 +30,9 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 abstract class AbstractController extends Controller
 {
-    use ManagesSidebarMenu,
+    use
+        EvaluatesClosures,
+        ManagesSidebarMenu,
         AuthorizesRequests,
         SortableWithRelationships,
         HasScreen,
@@ -261,19 +264,15 @@ abstract class AbstractController extends Controller
     {
         $this->authorize($this->getSidebarMenuPermission('import'));
 
-        $action = $this->getAction('import');
+        $this->getTableActions(); 
 
-        $file = $request->file($action->getFileName());
+        $action = $this->getAction('import'); 
 
-        if (!$file || !$file->isValid()) {
-            return redirect()->back()->with('error', 'Arquivo inválido.');
+        $result = $this->evaluate($action->getCallback(), ['request' => $request]); 
+        if ($result instanceof RedirectResponse) {
+            return $result;
         }
-
-        dd($file->getClientOriginalName());
-        // Lógica para importar o arquivo
-        // ...
-
-        return redirect()->back()->with('success', 'Importação realizada com sucesso.');
+        return redirect()->back()->with('error', 'Import action did not return a valid response.');
     }
 
     public function export(Request $request): RedirectResponse

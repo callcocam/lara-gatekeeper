@@ -37,6 +37,7 @@ class Action
     public ?Closure $visibilityCallback = null;
     public Closure|string|null $urlCallback = null;
     public ?Closure $confirmCallback = null;
+    public ?Closure $callback = null;
 
 
     protected function __construct(string $accessorKey, ?string $header = null)
@@ -116,6 +117,17 @@ class Action
     {
         $this->urlCallback = $callback;
         return $this;
+    }
+
+    public function action(Closure $callback): self
+    {
+        $this->callback = $callback;
+        return $this;
+    }
+
+    public function getCallback(): ?Closure
+    {
+        return $this->callback;
     }
 
     /**

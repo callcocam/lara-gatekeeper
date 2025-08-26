@@ -23,6 +23,7 @@ export interface FormValues {
 export interface ActionProps {
     action: {
         id: string;
+        name: string;
         label: string;
         icon?: string;
         color?: string;

@@ -22,6 +22,8 @@ trait BelongsToModal
 
     protected Closure|string|null $modalCancelButtonText = "Cancelar";
 
+    protected Closure|string|null $confirmButtonVariant = 'default';
+
     protected Closure|bool $modalCloseOnOutsideClick = true;
 
     public function modal(Closure|string|null $modal): self
@@ -34,11 +36,12 @@ trait BelongsToModal
     {
         return [
             'fields' => array_map(fn($field) => $field->toArray(), $this->getFields()),
-            'heading' => $this->getModalHeading(),
-            'description' => $this->getModalDescription(),
+            'modalHeading' => $this->getModalHeading(),
+            'modalDescription' => $this->getModalDescription(),
             'confirmButtonText' => $this->getModalConfirmButtonText(),
             'cancelButtonText' => $this->getModalCancelButtonText(),
             'closeOnOutsideClick' => $this->getModalCloseOnOutsideClick(),
+            'confirmButtonVariant' => $this->getConfirmButtonVariant(),
         ];
     }
 
@@ -81,6 +84,12 @@ trait BelongsToModal
         return $this;
     }
 
+    public function confirmButtonVariant(Closure|string|null $variant): self
+    {
+        $this->confirmButtonVariant = $variant;
+        return $this;
+    }
+
     public function getModalConfirmButtonText(): ?string
     {
         return $this->evaluate($this->modalConfirmButtonText);
@@ -106,5 +115,10 @@ trait BelongsToModal
     public function getModalCloseOnOutsideClick(): ?bool
     {
         return $this->evaluate($this->modalCloseOnOutsideClick);
+    }
+
+    public function getConfirmButtonVariant(): ?string
+    {
+        return $this->evaluate($this->confirmButtonVariant);
     }
 }

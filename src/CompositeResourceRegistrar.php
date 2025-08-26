@@ -19,13 +19,13 @@ class CompositeResourceRegistrar extends ResourceRegistrar
     {
         // Registrar as rotas básicas do resource
         parent::register($name, $controller, $options);
-        
+
         // Adicionar funcionalidades de bulk actions
         $this->addBulkRoutes($name, $controller, $options);
-        
+
         // Adicionar funcionalidades de import
         $this->addImportRoutes($name, $controller, $options);
-        
+
         // Adicionar funcionalidades de export
         $this->addExportRoutes($name, $controller, $options);
     }
@@ -44,7 +44,7 @@ class CompositeResourceRegistrar extends ResourceRegistrar
 
             // Bulk update
             $this->router->patch("{$name}/bulk", [
-                'uses' => "{$controller}@bulkUpdate", 
+                'uses' => "{$controller}@bulkUpdate",
                 'as' => "{$name}.bulk.update"
             ]);
 
@@ -62,23 +62,12 @@ class CompositeResourceRegistrar extends ResourceRegistrar
     protected function addImportRoutes($name, $controller, array $options = [])
     {
         if ($this->shouldAddRoute('import', $options)) {
-            // Mostrar formulário de import
-            $this->router->get("{$name}/import", [
+            // Mostrar formulário de import 
+            // Processar import
+            $this->router->post("{$name}/import", [
                 'uses' => "{$controller}@import",
                 'as' => "{$name}.import"
             ]);
-
-            // Processar import
-            $this->router->post("{$name}/import", [
-                'uses' => "{$controller}@processImport",
-                'as' => "{$name}.import.process"
-            ]);
-
-            // Download template de import
-            // $this->router->get("{$name}/import/template", [
-            //     'uses' => "{$controller}@importTemplate",
-            //     'as' => "{$name}.import.template"
-            // ]);
         }
     }
 
@@ -89,15 +78,11 @@ class CompositeResourceRegistrar extends ResourceRegistrar
     {
         if ($this->shouldAddRoute('export', $options)) {
             // Export todos os registros
-            $this->router->get("{$name}/export", [
-                'uses' => "{$controller}@export",
-                'as' => "{$name}.export"
-            ]);
 
             // Export registros selecionados
             $this->router->post("{$name}/export", [
-                'uses' => "{$controller}@exportSelected",
-                'as' => "{$name}.export.selected"
+                'uses' => "{$controller}@export",
+                'as' => "{$name}.export"
             ]);
 
             // Export com filtros
