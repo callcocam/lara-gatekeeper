@@ -39,6 +39,8 @@ class Filter
         $this->name($name ?? str($label)->slug()->toString());
         $this->label($label);
         $this->id($name);
+
+        $this->modelValue($this->getRequest()->get($name));
     }
 
     public function modelValue(string | int | float | bool | array | null $modelValue): self

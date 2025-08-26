@@ -84,6 +84,7 @@ interface Option {
 
 interface FilterProps {
     modelValue: any;
+    queryParams: Record<string, any>;
     filter: {
         id: string;
         label: string;

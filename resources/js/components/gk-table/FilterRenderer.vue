@@ -1,7 +1,7 @@
 <template>
     <div class="flex items-center space-x-2">
-        <component :is="filter.component" :filter="filter" :modelValue="queryParams[filter.name]"
-            @update:modelValue="updateQueryParams($event)" />
+        <component :is="filter.component" :filter="filter" :modelValue="filter.modelValue"
+            @update:modelValue="updateQueryParams($event)" @reset="resetFilter($event)" :query-params="queryParams" />
     </div>
 </template>
 <script lang="ts" setup>
@@ -33,4 +33,12 @@ const updateQueryParams = (value: any) => {
     }
 }
 
+const resetFilter = (filters: any) => {
+    filters.forEach((name: string) => {
+        emit('update:modelValue', {
+            name,
+            value: undefined
+        });
+    });
+}
 </script>

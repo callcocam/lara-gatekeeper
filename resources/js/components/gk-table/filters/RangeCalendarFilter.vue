@@ -1,10 +1,7 @@
 <template>
     <Popover>
         <PopoverTrigger as-child>
-            <Button variant="outline" :class="cn(
-                ' justify-start text-left font-normal',
-                !value && 'text-muted-foreground',
-            )">
+            <Button variant="outline" size="sm" class="h-8 border-dashed">
                 <CalendarIcon class="mr-2 h-4 w-4" />
                 <template v-if="value.start">
                     <template v-if="value.end">
@@ -55,6 +52,7 @@ interface Option {
 
 interface FilterProps {
     modelValue: any;
+    queryParams: Record<string, any>;
     filter: {
         id: string;
         label: string;
