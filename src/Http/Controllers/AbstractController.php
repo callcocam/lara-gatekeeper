@@ -275,7 +275,7 @@ abstract class AbstractController extends Controller
         return redirect()->back()->with('error', 'Import action did not return a valid response.');
     }
 
-    public function export(Request $request): RedirectResponse
+    public function export(Request $request): mixed
     {
         $this->authorize($this->getSidebarMenuPermission('export'));
 
@@ -293,7 +293,7 @@ abstract class AbstractController extends Controller
 
         $result = $this->evaluate($action->getCallback(), ['query' => $query]);
 
-        if ($result instanceof RedirectResponse) {
+        if ($result) { 
             return $result;
         }
         return redirect()->back()->with('error', 'Export action did not return a valid response.');

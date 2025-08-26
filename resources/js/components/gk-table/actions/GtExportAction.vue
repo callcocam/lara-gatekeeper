@@ -1,5 +1,5 @@
 <template>
-    <GtConfirmModal :action="action" @confirm="handleClick" />
+    <GtConfirmModal :action="action" @confirm="handleClick" class="p-0"/>
 </template>
 
 <script setup lang="ts">

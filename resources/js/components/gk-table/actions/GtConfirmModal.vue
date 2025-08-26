@@ -1,6 +1,6 @@
 <template>
     <AlertDialog>
-        <AlertDialogTrigger as-child>
+        <AlertDialogTrigger as-child class="p-0">
             <Button v-bind="attributes(action)">
                 <Icon :name="action.icon" v-if="action.icon && action.iconPosition === 'left'" />
                 <span :class="cn({
@@ -57,10 +57,11 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { cn } from '../../../lib/utils';
-import { ActionProps } from '../../../types/field'; 
+import { ActionProps } from '../../../types/field';
 
-const props = defineProps<ActionProps>();
-console.log(props.action);
+const props = defineProps<ActionProps>(); 
+
+ 
 
 const attributes = (action: any) => {
     // Map your color or custom logic to allowed variants
@@ -70,19 +71,20 @@ const attributes = (action: any) => {
     if (variant) {
         return {
             variant,
-            class: cn('flex items-center p-1', action?.class),
+            class: cn('flex items-center p-0', action?.class),
             size: action.size ?? 'sm',
         }
     }
 
     return {
         variant,
-        class: cn('flex items-center gap-2', action?.class),
+        size: action.size ?? 'sm',
+        class: cn('flex items-center  p-1', action?.class),
         style: action?.style ?? { background: 'linear-gradient(to right, #1e293b, #a8ff3e)', color: 'white' }
     };
 };
 
-const confirmAction = () => { 
+const confirmAction = () => {
     if (props.action.url) {
         switch (props.action.method) {
             case 'POST':
