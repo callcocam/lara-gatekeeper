@@ -21,9 +21,9 @@ class SelectFilter extends Filter
     protected Closure|string|null $modelClassUnsure = null;
     protected ?array $fields = [];
 
-    public function __construct(string $label, ?string $name = null)
+    public function __construct(string $name, string $label)
     {
-        parent::__construct($label, $name);
+        parent::__construct($name, $label);
 
         // Criar um filtro padrão inteligente capaz de reconhecer se é um relacionamento
         $this->formatUsing(function (Builder $query, $value) {

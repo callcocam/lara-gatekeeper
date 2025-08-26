@@ -48,7 +48,7 @@ class Column
         $this->label = $label;
         $this->accessorKey = $accessorKey ?? strtolower(str_replace(' ', '_', $label));
         $this->id($this->accessorKey);
-        $this->nameFormatter($this->accessorKey . '_formatted');
+        $this->nameFormatter(str_replace('.', '_', $this->accessorKey) . '_formatted');
         $this->name($this->accessorKey);
     }
 

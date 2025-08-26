@@ -57,13 +57,15 @@ trait HasApplyFormatter
      */
     private function formatRelationshipColumns(&$item): void
     {
-        foreach ($this->relationshipColumns as $column) {
-            $columnName = data_get($column, 'name');
+
+        foreach ($this->relationshipColumns as $columnName) {
             $value = $this->getRelationshipValue($item, $columnName);
 
             $formattedValue = $this->formatColumnValue($value, $columnName);
+
             if ($formattedValue !== null) {
-                $this->setRelationshipValue($item, $columnName . '_formatted', $formattedValue);
+                $columnName = str_replace('.', '_', $columnName . '_formatted');
+                $this->setRelationshipValue($item,   $columnName, $formattedValue);
             }
         }
     }
@@ -147,22 +149,22 @@ trait HasApplyFormatter
      * Define valor formatado para coluna de relacionamento
      * Usa separador configurado para navegar na estrutura aninhada
      */
-    protected function setRelationshipValue($model, string $column, $value): void
+    protected function setRelationshipValue(&$item, string $column, $value): void
     {
         $separator = config('lara-gatekeeper.table.relationship_separator', '.');
         $path = str_replace($separator, '.', $column);
-        data_set($model, $path, $value);
+        data_set($item, $path, $value);
     }
 
     /**
      * Obtém valor de coluna de relacionamento
      * Usa separador configurado para navegar na estrutura aninhada
      */
-    protected function getRelationshipValue($model, string $column)
+    protected function getRelationshipValue($item, string $column)
     {
         $separator = config('lara-gatekeeper.table.relationship_separator', '.');
         $path = str_replace($separator, '.', $column);
-        return data_get($model, $path);
+        return data_get($item, $path);
     }
 
     /**

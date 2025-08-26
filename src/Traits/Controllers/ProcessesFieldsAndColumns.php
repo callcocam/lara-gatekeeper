@@ -66,7 +66,12 @@ trait ProcessesFieldsAndColumns
     {
         $rawColumns = $this->columns();
 
-        $tableColumns = array_map(fn(Column $column) => $column->toArray(), $rawColumns);
+        $tableColumns = array_map(function(Column $column) {
+            if(str_contains($column->getName(), '.')){
+               $this->relationshipColumns[] = $column->getName();
+            }
+            return $column->toArray();
+        }, $rawColumns);
 
         $this->columns = $rawColumns;
 
