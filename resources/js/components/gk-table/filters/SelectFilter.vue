@@ -119,9 +119,12 @@ const selectedValues = computed(() => {
 
 // Computed para opções selecionadas
 const selectedOptions = computed(() => {
-    return props.filter.options.filter(option =>
-        selectedValues.value.includes(String(option.value))
-    );
+    if (props.filter.options?.length > 0) {
+        return props.filter.options.filter(option =>
+            selectedValues.value.includes(String(option.value))
+        );
+    }
+    return [];
 });
 
 // Função para verificar se um valor está selecionado

@@ -6,8 +6,11 @@
  */
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
+use Callcocam\LaraGatekeeper\Core\Support\Filters\SelectFilter;
+use Callcocam\LaraGatekeeper\Core\Support\Table\Columns\StatusColumn;
 use Callcocam\LaraGatekeeper\Enums\RoleStatus;
 use Callcocam\LaraGatekeeper\Models\Permission;
 use Callcocam\LaraGatekeeper\Models\Role;
@@ -79,15 +82,15 @@ class RoleController extends AbstractController
 
             Column::make('Criado em', 'created_at')
                 ->sortable()
-                ->formatter('formatDate')
-                ->options('dd/MM/yyyy HH:mm'),
+                ->formatter('formatDate') ,
 
-            Column::make('Status', 'status')
-                ->sortable()
-                ->formatter('renderBadge')
-                ->options(RoleStatus::options()),
+            StatusColumn::withEnum(RoleStatus::class)->sortable(),
 
-            Column::actions(),
+            Column::actions([
+                Action::view('admin.roles'),
+                Action::edit('admin.roles'),
+                Action::delete('admin.roles'),
+            ]),
         ];
 
         return $columns;
@@ -101,12 +104,8 @@ class RoleController extends AbstractController
     protected function filters(): array
     {
         return [
-            [
-                'column' => 'status',
-                'label' => 'Status',
-                'type' => 'select',
-                'options' => RoleStatus::options(),
-            ]
+           SelectFilter::make('status', 'Status')
+                ->options(RoleStatus::options()) ,
         ];
     }
 

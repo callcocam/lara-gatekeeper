@@ -10,6 +10,7 @@ namespace Callcocam\LaraGatekeeper\Core\Support;
 
 use Callcocam\LaraGatekeeper\Core;
 use Closure;
+use Illuminate\Support\Str;
 
 class Filter
 {
@@ -34,10 +35,10 @@ class Filter
     protected Closure|string|null $formatUsing = null;
 
 
-    public function __construct(string $label, ?string $name = null)
+    public function __construct(string $name, ?string $label = null)
     {
-        $this->name($name ?? str($label)->slug()->toString());
-        $this->label($label);
+        $this->name($name);
+        $this->label($label ?? Str::ucfirst(Str::singular($name)));
         $this->id($name);
 
         $this->modelValue($this->getRequest()->get($name));

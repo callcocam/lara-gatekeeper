@@ -1,13 +1,18 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
+use Callcocam\LaraGatekeeper\Core\Support\Filters\SelectFilter;
+use Callcocam\LaraGatekeeper\Core\Support\Table\Columns\StatusColumn;
 use Callcocam\LaraGatekeeper\Enums\TenantStatus;
 use Callcocam\LaraGatekeeper\Models\Tenant;
 use Illuminate\Database\Eloquent\Model;
@@ -20,9 +25,9 @@ use Illuminate\Validation\Rule;
 class TenantController extends AbstractController
 {
     protected ?string $model = Tenant::class;
-    
+
     protected string $resourceName = 'Empresa';
-    protected string $pluralResourceName = 'Empresas'; 
+    protected string $pluralResourceName = 'Empresas';
 
     public function getSidebarMenuOrder(): int
     {
@@ -33,7 +38,7 @@ class TenantController extends AbstractController
     {
         return 'Settings';
     }
- 
+
 
     protected function fields(?Model $model = null): array
     {
@@ -44,7 +49,7 @@ class TenantController extends AbstractController
                 ->type('text')
                 ->required()
                 ->colSpan(12),
- 
+
 
             Field::make('domain', 'Domínio')
                 ->type('text')
@@ -94,15 +99,15 @@ class TenantController extends AbstractController
 
             Column::make('Criado em', 'created_at')
                 ->sortable()
-                ->formatter('formatDate')
-                ->options('dd/MM/yyyy HH:mm'),
+                ->formatter('formatDate'),
 
-            Column::make('Status', 'status')
-                ->sortable()
-                ->formatter('renderBadge')
-                ->options(TenantStatus::variantOptions()),
+            StatusColumn::withEnum(TenantStatus::class)->sortable(),
 
-            Column::actions(),
+            Column::actions([
+                Action::view('admin.tenants'),
+                Action::edit('admin.tenants'),
+                Action::delete('admin.tenants'),
+            ]),
         ];
 
         return $columns;
@@ -116,12 +121,8 @@ class TenantController extends AbstractController
     protected function filters(): array
     {
         return [
-            [
-                'column' => 'status',
-                'label' => 'Status',
-                'type' => 'select',
-                'options' => TenantStatus::options(),
-            ]
+            SelectFilter::make('status', 'Status')
+                ->options(TenantStatus::options()),
         ];
     }
 
@@ -129,7 +130,7 @@ class TenantController extends AbstractController
     {
         $tenantId = $model?->id;
         $rules = [
-            'name' => ['required', 'string', 'max:255'], 
+            'name' => ['required', 'string', 'max:255'],
             'domain' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'string', 'email', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -207,4 +208,4 @@ class TenantController extends AbstractController
                 ->with('error', 'Erro ao excluir ' . Str::singular($this->getResourceName()) . '.');
         }
     }
-} 
+}

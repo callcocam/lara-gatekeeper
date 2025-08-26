@@ -117,7 +117,7 @@ const getClassName = () => {
                                 <GtPagination :meta="meta" />
                             </template>
                         </GtDataTable>
-                        <pre class="whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm dark:bg-gray-700">{{ JSON.stringify(actions, null,
+                        <pre class="whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm dark:bg-gray-700">{{ JSON.stringify(data, null,
                             2) }}
 </pre>
                     </div>

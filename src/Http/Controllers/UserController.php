@@ -9,9 +9,12 @@
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
 use App\Models\User;
+use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
-use Callcocam\LaraGatekeeper\Enums\DefaultStatus; 
+use Callcocam\LaraGatekeeper\Core\Support\Filters\SelectFilter;
+use Callcocam\LaraGatekeeper\Core\Support\Table\Columns\StatusColumn;
+use Callcocam\LaraGatekeeper\Enums\DefaultStatus;
 use Callcocam\LaraGatekeeper\Models\Role;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -103,17 +106,13 @@ class UserController extends AbstractController
 
             Column::make('E-mail', 'email')->sortable(),
 
-            Column::make('Criado em', 'created_at')
-                ->sortable()
-                ->formatter('formatDate')
-                ->options('dd/MM/yyyy HH:mm'),
+            StatusColumn::withEnum(DefaultStatus::class)->sortable(),
 
-            Column::make('Status', 'status')
-                ->sortable()
-                ->formatter('renderBadge')
-                ->options(DefaultStatus::variantOptions()),
-
-            Column::actions(),
+            Column::actions([
+                Action::view('admin.users'),
+                Action::edit('admin.users'),
+                Action::delete('admin.users'),
+            ]),
         ];
 
         return $columns;
@@ -127,12 +126,8 @@ class UserController extends AbstractController
     protected function filters(): array
     {
         return [
-            [
-                'column' => 'status',
-                'label' => 'Status',
-                'type' => 'select',
-                'options' => DefaultStatus::options(),
-            ]
+            SelectFilter::make('status', 'Status')
+                ->options(DefaultStatus::options()),
         ];
     }
 

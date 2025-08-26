@@ -2,6 +2,7 @@ export interface BackendColumnDef {
     id: string;
     name: string;
     label: string;
+    nameFormatter?: string;
     component?: string;
     accessorKey: string;
     header: string;

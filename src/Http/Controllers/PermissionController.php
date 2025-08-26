@@ -1,13 +1,18 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
+use Callcocam\LaraGatekeeper\Core\Support\Filters\SelectFilter;
+use Callcocam\LaraGatekeeper\Core\Support\Table\Columns\StatusColumn;
 use Callcocam\LaraGatekeeper\Enums\PermissionStatus;
 use Callcocam\LaraGatekeeper\Models\Permission;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +26,7 @@ class PermissionController extends AbstractController
     protected ?string $model = Permission::class;
 
     protected string $resourceName = 'Permissão';
-    protected string $pluralResourceName = 'Permissões'; 
+    protected string $pluralResourceName = 'Permissões';
 
     public function getSidebarMenuOrder(): int
     {
@@ -71,15 +76,15 @@ class PermissionController extends AbstractController
 
             Column::make('Criado em', 'created_at')
                 ->sortable()
-                ->formatter('formatDate')
-                ->options('dd/MM/yyyy HH:mm'),
+                ->formatter('formatDate'),
 
-            Column::make('Status', 'status')
-                ->sortable()
-                ->formatter('renderBadge')
-                ->options(PermissionStatus::variantOptions()),
+            StatusColumn::withEnum(PermissionStatus::class)->sortable(),
 
-            Column::actions(),
+            Column::actions([
+                Action::view('admin.permissions'),
+                Action::edit('admin.permissions'),
+                Action::delete('admin.permissions'),
+            ]),
         ];
 
         return $columns;
@@ -93,12 +98,8 @@ class PermissionController extends AbstractController
     protected function filters(): array
     {
         return [
-            [
-                'column' => 'status',
-                'label' => 'Status',
-                'type' => 'select',
-                'options' => PermissionStatus::options(),
-            ]
+            SelectFilter::make('status', 'Status')
+                ->options(PermissionStatus::options()),
         ];
     }
 
@@ -153,4 +154,4 @@ class PermissionController extends AbstractController
                 ->with('error', 'Erro ao excluir ' . Str::singular($this->getResourceName()) . '.');
         }
     }
-} 
+}

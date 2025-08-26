@@ -48,6 +48,7 @@ class Column
         $this->label = $label;
         $this->accessorKey = $accessorKey ?? strtolower(str_replace(' ', '_', $label));
         $this->id($this->accessorKey);
+        $this->nameFormatter($this->accessorKey . '_formatted');
         $this->name($this->accessorKey);
     }
 
@@ -109,6 +110,7 @@ class Column
     {
         $data = [
             'id' => $this->id,
+            'nameFormatter' => $this->getNameFormatter(),
             'accessorKey' => $this->getAccessorKey(),
             'label' => $this->getLabel(),
             'header' => $this->getLabel(), // Deprecated use 'label' instead

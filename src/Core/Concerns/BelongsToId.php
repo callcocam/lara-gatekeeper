@@ -19,6 +19,8 @@ trait BelongsToId
      */
     public Closure|string|null $id = null;
 
+    public Closure|string|null $nameFormatter = null;
+
     /**
      * Set the ID for the column.
      *
@@ -31,6 +33,12 @@ trait BelongsToId
         return $this;
     }
 
+    public function nameFormatter(Closure|string|null $nameFormatter): static
+    {
+        $this->nameFormatter = $nameFormatter;
+        return $this;
+    }
+
     /**
      * Get the ID of the column.
      *
@@ -39,6 +47,11 @@ trait BelongsToId
     public function getId(): ?string
     {
         return $this->evaluate($this->id);
+    }
+
+    public function getNameFormatter(): ?string
+    {
+        return $this->evaluate($this->nameFormatter);
     }
 
     /**
