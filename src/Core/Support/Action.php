@@ -316,6 +316,12 @@ class Action
             ->routeNameBase($routeBase)
             ->routeSuffix('destroy')
             ->variant('destructive')
-            ->icon('trash-2');
+            ->method('DELETE')
+            ->confirm(fn($record) => [
+                'title' => 'Excluir Produto',
+                'description' =>  sprintf('Tem certeza que deseja excluir o produto "%s"?', $record->name),
+                'confirmButtonText' => 'Sim, excluir',
+                'cancelButtonText' => 'Cancelar',
+            ]);
     }
 }

@@ -27,7 +27,7 @@
                                     v-if="action.confirm?.cancelIcon" />
                                 {{ action.confirm?.cancelButtonText || 'Cancelar' }}
                             </AlertDialogCancel>
-                            <AlertDialogAction as="button" v-bind="attributes(action)" @click="confirmAction">
+                            <AlertDialogAction as="button"   @click="confirmAction">
                                 <Icon :name="action.confirm?.confirmIcon" class="w-4 h-4 mr-1"
                                     v-if="action.confirm?.confirmIcon" />
                                 <span>{{ action.confirm?.confirmButtonText || 'Continuar' }}</span>
@@ -76,7 +76,7 @@ const attributes = (action: any) => {
     if (variant) {
         return {
             variant,
-            class: cn('flex items-center p-0', action?.class),
+            class: cn('flex items-center p-1', action?.class),
             size: action.size ?? 'sm',
         }
     }
@@ -84,7 +84,7 @@ const attributes = (action: any) => {
     return {
         variant,
         size: action.size ?? 'sm',
-        class: cn('flex items-center  p-1', action?.class),
+        class: cn('flex items-center p-1', action?.class),
         style: action?.style ?? { background: 'linear-gradient(to right, #1e293b, #a8ff3e)', color: 'white' }
     };
 };
