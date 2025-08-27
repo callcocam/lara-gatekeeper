@@ -116,10 +116,7 @@ const getClassName = () => {
                             <template #pagination="{ meta }">
                                 <GtPagination :meta="meta" />
                             </template>
-                        </GtDataTable>
-                        <pre class="whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm dark:bg-gray-700">{{ JSON.stringify(data, null,
-                            2) }}
-</pre>
+                        </GtDataTable> 
                     </div>
                 </div>
             </div>
