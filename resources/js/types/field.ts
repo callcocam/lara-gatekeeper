@@ -20,34 +20,58 @@ export interface FormErrors {
 export interface FormValues {
     [key: string]: any;
 }
+
+export type ActionPosition = 'top' | 'footer' | 'row';
+
+export type ActionVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+
+export type ActionSize = 'default' | 'sm' | 'lg' | 'icon';
+
+export type ActionMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+export type ActionIconPosition = 'left' | 'right' | 'top' | 'bottom';
+
+export type ActionComponent = 'GtButton' | 'GtLink' | 'GtModal' | 'GtConfirmModal' | string;
+
+export type ActionConfirm = {
+    title: string;
+    description: string;
+    confirmButtonText: string;
+    cancelButtonText: string;
+    confirmIcon?: string;
+    cancelIcon?: string;
+};
+
+export type ActionModal = {
+    fields: FieldConfig[];
+    modalHeading: string;
+    modalDescription?: string;
+    modalConfirmButtonText?: string;
+    cancelButtonText?: string;
+    confirmButtonText?: string;
+    cancelButtonVariant?: ActionVariant;
+    confirmButtonVariant?: ActionVariant;
+    confirmButtonIcon?: string;
+    cancelButtonIcon?: string;
+};
+
+export type ActionItemProps = {
+    id: string;
+    name: string;
+    label: string;
+    icon?: string;
+    color?: string;
+    url?: string;
+    position?: ActionPosition;
+    component?: ActionComponent;
+    iconPosition?: ActionIconPosition;
+    size?: ActionSize;
+    variant?: ActionVariant;
+    method?: ActionMethod;
+    confirm?: ActionConfirm;
+    modal?: ActionModal;
+};
+
 export interface ActionProps {
-    action: {
-        id: string;
-        name: string;
-        label: string;
-        icon?: string;
-        color?: string;
-        url?: string;
-        component?: string;
-        iconPosition?: string;
-        size: "default" | "sm" | "lg" | "icon" | null | undefined;
-        variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-        method?: "GET" | "POST" | "PUT" | "DELETE";
-        confirm?: {
-            title: string;
-            description: string;
-            confirmButtonText: string;
-            cancelButtonText: string;
-            confirmIcon?: string;
-            cancelIcon?: string;
-        };
-        modal: {
-            fields: Array<FieldConfig>;
-            modalHeading: string;
-            modalDescription?: string;
-            modalConfirmButtonText?: string;
-            modalCancelButtonText?: string;
-            [key: string]: any;
-        };
-    };
+    action: ActionItemProps;
 }

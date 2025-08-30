@@ -10,6 +10,7 @@ namespace Callcocam\LaraGatekeeper\Core\Support;
 
 use Callcocam\LaraGatekeeper\Core;
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 
 class Field
 {
@@ -18,6 +19,8 @@ class Field
     use Core\Concerns\BelongsToName;
     use Core\Concerns\BelongsToOptions;
     use Core\Concerns\BelongsToType;
+    use Core\Concerns\BelongsToVisible;
+    use Core\Concerns\BelongsToPermission;
     use Concerns\HasTypes;
     // use Concerns\HasOptions;
     use Concerns\HasTextarea;
@@ -48,12 +51,16 @@ class Field
     public ?string $acceptedFileTypes = 'image/*';
     public ?array $acceptedFormats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     public ?int $maxFileSize = 15;
+    public ?int $order = 0;
+
+    protected ?Model $model = null;
 
     protected function __construct(string $key, string $label)
     {
         $this->key = $key;
         $this->name = $key;
         $this->label = $label;
+        $this->placeholder($label);
     }
 
     public static function make(string $key, string $label): self
@@ -249,8 +256,30 @@ class Field
         return $this;
     }
 
+    public function order(int $order): self
+    {
+        $this->order = $order;
+        return $this;
+    }
+
+    public function getOrder(): int
+    {
+        return $this->order;
+    }
+
+    public function model(Model $model): self
+    {
+        $this->model = $model;
+        return $this;
+    }
+
+    public function getModel(): ?Model
+    {
+        return $this->model;
+    }
+
     // Convert the field definition to an array for the frontend
-    public function toArray(): ?array
+    public function toArray($model = null): ?array
     {
         // Don't render the field if the condition is false
         if (!$this->resolveCondition()) {
@@ -266,6 +295,7 @@ class Field
             'searchable' => $this->searchable,
             'hideLabel' => $this->hideLabel,
             'fieldMappings' => $this->fieldMappings,
+            'order' => $this->order,
         ];
 
         // WorkflowStepCalculator properties

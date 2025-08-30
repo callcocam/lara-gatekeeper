@@ -17,14 +17,15 @@ const props = defineProps<{
     // modelValue: string | number | null; // Removido, usa defineModel
     field: {
         name: string; // Adicionado name
-        apiEndpoint: string; 
+        apiEndpoint: string;
         searchParam?: string;
         valueKey?: string;
         labelKey?: string;
         initialLabel?: string;
         [key: string]: any;
     };
-    inputProps?: { placeholder?: string; [key: string]: any };
+    inputProps?: { placeholder?: string;[key: string]: any };
+    error?: string;
 }>()
 
 // Use defineModel for v-model binding
@@ -65,7 +66,7 @@ const fetchOptions = async (query: string) => {
         } catch (_) {
             apiUrl = new URL(apiUrl, window.location.origin).toString(); // Tenta tornar absoluta
         }
-        
+
         const url = new URL(apiUrl);
         if (query) {
             url.searchParams.set(searchParam.value, query);
@@ -76,7 +77,7 @@ const fetchOptions = async (query: string) => {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        
+
         // Tenta encontrar os dados (pode estar em data.data)
         const results = Array.isArray(data) ? data : (data?.data || []);
         if (!Array.isArray(results)) {
@@ -86,15 +87,15 @@ const fetchOptions = async (query: string) => {
             options.value = results;
         }
         console.log(`[Gatekeeper/Combobox:${props.field.name}] Options received:`, options.value.length);
-        
+
         // Tenta encontrar label do valor atual (se não tiver ainda)
         if (model.value !== null && model.value !== undefined && !selectedLabel.value) {
-             updateSelectedLabel(model.value);
+            updateSelectedLabel(model.value);
         }
 
     } catch (error) {
         console.error(`[Gatekeeper/Combobox:${props.field.name}] Failed to fetch options:`, error);
-        options.value = []; 
+        options.value = [];
     } finally {
         isLoading.value = false;
     }
@@ -123,30 +124,30 @@ const getLabel = (value: string | number | null): string | null => {
 }
 
 const updateSelectedLabel = (currentValue: string | number | null) => {
-     const valueToCompare = currentValue === undefined ? null : currentValue;
-     const foundLabel = getLabel(valueToCompare);
-     if (foundLabel) {
+    const valueToCompare = currentValue === undefined ? null : currentValue;
+    const foundLabel = getLabel(valueToCompare);
+    if (foundLabel) {
         selectedLabel.value = foundLabel;
         console.log(`[Gatekeeper/Combobox:${props.field.name}] Found label for value ${valueToCompare}: "${foundLabel}"`);
-     } else if (valueToCompare === null) {
-        selectedLabel.value = null; 
+    } else if (valueToCompare === null) {
+        selectedLabel.value = null;
         console.log(`[Gatekeeper/Combobox:${props.field.name}] Clearing label as value is null.`);
-     } else {
-         console.log(`[Gatekeeper/Combobox:${props.field.name}] Label not found for value ${valueToCompare} in current options.`);
-         // Manter initialLabel se existir e valor corresponder?
-         if (props.field.initialLabel && model.value == props.field.initialValue) { // Comparação frouxa
+    } else {
+        console.log(`[Gatekeeper/Combobox:${props.field.name}] Label not found for value ${valueToCompare} in current options.`);
+        // Manter initialLabel se existir e valor corresponder?
+        if (props.field.initialLabel && model.value == props.field.initialValue) { // Comparação frouxa
             selectedLabel.value = props.field.initialLabel;
-         } else if (!options.value.length) { // Se não houver opções carregadas, mantenha o que estava
+        } else if (!options.value.length) { // Se não houver opções carregadas, mantenha o que estava
             // Não limpa o label se as opções ainda não carregaram
-         } else {
-             selectedLabel.value = null; // Limpa se não encontrou E as opções carregaram
-         }
-     }
+        } else {
+            selectedLabel.value = null; // Limpa se não encontrou E as opções carregaram
+        }
+    }
 }
 
 watch(model, (newValue, oldValue) => {
-   console.log(`[Gatekeeper/Combobox:${props.field.name}] Model changed from ${oldValue} to ${newValue}`);
-   updateSelectedLabel(newValue === undefined ? null : newValue);
+    console.log(`[Gatekeeper/Combobox:${props.field.name}] Model changed from ${oldValue} to ${newValue}`);
+    updateSelectedLabel(newValue === undefined ? null : newValue);
 }, { immediate: true });
 
 watch(options, () => {
@@ -160,7 +161,7 @@ watch(options, () => {
 const handleSelect = (option: ApiOption) => {
     const newValue = option[valueKey.value];
     console.log(`[Gatekeeper/Combobox:${props.field.name}] Option selected:`, option, `New value: ${newValue}`);
-    model.value = newValue; 
+    model.value = newValue;
     // selectedLabel será atualizado pelo watcher do model
     open.value = false;
     searchTerm.value = '';
@@ -169,49 +170,36 @@ const handleSelect = (option: ApiOption) => {
 </script>
 
 <template>
-    <Popover v-model:open="open">
-        <PopoverTrigger as-child>
-            <Button
-                variant="outline"
-                role="combobox"
-                :aria-expanded="open"
-                :id="props.id"
-                class="w-full justify-between font-normal"
-                :disabled="isLoading"
-                v-bind="props.inputProps"
-            >
-                <span class="truncate">{{ selectedLabel || placeholder }}</span>
-                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-        </PopoverTrigger>
-        <PopoverContent class="w-[--radix-popover-trigger-width] p-0">
-            <Command should-filter="false">
-                <CommandInput
-                    v-model="searchTerm"
-                    :placeholder="placeholder"
-                    :disabled="isLoading"
-                    class="h-9"
-                 />
-                 <CommandList>
-                    <CommandEmpty>{{ isLoading ? 'Carregando...' : 'Nenhum resultado encontrado.' }}</CommandEmpty>
-                    <CommandGroup>
-                        <CommandItem
-                            v-for="option in options"
-                            :key="option[valueKey]"
-                            :value="option[labelKey]"
-                            @select="() => handleSelect(option)"
-                        >
-                            <Check
-                                :class="cn(
+    <div class="space-y-2">
+        <GtLabel :field="field" :error="error" :fieldId="props.id" />
+        <Popover v-model:open="open">
+            <PopoverTrigger as-child>
+                <Button variant="outline" role="combobox" :aria-expanded="open" :id="props.id"
+                    class="w-full justify-between font-normal" :disabled="isLoading" v-bind="props.inputProps">
+                    <span class="truncate">{{ selectedLabel || placeholder }}</span>
+                    <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-[--radix-popover-trigger-width] p-0">
+                <Command should-filter="false">
+                    <CommandInput v-model="searchTerm" :placeholder="placeholder" :disabled="isLoading" class="h-9" />
+                    <CommandList>
+                        <CommandEmpty>{{ isLoading ? 'Carregando...' : 'Nenhum resultado encontrado.' }}</CommandEmpty>
+                        <CommandGroup>
+                            <CommandItem v-for="option in options" :key="option[valueKey]" :value="option[labelKey]"
+                                @select="() => handleSelect(option)">
+                                <Check :class="cn(
                                     'mr-2 h-4 w-4',
                                     model == option[valueKey] ? 'opacity-100' : 'opacity-0'
-                                )"
-                            />
-                            <span>{{ option[labelKey] }}</span>
-                        </CommandItem>
-                    </CommandGroup>
-                </CommandList>
-            </Command>
-        </PopoverContent>
-    </Popover>
-</template> 
+                                )" />
+                                <span>{{ option[labelKey] }}</span>
+                            </CommandItem>
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+        <GtDescription :description="field.description" :error="props.error" />
+        <GtError :id="props.id" :error="props.error" />
+    </div>
+</template>

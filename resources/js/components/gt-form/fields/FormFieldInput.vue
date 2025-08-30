@@ -2,12 +2,15 @@
 import { computed } from 'vue'
 // TODO: Assumir Input como peer dependency de shadcn-vue ou copiar/recriar 
 import { Input } from '@/components/ui/input'
+import GtLabel from '../GtLabel.vue';
+import { FieldConfig } from '../../../types/field';
 // Define props expected from FormFieldWrapper (agora dentro do pacote)
 const props = defineProps<{
-    id: string;
-    // modelValue: string | number | null; // Removido, usa defineModel
-    field: { name: string; type: string; [key: string]: any }; // Adicionado name para logs
-    inputProps?: Record<string, any>; 
+  id: string;
+  // modelValue: string | number | null; // Removido, usa defineModel
+  field: FieldConfig // Adicionado name para logs
+  inputProps?: Record<string, any>;
+  error?: string;
 }>()
 
 // Use defineModel for v-model binding (Vue 3.4+)
@@ -19,7 +22,7 @@ const emit = defineEmits<{
 // Needed because native <input> doesn't handle null well
 const modelValueForInput = computed({
   get: () => model.value ?? '',
-  set: (value) => { 
+  set: (value) => {
     // console.log(`[Gatekeeper/Input:${props.field.name}] Setting value:`, value);
     model.value = value === '' ? null : value;
     emit('reactive', model.value);
@@ -28,21 +31,20 @@ const modelValueForInput = computed({
 
 // Determine the input type based on field config, default to 'text'
 const inputType = computed(() => {
-    const type = props.field.type;
-    if (['text', 'email', 'password', 'number', 'url', 'tel', 'search'].includes(type)) {
-        return type;
-    }
-    return 'text'; 
+  const type = props.field.type;
+  if (['text', 'email', 'password', 'number', 'url', 'tel', 'search'].includes(type)) {
+    return type;
+  }
+  return 'text';
 });
 
 </script>
 
 <template>
-    <Input
-        :id="props.id"
-        :type="inputType"
-        v-model="modelValueForInput"
-        v-bind="props.inputProps"
-        autocomplete="off" 
-    />
-</template> 
+  <div class="space-y-2">
+    <GtLabel :field="field" :error="error" :fieldId="props.id" />
+    <Input :id="props.id" :type="inputType" v-model="modelValueForInput" v-bind="field.inputProps" autocomplete="off" />
+    <GtDescription :description="field.description" :error="props.error" />
+    <GtError :id="props.id" :error="props.error" />
+  </div>
+</template>

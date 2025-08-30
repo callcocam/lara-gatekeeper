@@ -11,7 +11,7 @@ import { ActionProps } from "../../../types/field"
 const props = defineProps<ActionProps>();
 const isOpen = ref(false)
 const modal = ref(props.action.modal);
-const fields = modal.value.fields || [];
+const fields = modal.value?.fields || []; 
 
 const initialData = computed(() => {
     const data: Record<string, any> = {};

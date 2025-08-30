@@ -3,8 +3,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import type { BreadcrumbItem } from '@/types';
-import Heading from '@/components/Heading.vue';
 import { computed } from 'vue';
+import { ActionItemProps } from '../../../types/field';
 
 // --- Tipos ---
 interface FieldConfig {
@@ -20,11 +20,11 @@ interface FieldConfig {
 interface Props {
     fields: FieldConfig[];
     initialValues: Record<string, any>;
-    modelId: number | string;
     pageTitle: string;
     pageDescription?: string;
     breadcrumbs: BreadcrumbItem[];
     routeNameBase: string;
+    actions?: ActionItemProps[];
 }
 
 const props = defineProps<Props>();
@@ -35,13 +35,10 @@ const initialData = computed(() => {
         props.fields.forEach(field => {
             data[field.name] = props.initialValues?.[field.name] ?? null;
         });
-    } 
+    }
     return data;
 });
 
-// Extrai o nome singular do recurso
-const resourceSingularName = props.routeNameBase.split('.').pop()?.replace(/s$/, '') ?? 'registro';
-const resourceSingularTitle = resourceSingularName.charAt(0).toUpperCase() + resourceSingularName.slice(1);
 
 </script>
 
@@ -53,7 +50,9 @@ const resourceSingularTitle = resourceSingularName.charAt(0).toUpperCase() + res
         <!-- <Breadcrumbs :breadcrumbs="breadcrumbs" /> -->
 
         <div class="w-full max-w-5xl mx-auto mt-6 flex flex-col">
-            <Heading :title="pageTitle" :description="pageDescription ?? ''" class="mb-6" />
+            <GtHeading :title="pageTitle" :description="pageDescription ?? ''" class="mb-6">
+                <ActionRenderer v-for="action in actions" :key="action.id" :action="action" position="top" />
+            </GtHeading>
             <div class="py-12">
                 <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div class="overflow-hidden bg-white p-6 shadow-sm dark:bg-gray-800 sm:rounded-lg">
@@ -67,7 +66,7 @@ const resourceSingularTitle = resourceSingularName.charAt(0).toUpperCase() + res
                                         Cancelar
                                     </Button>
                                     <Button type="submit" :disabled="form.processing">
-                                        {{ form.processing ? 'Salvando...' : `Salvar ${resourceSingularTitle}` }}
+                                        {{ form.processing ? 'Salvando...' : `Salvar` }}
                                     </Button>
                                 </div>
                             </template>

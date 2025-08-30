@@ -14,6 +14,7 @@ const props = defineProps<{
     [key: string]: any;
   };
   inputProps?: Record<string, any>;
+  error?: string;
 }>()
 
 const model = defineModel<boolean | null>()
@@ -33,18 +34,17 @@ const handleChange = (checked: boolean | 'indeterminate') => {
 </script>
 
 <template>
-  <div :id="props.id" class="flex items-center gap-3 py-1">
-    <Checkbox
-      :id="props.id + '-checkbox'"
-      :checked="Boolean(model)"
-      @update:model-value="handleChange"
-      :disabled="props.field.disabled"
-      v-bind="props.inputProps"
-    />
-    <Label :for="props.id + '-checkbox'" class="font-normal cursor-pointer select-none">
-      {{ labelText }}
-      <span v-if="props.field.required" class="text-red-500 ml-1">*</span>
-    </Label>
-    <span v-if="props.field.description" class="text-xs text-gray-500 ml-2">{{ props.field.description }}</span>
+  <div class="space-y-2">
+    <GtLabel :field="field" :error="error" :fieldId="props.id" />
+    <div :id="props.id" class="flex items-center gap-3 py-1">
+      <Checkbox :id="props.id + '-checkbox'" :checked="Boolean(model)" @update:model-value="handleChange"
+        :disabled="props.field.disabled" v-bind="props.inputProps" />
+      <Label :for="props.id + '-checkbox'" class="font-normal cursor-pointer select-none">
+        {{ labelText }}
+        <span v-if="props.field.required" class="text-red-500 ml-1">*</span>
+      </Label>
+      <GtDescription :description="field.description" :error="props.error" />
+      <GtError :id="props.id" :error="props.error" />
+    </div>
   </div>
-</template> 
+</template>

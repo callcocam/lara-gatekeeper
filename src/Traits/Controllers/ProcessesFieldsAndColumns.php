@@ -8,153 +8,140 @@
 
 namespace Callcocam\LaraGatekeeper\Traits\Controllers;
 
-use Callcocam\LaraGatekeeper\Core\Support\Action;
-use Callcocam\LaraGatekeeper\Core\Support\Column;
-use Callcocam\LaraGatekeeper\Core\Support\Field;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Database\Eloquent\Model; 
 
+/**
+ * Trait unificado que combina processamento de Fields, Columns, Actions e Import/Export
+ * 
+ * Este trait serve como interface unificada para manter compatibilidade
+ * com controllers existentes, mas agora utiliza traits especializados.
+ * 
+ * Traits utilizados:
+ * - ProcessesFields: Lógica de fields para formulários
+ * - ProcessesColumns: Lógica de columns para tabelas  
+ * - ProcessesActions: Lógica de actions (CRUD, custom)
+ * - ProcessesImportExport: Lógica de import/export
+ */
 trait ProcessesFieldsAndColumns
 {
+    use ProcessesFields,
+        ProcessesColumns,
+        ProcessesActions,
+        ProcessesImportExport;
 
-    protected $columns = [];
-    protected $actions = [];
+    /**
+     * Métodos auxiliares para facilitar o uso dos traits separados
+     */
 
-    protected function getColumns(): array
+    /**
+     * Configura actions padrão + customizadas de uma vez
+     */
+    protected function setupActions(): array
     {
-        return $this->columns;
-    }
-
-    protected function getActions(): array
-    {
-        return $this->actions;
-    }
-
-    public function getAction(string $name): ?Action
-    {
-        $action = collect($this->actions)->firstWhere('name', $name);
-        return $action;
+        return array_merge(
+            $this->getDefaultTableActions(),
+            $this->getCrudActions(),
+            $this->getCustomActions(),
+            $this->getFooterActions()
+        );
     }
 
     /**
-     * Processa os campos definidos pelo método fields.
-     * Converte objetos Field em arrays e filtra os nulos (condicionais não atendidas).
+     * Configura columns padrão + customizadas de uma vez
      */
-    protected function processFields(?Model $model = null): array
+    protected function setupColumns(): array
     {
-        $rawFields = $this->fields($model);
-        $processedFields = [];
+        $columns = $this->columns();
+        $filtered = $this->filterColumnsWithPermissions($columns);
+        return $this->sortColumnsByOrder($filtered);
+    }
 
-        if (!empty($rawFields) && $rawFields[0] instanceof Field) {
-            $processedFields = array_map(fn(Field $field) => $field->toArray(), $rawFields);
-            // Filtrar campos que retornaram null (condição não atendida)
-            $processedFields = array_filter($processedFields, fn($field) => $field !== null);
-        } elseif (is_array($rawFields)) {
-            // Se já for um array de arrays, assumir que a lógica condicional
-            // já foi tratada dentro do fields (menos ideal)
-            $processedFields = $rawFields;
+    /**
+     * Configura fields com filtragem por contexto
+     */
+    protected function setupFields(?Model $model = null, ?string $context = null): array
+    {
+        $context = $context ?? $this->getContext();
+        $fields = $this->fields($model);
+        
+        if ($context) {
+            $fields = $this->filterFieldsByContext($fields, $context, $model);
         }
-
-        // Reindexar array para evitar problemas com índices faltando no JS
-        return array_values($processedFields);
+        
+        return $this->processFields($model);
     }
 
     /**
-     * Processa as colunas da tabela
+     * Métodos de conveniência para diferentes contextos
      */
-    protected function processTableColumns(): array
+
+    /**
+     * Prepara dados completos para formulário de criação
+     */
+    protected function prepareCreateFormData(): array
     {
-        $rawColumns = $this->columns();
-
-        $tableColumns = array_map(function(Column $column) {
-            if(str_contains($column->getName(), '.')){
-               $this->relationshipColumns[] = $column->getName();
-            }
-            return $column->toArray();
-        }, $rawColumns);
-
-        $this->columns = $rawColumns;
-
-        return array_values($tableColumns);
+        return [
+            'fields' => $this->processFieldsForCreate(),
+            'actions' => $this->getTableActions(),
+            'initial_values' => $this->getInitialValuesForCreate(new ($this->getModelClass()), []),
+        ];
     }
 
     /**
-     * Define as ações padrão para a tabela.
-     * Pode ser sobrescrito por controllers filhos para lógica customizada.
+     * Prepara dados completos para formulário de edição
      */
-    protected function getDefaultTableActions(): array
+    protected function prepareEditFormData(Model $model): array
     {
-
-        $actions = [];
-        if (Gate::allows($this->getSidebarMenuPermission('create'))) {
-            $actions[] = Action::make('create')
-                ->icon('Plus')
-                ->color('primary')
-                ->routeNameBase($this->getRouteNameBase())
-                ->routeSuffix('create')
-                ->label('Criar');
-        }
-        return $actions;
+        $fields = $this->processFieldsForEdit($model);
+        
+        return [
+            'fields' => $fields,
+            'actions' => $this->getTableActions(),
+            'initial_values' => $this->getInitialValuesForEdit($model, $fields),
+        ];
     }
 
     /**
-     * Retorna as ações processadas
+     * Prepara dados completos para visualização
      */
-    protected function getTableActions(): array
+    protected function prepareShowData(Model $model): array
     {
-        $actions = array_merge($this->getImportOptions(), $this->getExportOptions(), $this->getDefaultTableActions());
-
-        $this->actions = $actions;
-
-        // Adicionar ações padrão se não estiverem definidas
-        return collect($actions)->map(function ($action) { 
-            return $action->toArray();
-        })->toArray();
+        return [
+            'fields' => $this->processFieldsForShow($model),
+            'actions' => $this->getTableActions(),
+            'model' => $model,
+        ];
     }
 
     /**
-     * Resolve relacionamentos para formulários
+     * Prepara dados completos para listagem/tabela
      */
-    public function resolveRelationship($relationship, $modelInstance, $labelAttribute = 'name', $valueAttribute = 'id'): array
+    protected function prepareIndexData(): array
     {
-        $options = [];
-
-        if ($relationship) {
-            if (method_exists($modelInstance, $relationship)) {
-                $options = $modelInstance->{$relationship}->pluck($valueAttribute)->toArray();
-            }
-        }
-
-        return $options;
+        return [
+            'columns' => $this->processTableColumns(),
+            'actions' => $this->getTableActions(),
+            'headers' => $this->getTableHeaders(),
+        ];
     }
 
     /**
-     * Obtém os valores iniciais para o formulário de edição.
-     * Pode ser sobrescrito por controllers filhos para lógica customizada.
+     * Placeholder para métodos que devem ser implementados pelo controller
      */
-    protected function getInitialValuesForEdit(Model $modelInstance, array $fields = []): array
-    {
-        $values = $modelInstance->toArray();
-
-        foreach ($fields as $field) {
-            if (isset($field['relationship'])) {
-                $values[$field['key']] = $this->resolveRelationship(
-                    $field['relationship'],
-                    $modelInstance,
-                    $field['labelAttribute'],
-                    $field['valueAttribute']
-                );
-            }
-        }
-
-        return $values;
-    }
+    abstract protected function fields(?Model $model = null): array;
+    abstract protected function columns(): array;
+    abstract protected function getRouteNameBase(): string;
 
     /**
-     * Obtém valores iniciais para criação
+     * Método opcional para obter a classe do modelo
+     * Pode ser implementado pelo controller para facilitar operações
      */
-    protected function getInitialValuesForCreate(Model $modelInstance, array $fields = []): array
+    protected function getModelClass(): string
     {
-        return [];
+        // Por padrão, tenta derivar da classe do controller
+        $controllerClass = static::class;
+        $modelName = str_replace('Controller', '', class_basename($controllerClass));
+        
+        return "App\\Models\\{$modelName}";
     }
 }

@@ -9,9 +9,13 @@ import {
 } from 'lucide-vue-next'
 // TODO: Assumir Toggle como peer dependency de shadcn-vue ou copiar/recriar 
 import { computed } from 'vue'
+import { FieldConfig } from '../../../types/field';
 
 const props = defineProps<{
     editor: Editor | undefined
+    id: string
+    error?: string
+    field: FieldConfig
 }>()
 
 // Map command names to their corresponding `can()` and `action` methods
@@ -60,17 +64,12 @@ const commands = computed(() => {
 
 <template>
     <div v-if="editor" class="toolbar flex flex-wrap gap-1 p-2 bg-muted/50 rounded-t-md">
-        <Toggle
-            v-for="command in commands"
-            :key="command.name"
-            size="sm"
-            :pressed="command.isActive()"
-            @update:pressed="command.action"
-            :disabled="!command.can()"
-            :aria-label="`Toggle ${command.name}`"
-            variant="outline"
-        >
-             <component :is="command.icon" class="h-4 w-4" />
+        <Toggle v-for="command in commands" :key="command.name" size="sm" :pressed="command.isActive()"
+            @update:pressed="command.action" :disabled="!command.can()" :aria-label="`Toggle ${command.name}`"
+            variant="outline">
+            <component :is="command.icon" class="h-4 w-4" />
         </Toggle>
+        <GtError :id="props.id" :error="props.error" />
+        <GtDescription :description="field.description" :error="props.error" />
     </div>
 </template>

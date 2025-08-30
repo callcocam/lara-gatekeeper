@@ -11,12 +11,14 @@ namespace Callcocam\LaraGatekeeper\Core\Support;
 use Callcocam\LaraGatekeeper\Core\Cast\CastRegistry;
 use Callcocam\LaraGatekeeper\Core\Concerns;
 use Callcocam\LaraGatekeeper\Core\Concerns\EvaluatesClosures;
+use Callcocam\LaraGatekeeper\Core\Concerns\FactoryPattern;
 use Callcocam\LaraGatekeeper\Core\Support\Table\Concerns\HasSearchable;
 use Callcocam\LaraGatekeeper\Core\Support\Table\Concerns\HasSortable;
 use Closure;
 
 class Column
 {
+    use FactoryPattern;
     use EvaluatesClosures;
     use Concerns\BelongsToLabel;
     use Concerns\BelongsToName;
@@ -27,6 +29,8 @@ class Column
 
     public ?string $accessorKey = null;
     public bool $isHtml = false; // Para indicar se a célula retorna HTML bruto
+    public bool $isImage = false; // Para indicar se a célula retorna uma imagem
+    
 
     /**
      * Formatação da coluna
@@ -43,19 +47,19 @@ class Column
 
     protected Closure|string|null $component = "TextColumn";
 
-    protected function __construct(string $label, ?string $accessorKey = null)
+    protected function __construct(string $accessorKey, ?string $label = null)
     {
-        $this->label = $label;
-        $this->accessorKey = $accessorKey ?? strtolower(str_replace(' ', '_', $label));
+        $this->label($label ?? str_replace('_', ' ', ucfirst($accessorKey)));
+        $this->accessorKey = $accessorKey;
         $this->id($this->accessorKey);
         $this->nameFormatter(str_replace('.', '_', $this->accessorKey) . '_formatted');
         $this->name($this->accessorKey);
     }
 
-    public static function make(string $label, ?string $accessorKey = null): self
-    {
-        return new static($label, $accessorKey);
-    }
+    // public static function make(string $accessorKey, ?string $label = null): self
+    // {
+    //     return new static($accessorKey, $label);
+    // }
 
 
     public function accessorKey(?string $key): self
@@ -78,6 +82,13 @@ class Column
     public function getComponent(): ?string
     {
         return $this->component;
+    }
+
+    public function image(bool $isImage = true): self
+    {
+        $this->component('ImageColumn');
+        $this->isImage = $isImage;
+        return $this;
     }
 
     public function hideable(bool $enableHiding = true): self
@@ -117,7 +128,9 @@ class Column
             'sortable' => $this->isSortable(),
             'searchable' => $this->isSearchable(),
             'component' => $this->getComponent(),
-            'options' => $this->getOptions()
+            'options' => $this->getOptions(),
+            'image' => $this->isImage,
+            'html' => $this->isHtml,
         ];
 
         return $data;

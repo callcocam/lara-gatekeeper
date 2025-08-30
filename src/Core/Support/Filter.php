@@ -22,6 +22,8 @@ class Filter
     use Core\Concerns\BelongsToLabel;
     use Core\Concerns\BelongsToName;
     use Core\Concerns\BelongsToOptions;
+    use Core\Concerns\BelongsToVisible;
+    use Core\Concerns\BelongsToPermission;
 
     protected string $component = 'Select';
 

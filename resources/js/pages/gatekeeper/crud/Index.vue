@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'; // Ajuste o caminho se necessário
 import { Head } from '@inertiajs/vue3';
-import { h, computed, toRefs, watch, ref } from 'vue'; // Restaurar imports h, resolveComponent, watch
+import { toRefs } from 'vue'; // Restaurar imports h, resolveComponent, watch
 import type { BreadcrumbItem } from '@/types'; // Supondo que BreadcrumbItem está em @/types 
 import type { BackendColumnDef } from '@/types/tables'; // Importar do arquivo central 
 
@@ -100,12 +100,10 @@ const getClassName = () => {
             <div class="mx-auto  sm:px-6 lg:px-8" :class="getClassName()">
                 <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <div class="mb-4 flex justify-end gap-2">
-                             
+                        <div class="mb-4 flex justify-end gap-2" v-if="actions">
                             <!-- Botão de Criar (usa can.create_resource ou um nome mais específico se passado) -->
-                            <template v-if="actions && actions.length">
-                                <ActionRenderer v-for="action in actions" :key="action.id" :action="action" />
-                            </template>
+                            <ActionRenderer v-for="action in actions" :key="action.id" :action="action"
+                                position="top" />
                         </div>
                         <GtDataTable :items="data.data" :columns="columns" :meta="data.meta"
                             :query-params="queryParams">
@@ -116,7 +114,7 @@ const getClassName = () => {
                             <template #pagination="{ meta }">
                                 <GtPagination :meta="meta" />
                             </template>
-                        </GtDataTable> 
+                        </GtDataTable>
                     </div>
                 </div>
             </div>

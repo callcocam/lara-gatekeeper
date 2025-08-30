@@ -15,27 +15,11 @@ use ReflectionClass;
 
 class StatusColumn extends Column
 {
-    /**
-     * Cria uma coluna de status com configuração automática baseada em Enum
-     *
-     * @param string $label Label da coluna
-     * @param string|null $accessorKey Campo do banco (padrão: 'status')
-     * @param string|null $enumClass Classe do Enum (será detectada automaticamente se não fornecida)
-     * @return static
-     */
-    public static function make(string $label = 'Status', ?string $accessorKey = null, ?string $enumClass = null): self
+
+    public function __construct(string $accessorKey, ?string $label = null)
     {
-        $instance = new static($label, $accessorKey ?? 'status');
-        
-        // Configura automaticamente o componente para status
-        $instance->component('StatusColumn');
-        
-        // Se um Enum foi fornecido, configura automaticamente
-        if ($enumClass) {
-            $instance->fromEnum($enumClass);
-        }
-        
-        return $instance;
+        parent::__construct($accessorKey, $label);
+        $this->component('StatusColumn');
     }
 
     /**
@@ -52,7 +36,7 @@ class StatusColumn extends Column
 
         // Extrai as opções do Enum automaticamente
         $options = $this->extractEnumOptions($enumClass);
-        
+
         if (!empty($options)) {
             $this->options($options);
         }
@@ -71,10 +55,10 @@ class StatusColumn extends Column
     {
         $modelName = class_basename($modelClass);
         $accessorKey = $this->getAccessorKey();
-        
+
         // Converte accessor_key para EnumClass (ex: 'status' -> 'Status')
         $enumSuffix = ucfirst(str_replace('_', '', $accessorKey));
-        
+
         // Tenta encontrar o Enum seguindo convenções comuns
         $possibleEnums = [
             "App\\Enums\\{$modelName}{$enumSuffix}",
@@ -104,7 +88,7 @@ class StatusColumn extends Column
             // Primeiro tenta usar o método options() se existir
             if (method_exists($enumClass, 'options')) {
                 $options = $enumClass::options();
-                
+
                 // Se retornou array com estrutura correta, usa direto
                 if (is_array($options) && $this->isValidOptionsArray($options)) {
                     return $this->enrichOptionsWithColors($options, $enumClass);
@@ -113,7 +97,6 @@ class StatusColumn extends Column
 
             // Fallback: constrói manualmente a partir dos cases
             return $this->buildOptionsFromCases($enumClass);
-            
         } catch (\Throwable $e) {
             // Em caso de erro, retorna array vazio (fallback graceful)
             return [];
@@ -130,7 +113,7 @@ class StatusColumn extends Column
     {
         $options = [];
         $reflection = new ReflectionClass($enumClass);
-        
+
         // Verifica se é um BackedEnum
         if (!$reflection->implementsInterface(BackedEnum::class)) {
             return [];
@@ -226,9 +209,9 @@ class StatusColumn extends Column
         }
 
         $firstOption = $options[0];
-        return is_array($firstOption) && 
-               isset($firstOption['value']) && 
-               isset($firstOption['label']);
+        return is_array($firstOption) &&
+            isset($firstOption['value']) &&
+            isset($firstOption['label']);
     }
 
     /**
@@ -239,9 +222,9 @@ class StatusColumn extends Column
      * @param string|null $accessorKey
      * @return static
      */
-    public static function withEnum(string $enumClass, string $label = 'Status', ?string $accessorKey = null): static
+    public static function withEnum(string $enumClass, string $accessorKey = 'status', ?string $label = null): static
     {
-        return static::make($label, $accessorKey)->fromEnum($enumClass);
+        return static::make($accessorKey, $label)->fromEnum($enumClass);
     }
 
     /**
@@ -252,8 +235,8 @@ class StatusColumn extends Column
      * @param string|null $accessorKey
      * @return static
      */
-    public static function forModel(string $modelClass, string $label = 'Status', ?string $accessorKey = null): static
+    public static function forModel(string $modelClass, string $accessorKey = 'status', ?string $label = null): static
     {
-        return static::make($label, $accessorKey)->autoDetectEnum($modelClass);
+        return static::make($accessorKey, $label)->autoDetectEnum($modelClass);
     }
 }

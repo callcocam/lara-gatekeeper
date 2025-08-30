@@ -27,6 +27,7 @@ use Callcocam\LaraGatekeeper\Traits\Controllers\HasDebugCustomFilters;
 use Callcocam\LaraGatekeeper\Traits\Controllers\IteractWithTable;
 use Callcocam\LaraGatekeeper\Traits\Controllers\ProvidesExtraData;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 
 abstract class AbstractController extends Controller
 {
@@ -88,7 +89,7 @@ abstract class AbstractController extends Controller
 
         // Processar colunas usando a trait
         $tableColumns = $this->processTableColumns();
-        $actions = $this->getTableActions();
+        $actions = array_values($this->getTableActions());
         $filters = array_map(fn($filter) => $filter->toArray(), $this->filters());
 
         // Aplicar filtros, busca e ordenação
@@ -101,9 +102,7 @@ abstract class AbstractController extends Controller
             ...$this->toArray(),
             'columns' => $tableColumns,
             'filters' => $filters,
-            'actions' => $actions,
-            'importOptions' => $this->getImportOptions(),
-            'exportOptions' => $this->getExportOptions(),
+            'actions' => $actions, 
             'extraData' => $this->getExtraDataForIndex(),
             'fullWidth' => $this->getFullWidthIndexPage() ?? false,
             'currentFilters' => $request->query(),
@@ -123,12 +122,16 @@ abstract class AbstractController extends Controller
         $this->authorize($this->getSidebarMenuPermission('create'));
         $fields = $this->processFields();
 
+        $this->setContext('create');
+        $actions = array_values($this->getFormActions());
+
         return Inertia::render($this->getViewCreate(), [
             'fields' => $fields,
             'initialValues' => new $this->model(),
             ...$this->getToArrayManagesResources('create'),
             'extraData' => $this->getExtraDataForCreate(),
             'fullWidth' => $this->getFullWidthCreateForm() ?? false,
+            'actions' => $actions,
         ]);
     }
 
@@ -162,10 +165,17 @@ abstract class AbstractController extends Controller
             $modelInstance->load($relationship);
         }
 
+        $this->setContext('show');
+        $actions = array_values($this->getFormActions($modelInstance));
+        $fields = $this->processFields($modelInstance);
+
         return Inertia::render($this->getViewShow(), [
-            'model' => $modelInstance->toArray(),
+            'modelId' => $id,
+            'fields' => $fields,
+            'initialValues' => $modelInstance->toArray(),
             ...$this->getToArrayManagesResources('show', $modelInstance),
             'fullWidth' => $this->getFullWidthShowPage() ?? false,
+            'actions' => $actions,
         ]);
     }
 
@@ -184,6 +194,9 @@ abstract class AbstractController extends Controller
         $fields = $this->processFields($modelInstance);
         $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields);
 
+        $this->setContext('edit');
+        $actions = array_values($this->getFormActions($modelInstance));
+
         return Inertia::render($this->getViewEdit(), [
             'fields' => $fields,
             'initialValues' => $initialValues,
@@ -191,6 +204,7 @@ abstract class AbstractController extends Controller
             'extraData' => $this->getExtraDataForEdit(),
             'fullWidth' => $this->getFullWidthEditForm() ?? false,
             ...$this->getToArrayManagesResources('edit', $modelInstance),
+            'actions' => $actions,
         ]);
     }
 
@@ -293,9 +307,16 @@ abstract class AbstractController extends Controller
 
         $result = $this->evaluate($action->getCallback(), ['query' => $query]);
 
-        if ($result) { 
+        if ($result) {
             return $result;
         }
         return redirect()->back()->with('error', 'Export action did not return a valid response.');
+    }
+
+    public function cascading(Request $request): JsonResponse
+    {
+       
+
+        return response()->json($request->all());
     }
 }

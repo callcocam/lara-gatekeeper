@@ -37,22 +37,18 @@ trait ProvidesExtraData
     /**
      * Retorna opções de importação
      */
-    protected function getImportOptions(): array
+    protected function getExtraDataForImportOptions(): array
     {
-        if (method_exists($this, 'getImport')) {
-            return $this->getImport();
-        }
+        
         return [];
     }
 
     /**
      * Retorna opções de exportação
      */
-    protected function getExportOptions(): array
+    protected function getExtraDataForExportOptions(): array
     {
-        if (method_exists($this, 'getExport')) {
-            return $this->getExport();
-        }
+         
         return [];
     }
 }

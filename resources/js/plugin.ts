@@ -5,8 +5,8 @@ import { formatterRegistryKey, fieldRegistryKey } from './injectionKeys';
 
 // Importar Registros Padrão
 import * as defaultFormatters from './utils/columnFormatters';
-import { defaultFieldComponents } from './components/form/fieldRegistry';
-import type { FieldRegistry } from './components/form/fieldRegistry';
+import { defaultFieldComponents } from './components/gt-form/fieldRegistry';
+import type { FieldRegistry } from './components/gt-form/fieldRegistry';
 
 // --- Form Components --- 
 // import DynamicForm from './components/form/DynamicForm.vue';

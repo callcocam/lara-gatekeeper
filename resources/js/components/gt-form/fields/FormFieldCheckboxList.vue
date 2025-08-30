@@ -16,6 +16,7 @@ const props = defineProps<{
         [key: string]: any;
     };
     inputProps?: Record<string, any>; 
+    error?: string;
 }>()
 
 // Use defineModel, forçando a ser um array ou null

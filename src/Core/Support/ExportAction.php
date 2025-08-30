@@ -31,9 +31,9 @@ class ExportAction extends Action
         $this->modalDescription('Tem certeza que deseja exportar os dados?');
     }
 
-    public function toArray($item = null): array
+    public function render($item = null): array
     {
-        return array_merge(parent::toArray($item), [ 
+        return array_merge(parent::render($item), [ 
             'icon' => $this->getIcon(),
             'type' => $this->getType(),
             'confirm' => [

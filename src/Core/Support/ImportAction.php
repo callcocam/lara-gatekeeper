@@ -36,6 +36,11 @@ class ImportAction extends Action
         });
 
         $this->modalDescription('Selecione um arquivo para importar a estrutura mercadológica.');
+
+        $this->fields([
+            Field::make('file', 'Arquivo')
+                ->type('file')
+        ]);
     }
     /**
      * Formatação da coluna
@@ -55,9 +60,10 @@ class ImportAction extends Action
         return $this->evaluate($this->fileName);
     }
 
-    public function toArray($item = null): array
+    public function render($item = null): array
     {
-        return array_merge(parent::toArray($item), [
+
+        return array_merge(parent::render($item), [
             'type' => $this->getType(),
             'modal' => $this->getModal(),
         ]);

@@ -1,12 +1,11 @@
 <template>
-    <component :is="getComponent(action.component || 'Link')" :action="action" />
+    <component :is="getComponent(action.component || 'Link')" :action="action" v-if="action.position === position" />
 </template>
 <script setup lang="ts">
 import { defineProps } from 'vue';
-import { ActionProps } from '../../types/field';
+import { ActionPosition, ActionProps } from '../../types/field';
 
-
-const props = defineProps<ActionProps>();
+defineProps<ActionProps & { position: ActionPosition, form?: any }>();
 
 const getComponent = (component: string) => {
     return `Gt${component}`;

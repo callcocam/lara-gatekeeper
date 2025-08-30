@@ -16,6 +16,7 @@ const props = defineProps<{
         [key: string]: any;
     };
     inputProps?: { placeholder?: string; [key: string]: any };
+    error?: string;
 }>()
 
 // Use defineModel for v-model binding
@@ -178,7 +179,8 @@ watch(model, (newModelValue, oldModelValue) => {
 </script>
 
 <template>
-    <div class="space-y-3">
+    <div class="space-y-2">
+        <GtLabel :field="field" :error="error" :fieldId="props.id" />
         <div
             ref="dropZoneRef"
             @click="openFileInput"
@@ -240,5 +242,7 @@ watch(model, (newModelValue, oldModelValue) => {
                 </li>
             </ul>
         </div>
+        <GtDescription :description="field.description" :error="props.error" />
+        <GtError :id="props.id" :error="props.error" />
     </div>
 </template> 

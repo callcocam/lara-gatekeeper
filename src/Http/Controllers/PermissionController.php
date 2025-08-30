@@ -68,13 +68,13 @@ class PermissionController extends AbstractController
     protected function columns(): array
     {
         $columns = [
-            Column::make('Nome', 'name')->sortable(),
+            Column::make('name', 'Nome')->sortable(),
 
-            Column::make('Slug', 'slug')->sortable(),
+            Column::make('slug', 'Slug')->sortable(),
 
-            Column::make('Descrição', 'description'),
+            Column::make('description', 'Descrição'),
 
-            Column::make('Criado em', 'created_at')
+            Column::make('created_at', 'Criado em')
                 ->sortable()
                 ->formatter('formatDate'),
 

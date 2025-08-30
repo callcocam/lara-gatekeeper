@@ -11,13 +11,13 @@ import FormFieldFile from './fields/FormFieldFile.vue';
 import FormFieldRepeater from './fields/FormFieldRepeater.vue';
 import FormFieldModalSelect from './fields/FormFieldModalSelect.vue';
 import FormFieldRadioGroup from './fields/FormFieldRadioGroup.vue';
-import FormFieldCheckboxList from './fields/FormFieldCheckboxList.vue';
-import FormFieldFilePond from './fields/FormFieldFilePond.vue';
+import FormFieldCheckboxList from './fields/FormFieldCheckboxList.vue'; 
 import FormFieldSwitch from './fields/FormFieldSwitch.vue';
 import FormFieldCheckbox from './fields/FormFieldCheckbox.vue';
 import FormFieldTags from './fields/FormFieldTags.vue';
 import FormFieldSmartSelect from './fields/FormFieldSmartSelect.vue';
 import FormFieldMultiLevelSelect from './fields/FormFieldMultiLevelSelect.vue';
+import FormFieldArray from './fields/news/FormFieldArray.vue';
 
 export const defaultFieldComponents = {
     text: FormFieldInput,
@@ -38,8 +38,7 @@ export const defaultFieldComponents = {
     repeater: FormFieldRepeater,
     modalSelect: FormFieldModalSelect,
     radio: FormFieldRadioGroup,
-    checkboxList: FormFieldCheckboxList,
-    filepond: FormFieldFilePond,
+    checkboxList: FormFieldCheckboxList, 
     switch: FormFieldSwitch,
     checkbox: FormFieldCheckbox,
     tags: FormFieldTags,
@@ -48,6 +47,7 @@ export const defaultFieldComponents = {
     multiLevelSelect: FormFieldMultiLevelSelect,
     // avatarPreview: FormFieldAvatarPreview, // Remover mapeamento
     // Adicionar outros campos padrão aqui
+    array: FormFieldArray,
 };
 
 export type FieldRegistry = Record<string, Component>; 

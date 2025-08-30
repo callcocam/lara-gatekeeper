@@ -12,6 +12,7 @@ const props = defineProps<{
         [key: string]: any;
     };
     inputProps?: { placeholder?: string;[key: string]: any }; // Placeholder specifically
+    error?: string;
 }>()
 
 // Use defineModel for v-model binding (Vue 3.4+)
@@ -42,7 +43,8 @@ const computedOptions = computed(() => {
 </script>
 
 <template>
-    <div>
+    <div class="space-y-2">
+        <GtLabel :field="field" :error="error" :fieldId="props.id" />
         <Select v-model="model" v-if="computedOptions.length > 0">
             <SelectTrigger :id="props.id" class="w-full" v-bind="props.inputProps">
                 <SelectValue :placeholder="placeholder" />
@@ -56,5 +58,7 @@ const computedOptions = computed(() => {
             </SelectContent>
         </Select>
         <Input readonly class="text-sm text-gray-500" v-else :placeholder="'Nenhum item encontrado'" />
+        <GtDescription :description="field.description" :error="props.error" />
+        <GtError :id="props.id" :error="props.error" />
     </div>
 </template>

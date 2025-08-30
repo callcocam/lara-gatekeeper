@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { defineProps, computed, inject } from 'vue'
-import { cn } from '../../lib/utils'
 import { fieldRegistryKey } from '../../injectionKeys';
 import type { FieldRegistry } from './fieldRegistry';
-import { Label } from '@/components/ui/label'
 import { FieldConfig } from '../../types/field';
 
 const props = defineProps<{
@@ -18,6 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const fieldRegistry = inject(fieldRegistryKey);
+
 const FieldComponent = computed(() => {
     const fieldType = props.field?.type as keyof FieldRegistry;
     if (!fieldRegistry) {
@@ -34,7 +33,7 @@ const FieldComponent = computed(() => {
 
 const fieldId = computed(() => `field-${props.field?.name}`);
 
-const updateModelValue = (value: any) => {
+const updateModelValue = (value: any) => { 
     emit('update:modelValue', value);
 };
 
@@ -52,23 +51,11 @@ const updateFormValues = (values: any) => {
 </script>
 
 <template>
-    <div class="space-y-2">
-        <Label v-if="!props.field?.hideLabel" :for="fieldId" :class="cn(props.error && 'text-destructive')">
-            {{ field.label }}
-            <span v-if="field.required" class="text-destructive"> *</span>
-        </Label>
-        <component v-if="FieldComponent" :is="FieldComponent" :id="fieldId" :field="field"
-            :inputProps="{ ...field.inputProps, 'aria-invalid': !!props.error, 'aria-describedby': props.error ? `${fieldId}-error` : undefined }"
-            :error="props.error" :modelValue="props.modelValue" @update:modelValue="updateModelValue"
-            @fieldAction="handleFieldAction" @update:form-values="updateFormValues" />
-        <div v-else class="text-sm text-destructive bg-destructive/10 p-2 rounded">
-            [Gatekeeper] Componente de campo não encontrado para o tipo: {{ field.type }}
-        </div>
-        <p v-if="field.description && !props.error" class="text-sm text-muted-foreground">
-            {{ field.description }}
-        </p>
-        <p v-if="props.error" :id="`${fieldId}-error`" class="text-sm font-medium text-destructive">
-            {{ props.error }}
-        </p>
+    <component v-if="FieldComponent" :is="FieldComponent" :id="fieldId" :field="field"
+        :inputProps="{ ...field.inputProps, 'aria-invalid': !!props.error, 'aria-describedby': props.error ? `${fieldId}-error` : undefined }"
+        :error="props.error" :modelValue="props.modelValue" @update:modelValue="updateModelValue"
+        @fieldAction="handleFieldAction" @update:form-values="updateFormValues" />
+    <div v-else class="text-sm text-destructive bg-destructive/10 p-2 rounded">
+        [Gatekeeper] Componente de campo não encontrado para o tipo: {{ field.type }}
     </div>
 </template>

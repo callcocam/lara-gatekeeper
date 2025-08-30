@@ -14,6 +14,7 @@ const props = defineProps<{
     [key: string]: any;
   };
   inputProps?: Record<string, any>;
+  error?: string;
 }>()
 
 const model = defineModel<string[] | null>()
@@ -32,28 +33,22 @@ const placeholder = computed(() => props.field.placeholder || 'Digite uma tag e 
 </script>
 
 <template>
-  <TagsInput
-    :id="props.id"
-    v-model="modelValueForTags"
-    :disabled="props.field.disabled"
-    v-bind="props.inputProps"
-    class="min-h-10"
-  >
-    <div class="flex flex-wrap gap-2 items-center">
-      <TagsInputItem
-        v-for="item in modelValueForTags"
-        :key="item"
-        :value="item"
-        class="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-1 text-sm rounded-md flex items-center gap-1"
-      >
-        <TagsInputItemText class="text-sm" />
-        <TagsInputItemDelete class="ml-1 h-3 w-3 text-muted-foreground hover:text-foreground" />
-      </TagsInputItem>
-    </div>
+  <div class="space-y-2">
+    <GtLabel :field="field" :error="error" :fieldId="props.id" />
+    <TagsInput :id="props.id" v-model="modelValueForTags" :disabled="props.field.disabled" v-bind="props.inputProps"
+      class="min-h-10">
+      <div class="flex flex-wrap gap-2 items-center">
+        <TagsInputItem v-for="item in modelValueForTags" :key="item" :value="item"
+          class="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-1 text-sm rounded-md flex items-center gap-1">
+          <TagsInputItemText class="text-sm" />
+          <TagsInputItemDelete class="ml-1 h-3 w-3 text-muted-foreground hover:text-foreground" />
+        </TagsInputItem>
+      </div>
 
-    <TagsInputInput
-      :placeholder="placeholder"
-      class="flex-1 min-w-0 text-sm bg-transparent border-0 outline-none focus:ring-0 px-1"
-    />
-  </TagsInput>
-</template> 
+      <TagsInputInput :placeholder="placeholder"
+        class="flex-1 min-w-0 text-sm bg-transparent border-0 outline-none focus:ring-0 px-1" />
+    </TagsInput>
+    <GtDescription :description="field.description" :error="props.error" />
+    <GtError :id="props.id" :error="props.error" />
+  </div>
+</template>

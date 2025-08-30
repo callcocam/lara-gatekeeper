@@ -7,6 +7,7 @@ const props = defineProps<{
   // modelValue: string | null; // Removido, usa defineModel
   field: { name: string;[key: string]: any }; // Adicionado name
   inputProps?: Record<string, any>;
+  error?: string;
 }>()
 
 // Use defineModel for v-model binding (Vue 3.4+)
@@ -27,5 +28,10 @@ const modelValueForTextarea = computed({
 </script>
 
 <template>
-  <Textarea :id="props.id" v-model="modelValueForTextarea" v-bind="props.inputProps" />
+  <div class="space-y-2">
+    <GtLabel :field="field" :error="error" :fieldId="props.id" />
+    <Textarea :id="props.id" v-model="modelValueForTextarea" v-bind="props.inputProps" />
+    <GtDescription :description="field.description" :error="props.error" />
+    <GtError :id="props.id" :error="props.error" />
+  </div>
 </template>
