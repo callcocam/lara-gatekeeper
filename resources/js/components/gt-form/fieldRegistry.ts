@@ -18,7 +18,11 @@ import FormFieldTags from './fields/FormFieldTags.vue';
 import FormFieldSmartSelect from './fields/FormFieldSmartSelect.vue';
 import FormFieldMultiLevelSelect from './fields/FormFieldMultiLevelSelect.vue';
 import FormFieldArray from './fields/news/FormFieldArray.vue';
-
+import FormFieldCnpjLookup from './fields/FormFieldCnpjLookup.vue';
+import FormFieldAddress from './fields/FormFieldAddress.vue';
+import FormHasManyField from './fields/FormHasManyField.vue';
+import FormSectionField from './fields/FormSectionField.vue';
+    
 export const defaultFieldComponents = {
     text: FormFieldInput,
     date: FormFieldInput,
@@ -48,6 +52,10 @@ export const defaultFieldComponents = {
     // avatarPreview: FormFieldAvatarPreview, // Remover mapeamento
     // Adicionar outros campos padrão aqui
     array: FormFieldArray,
+    cnpjLookup: FormFieldCnpjLookup,
+    address: FormFieldAddress,
+    hasMany: FormHasManyField,
+    section: FormSectionField,
 };
 
 export type FieldRegistry = Record<string, Component>; 
