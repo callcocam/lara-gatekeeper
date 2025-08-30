@@ -53,6 +53,8 @@ class Field
     public ?int $maxFileSize = 15;
     public ?int $order = 0;
 
+    protected ?Closure $valueCallback = null;
+
     protected ?Model $model = null;
 
     protected function __construct(string $key, string $label)
@@ -267,7 +269,7 @@ class Field
         return $this->order;
     }
 
-    public function model(Model $model): self
+    public function model(?Model $model = null): self
     {
         $this->model = $model;
         return $this;
@@ -276,6 +278,20 @@ class Field
     public function getModel(): ?Model
     {
         return $this->model;
+    }
+
+    public function getValue($initialValue = null): mixed
+    {
+        if ($this->valueCallback) {
+            return $this->evaluate($this->valueCallback, ['initialValue' => $initialValue]);
+        }
+        return $initialValue;
+    }
+
+    public function valueCallback(Closure $callback): self
+    {
+        $this->valueCallback = $callback;
+        return $this;
     }
 
     // Convert the field definition to an array for the frontend

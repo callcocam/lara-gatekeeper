@@ -61,6 +61,17 @@ abstract class AbstractController extends Controller
     abstract protected function columns(): array;
     abstract protected function filters(): array;
     abstract protected function getValidationRules(bool $isUpdate = false, ?Model $model = null): array;
+
+
+    protected function formFieldValues(?array $initialValues = null, $fields = []): array
+    { 
+        foreach ($fields as $field) {
+
+            $initialValues[$field->getName()] = $field->getValue(data_get($initialValues, $field->getName()));
+        }
+        return $initialValues;
+    }
+
     protected function getSearchableColumns(): array
     {
         $columns = $this->getColumns();
@@ -102,7 +113,7 @@ abstract class AbstractController extends Controller
             ...$this->toArray(),
             'columns' => $tableColumns,
             'filters' => $filters,
-            'actions' => $actions, 
+            'actions' => $actions,
             'extraData' => $this->getExtraDataForIndex(),
             'fullWidth' => $this->getFullWidthIndexPage() ?? false,
             'currentFilters' => $request->query(),
@@ -190,13 +201,16 @@ abstract class AbstractController extends Controller
         if ($relationship = $this->getWithRelations()) {
             $modelInstance->load($relationship);
         }
-
-        $fields = $this->processFields($modelInstance);
+        $rawFields = $this->fields($modelInstance);
+        $fields = $this->processFields($modelInstance, $rawFields);
         $initialValues = $this->getInitialValuesForEdit($modelInstance, $fields);
 
-        $this->setContext('edit');
-        $actions = array_values($this->getFormActions($modelInstance));
+        $initialValues = $this->formFieldValues($initialValues, $rawFields);
 
+        $this->setContext('edit'); 
+
+        $actions = array_values($this->getFormActions($modelInstance)); 
+ 
         return Inertia::render($this->getViewEdit(), [
             'fields' => $fields,
             'initialValues' => $initialValues,
@@ -315,7 +329,7 @@ abstract class AbstractController extends Controller
 
     public function cascading(Request $request): JsonResponse
     {
-       
+
 
         return response()->json($request->all());
     }

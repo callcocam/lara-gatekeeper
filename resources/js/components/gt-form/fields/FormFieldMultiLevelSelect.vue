@@ -6,98 +6,98 @@
     <p class="text-sm text-gray-600 dark:text-gray-400 mb-2" v-if="field.description">{{ field.description }}</p>
     <div v-if="field.fields" class="grid grid-cols-12 gap-4">
       <div v-for="fieldOther in fields" :key="fieldOther.name" :class="getColSpanClass(fieldOther)">
-        <GtFormFieldWrapper :field="fieldOther" :model-value="formData[fieldOther.name]"
+        <GtFormFieldWrapper :field="fieldOther" :model-value="safeModel[fieldOther.name]"
           :error="formData.errors[fieldOther.name]" @update:model-value="handleFieldUpdate(fieldOther.name, $event)"
           @fieldAction="handleFieldAction" />
       </div>
     </div>
   </fieldset>
 </template>
+
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { FieldConfig } from '../../../types/field';
 import { router, useForm } from '@inertiajs/vue3';
+import { map } from 'lodash';
 
+// Definição das props do componente
 const props = defineProps<{
   field: FieldConfig & {
-    cascadingFields: string[];
+    cascadingFields: Record<string, string>; // Mapeamento dos campos em cascata
   };
   error?: string;
-  modelValue: any;
+  modelValue: any; // Valor atual do modelo
 }>()
 
-const queryParams = ref(Object.fromEntries(new URLSearchParams(window.location.search).entries()));
-
+// Formulário para gerenciar dados e erros
 const formData = useForm({
   ...props.modelValue,
-  ...queryParams.value,
   errors: {},
 });
 
-const selfModel = ref({
-  ...props.modelValue,
-  ...queryParams.value,
-});
+// Eventos que o componente pode emitir
 const emit = defineEmits<{
   (e: 'update:model-value', value: any): void;
   (e: 'fieldAction', action: string, data: any): void;
 }>();
 
+// Parâmetros da query string atual (não utilizado atualmente)
+const queryParams = ref(Object.fromEntries(new URLSearchParams(window.location.search).entries()));
 
+// Modelo seguro para evitar mutações diretas das props
+const safeModel = ref({
+  ...props.modelValue,
+});
+
+// Computed para acessar os campos do formulário
 const fields = computed(() => props.field.fields);
 
+/**
+ * Manipula a atualização de um campo específico
+ * Remove valores dos campos dependentes quando um campo pai é alterado
+ */
 const handleFieldUpdate = (fieldName: string, value: any) => {
-  console.log('=== LÓGICA DE CASCATA ATIVADA ===');
-  console.log(fieldName, value, 'fieldName, value');
-  
-  // Atualiza o modelo local
-  selfModel.value[fieldName] = value;
-  
-  // Define a ordem hierárquica dos campos
-  const fieldOrder = ['segmento_varejista', 'departamento', 'subdepartamento', 'categoria', 'subcategoria', 'subsegmento'];
-  
-  // Encontra a posição do campo atualizado
-  const currentIndex = fieldOrder.indexOf(fieldName);
-  console.log('Campo atualizado:', fieldName, 'posição:', currentIndex);
-  
-  // Mantém apenas os campos até o atual, remove os posteriores
-  const fieldsToKeep = fieldOrder.slice(0, currentIndex + 1);
-  console.log('Campos a manter:', fieldsToKeep);
-  
-  const url = new URL(window.location.href, window.location.origin);
-  url.search = '';
-  
-  // Adiciona apenas os campos que devem ser mantidos
-  fieldsToKeep.forEach(fieldName => {
-    if (selfModel.value[fieldName]) {
-      console.log(`Mantendo ${fieldName}=${selfModel.value[fieldName]} na URL`);
-      url.searchParams.set(fieldName, String(selfModel.value[fieldName]));
+  const cascadingFields = props.field.cascadingFields;
+  const newModel = ref<any>({});
+
+  // Encontra o índice do campo que está sendo atualizado
+  const cascadingFieldIndex = Object.values(cascadingFields).findIndex(cascadingField => cascadingField == fieldName);
+
+  // Processa cada campo em cascata
+  map(cascadingFields, (cascadingField: string, index: number) => {
+    if (index <= cascadingFieldIndex) {
+      // Mantém valores dos campos anteriores ou iguais ao campo atual
+      if (fieldName == cascadingField) {
+        newModel.value[cascadingField] = value;
+      } else {
+        newModel.value[cascadingField] = safeModel.value[cascadingField];
+      }
+    } else {
+      // Limpa valores dos campos posteriores
+      newModel.value[cascadingField] = null;
     }
   });
-  
-  // Remove campos posteriores do modelo local
-  const fieldsToRemove = fieldOrder.slice(currentIndex + 1);
-  fieldsToRemove.forEach(fieldName => {
-    if (selfModel.value[fieldName]) {
-      console.log(`Removendo ${fieldName} do modelo (campo posterior)`);
-      delete selfModel.value[fieldName];
-    }
+
+  // Realiza requisição GET para atualizar a página com novos parâmetros
+  router.get(window.location.href, {
+    [props.field.name]: newModel.value
+  }, {
+    preserveScroll: true,
+    preserveState: false,
   });
-  
-  console.log('URL final:', url.toString());
-  console.log('Modelo atualizado:', selfModel.value);
-  console.log('=== FIM DA LÓGICA DE CASCATA ===');
-  
-  router.visit(url.toString(), { replace: true });
 };
 
+/**
+ * Repassa ações de campo para o componente pai
+ */
 const handleFieldAction = (action: string, data: any) => {
   emit('fieldAction', action, data);
 };
 
+/**
+ * Gera classe CSS para definir o span da coluna
+ */
 const getColSpanClass = (field: FieldConfig) => {
   return `col-span-${field.colSpan}`;
 };
 </script>
-
-?

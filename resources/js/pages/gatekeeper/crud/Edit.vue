@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import { Head } from '@inertiajs/vue3';
 import type { BreadcrumbItem } from '@/types';
-import Heading from '@/components/Heading.vue';
 import { computed } from 'vue';
 import { ActionItemProps } from '../../../types/field';
 

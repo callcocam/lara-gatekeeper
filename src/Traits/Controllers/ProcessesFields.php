@@ -26,9 +26,11 @@ trait ProcessesFields
      * Processa os campos definidos pelo método fields.
      * Converte objetos Field em arrays e filtra os nulos (condicionais não atendidas).
      */
-    protected function processFields(?Model $model = null): array
+    protected function processFields(?Model $model = null, $rawFields = []): array
     {
-        $rawFields = $this->fields($model); 
+        if (empty($rawFields)) {
+            $rawFields = $this->fields($model);
+        }
         $processedFields = [];
 
         if (!empty($rawFields) && $rawFields[0] instanceof Field) {

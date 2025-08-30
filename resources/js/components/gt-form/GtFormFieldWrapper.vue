@@ -33,7 +33,8 @@ const FieldComponent = computed(() => {
 
 const fieldId = computed(() => `field-${props.field?.name}`);
 
-const updateModelValue = (value: any) => { 
+const updateModelValue = (value: any) => {
+    console.log('updateModelValue', value);
     emit('update:modelValue', value);
 };
 
