@@ -14,7 +14,7 @@ import { FieldConfig } from '../../../types/field';
 const props = defineProps<{
     editor: Editor | undefined
     id: string
-    error?: string
+    error?: string | null | undefined;
     field: FieldConfig
 }>()
 

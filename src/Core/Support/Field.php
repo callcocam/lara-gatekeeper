@@ -17,6 +17,7 @@ class Field
     use Core\Concerns\EvaluatesClosures;
     use Core\Concerns\BelongsToLabel;
     use Core\Concerns\BelongsToName;
+    use Core\Concerns\BelongsToId;
     use Core\Concerns\BelongsToOptions;
     use Core\Concerns\BelongsToType;
     use Core\Concerns\BelongsToVisible;
@@ -283,9 +284,9 @@ class Field
     public function getValue($initialValue = null): mixed
     {
         if ($this->valueCallback) {
-            return $this->evaluate($this->valueCallback, ['initialValue' => $initialValue]);
+            return $this->evaluate($this->valueCallback, ['initialValue' => $initialValue,   'name' => $this->getName()]);
         }
-        return $initialValue;
+        return data_get($initialValue, $this->getName(), $this->default);
     }
 
     public function valueCallback(Closure $callback): self
@@ -303,15 +304,16 @@ class Field
         }
 
         $data = [
-            'key' => $this->key,
-            'name' => $this->name,
-            'label' => $this->label,
-            'type' => $this->type,
+            'key' => $this->getId(),
+            'name' => $this->getName(),
+            'label' => $this->getLabel(),
+            'type' => $this->getType(),
             'required' => $this->required,
             'searchable' => $this->searchable,
             'hideLabel' => $this->hideLabel,
             'fieldMappings' => $this->fieldMappings,
             'order' => $this->order,
+            'id' => $this->getId(),
         ];
 
         // WorkflowStepCalculator properties

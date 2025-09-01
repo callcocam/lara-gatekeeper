@@ -149,11 +149,16 @@ class CascadingField extends Field
      */
     public function getValue($initialValue = null): mixed
     {
+
+        if ($this->valueCallback) {
+            return $this->evaluate($this->valueCallback, ['initialValue' => $initialValue,  'name' => $this->getName()]);
+        }
+
         // Busca parâmetros específicos do campo na query string
-        $cascadingFieldParams = request()->query($this->getName(), []);
+        $cascadingFieldParams = request()->query($this->getName(), []); 
 
         // Se existem parâmetros, usa eles; caso contrário, usa valor inicial
-        return count($cascadingFieldParams) > 0 ? $cascadingFieldParams : $initialValue;
+        return count($cascadingFieldParams) > 0 ? $cascadingFieldParams : data_get($initialValue, $this->getName(), []);
     }
 
     /**
@@ -249,7 +254,6 @@ class CascadingField extends Field
             $requestData = data_get($this->getModel(), sprintf('%s.%s', $this->getName(), $parentField));
             return $this->evaluate($this->queryCallback, ['request' => $requestData]) ?? [];
         }
-
         // Se há valor selecionado para o campo pai, busca opções baseadas nele
         if ($parentValue = $cascadingFieldParams->get($parentField)) {
             return $this->evaluate($this->queryCallback, ['request' => $parentValue]) ?? [];

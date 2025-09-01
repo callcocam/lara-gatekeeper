@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, computed, inject } from 'vue'
+import { defineProps, computed, inject, watch } from 'vue'
 import { fieldRegistryKey } from '../../injectionKeys';
 import type { FieldRegistry } from './fieldRegistry';
 import { FieldConfig } from '../../types/field';
@@ -7,7 +7,6 @@ import { FieldConfig } from '../../types/field';
 const props = defineProps<{
     field: FieldConfig;
     error?: string;
-    modelValue: any;
 }>()
 const emit = defineEmits<{
     (e: 'update:modelValue', value: any): void;
@@ -15,6 +14,7 @@ const emit = defineEmits<{
     (e: 'update:form-values', values: any): void;
 }>()
 
+const modelValue = defineModel<any>()
 const fieldRegistry = inject(fieldRegistryKey);
 
 const FieldComponent = computed(() => {
@@ -46,16 +46,13 @@ const handleFieldAction = (action: string, data: any) => {
     emit('fieldAction', action, data, props.field?.name || '');
 };
 
-const updateFormValues = (values: any) => {
-    emit('update:form-values', values);
-};
 </script>
 
 <template>
     <component v-if="FieldComponent" :is="FieldComponent" :id="fieldId" :field="field"
         :inputProps="{ ...field.inputProps, 'aria-invalid': !!props.error, 'aria-describedby': props.error ? `${fieldId}-error` : undefined }"
-        :error="props.error" :modelValue="props.modelValue" @update:modelValue="updateModelValue"
-        @fieldAction="handleFieldAction" @update:form-values="updateFormValues" />
+        :error="props.error" :modelValue="modelValue" @fieldAction="handleFieldAction"
+        @update:modelValue="updateModelValue" />
     <div v-else class="text-sm text-destructive bg-destructive/10 p-2 rounded">
         [Gatekeeper] Componente de campo não encontrado para o tipo: {{ field.type }}
     </div>

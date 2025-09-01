@@ -13,37 +13,28 @@
 
 namespace Callcocam\LaraGatekeeper\Core\Support\Form\Fields;
 
+use Callcocam\LaraGatekeeper\Core\Concerns\BelongsToFields;
+use Callcocam\LaraGatekeeper\Core\Concerns\BelongsToId;
+use Callcocam\LaraGatekeeper\Core\Concerns\BelongsToName;
+use Callcocam\LaraGatekeeper\Core\Concerns\BelongsToLabel;
+use Callcocam\LaraGatekeeper\Core\Concerns\BelongsToIcon;
+use Callcocam\LaraGatekeeper\Core\Concerns\FactoryPattern;
+use Callcocam\LaraGatekeeper\Core\Concerns\BelongsToOrder;
+use Callcocam\LaraGatekeeper\Core\Concerns\EvaluatesClosures;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
+use Closure;
 
 class Tab
 {
-    /**
-     * Nome da aba
-     * 
-     * @var string
-     */
-    protected string $name;
+    use FactoryPattern;
+    use EvaluatesClosures;
+    use BelongsToId;
+    use BelongsToName;
+    use BelongsToLabel;
+    use BelongsToIcon;
+    use BelongsToOrder;
+    use BelongsToFields;
 
-    /**
-     * Rótulo da aba
-     * 
-     * @var string
-     */
-    protected string $label;
-
-    /**
-     * Campos da aba
-     * 
-     * @var array
-     */
-    protected array $fields = [];
-
-    /**
-     * Ícone da aba (opcional)
-     * 
-     * @var string|null
-     */
-    protected ?string $icon = null;
 
     /**
      * Se a aba está ativa por padrão
@@ -60,6 +51,20 @@ class Tab
     protected bool $disabled = false;
 
     /**
+     * Se a aba está visível
+     * 
+     * @var bool
+     */
+    protected bool $visible = true;
+
+    /**
+     * Callback para obter o valor da aba
+     * 
+     * @var ?Closure
+     */
+    protected ?Closure $valueCallback = null;
+
+    /**
      * Construtor da classe
      * 
      * @param string $name Nome interno da aba
@@ -67,25 +72,13 @@ class Tab
      */
     public function __construct(string $name, string $label)
     {
-        $this->name = $name;
-        $this->label = $label;
+        $this->name($name);
+        $this->label($label ?? str($name)->ucfirst()->toString());
     }
 
     // ==========================================
     // MÉTODOS DE CONFIGURAÇÃO
-    // ==========================================
-
-    /**
-     * Define o ícone da aba
-     * 
-     * @param string $icon Nome do ícone (Lucide)
-     * @return static
-     */
-    public function icon(string $icon): static
-    {
-        $this->icon = $icon;
-        return $this;
-    }
+    // ========================================== 
 
     /**
      * Define se a aba está ativa por padrão
@@ -143,24 +136,17 @@ class Tab
     // MÉTODOS DE ACESSO (GETTERS)
     // ==========================================
 
-    /**
-     * Retorna o nome da aba
-     * 
-     * @return string
-     */
-    public function getName(): string
+    public function getValue($initialValue = null): mixed
     {
-        return $this->name;
-    }
-
-    /**
-     * Retorna o rótulo da aba
-     * 
-     * @return string
-     */
-    public function getLabel(): string
-    {
-        return $this->label;
+        if ($this->valueCallback) {
+            return $this->evaluate($this->valueCallback, ['initialValue' => $initialValue]);
+        }
+        if ($fields = $this->getFields()) {
+            foreach ($fields as $field) {
+                $initialValue[$field->getName()] = $field->getValue($initialValue);
+            }
+        }
+        return  $initialValue;
     }
 
     /**
@@ -171,16 +157,6 @@ class Tab
     public function getFields(): array
     {
         return $this->fields;
-    }
-
-    /**
-     * Retorna o ícone da aba
-     * 
-     * @return string|null
-     */
-    public function getIcon(): ?string
-    {
-        return $this->icon;
     }
 
     /**
@@ -203,6 +179,28 @@ class Tab
         return $this->disabled;
     }
 
+    /**
+     * Retorna se a aba está visível
+     * 
+     * @return bool
+     */
+    public function isVisible(): bool
+    {
+        return $this->visible;
+    }
+
+    public function visible(bool $visible = true): static
+    {
+        $this->visible = $visible;
+        return $this;
+    }
+
+    public function valueCallback(Closure $valueCallback): static
+    {
+        $this->valueCallback = $valueCallback;
+        return $this;
+    }
+
     // ==========================================
     // MÉTODOS DE PROCESSAMENTO
     // ==========================================
@@ -215,10 +213,10 @@ class Tab
     public function toArray(): array
     {
         $data = [
-            'name' => $this->name,
-            'label' => $this->label,
-            'active' => $this->active,
-            'disabled' => $this->disabled,
+            'name' => $this->getName(),
+            'label' => $this->getLabel(),
+            'active' => $this->isActive(),
+            'disabled' => $this->isDisabled(),
             'fields' => [],
         ];
 
@@ -229,12 +227,12 @@ class Tab
 
         // Processa os campos
         foreach ($this->fields as $field) {
-            $fieldData = $field->toArray();
+            $fieldData = $field->id(sprintf('%s.%s', $this->getName(), $field->getName()));
             if ($fieldData) {
-                $data['fields'][] = $fieldData;
+                $data['fields'][] = $fieldData->toArray();
             }
         }
 
         return $data;
     }
-} 
+}

@@ -37,7 +37,7 @@ trait BelongsToTabs
         return !empty($this->tabs);
     }
 
-    public function getFieldsForForm(): array
+    public function getTabsForForm(): array
     {
         return array_map(fn(Tab $tab) => $tab->toArray(), $this->tabs);
     }

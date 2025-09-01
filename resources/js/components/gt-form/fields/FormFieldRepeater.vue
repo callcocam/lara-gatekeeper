@@ -19,7 +19,7 @@ const props = defineProps<{
         cloneable?: boolean;
     };
     modelValue?: any[] | null;
-    error?: string;
+    error?: string | null | undefined;
 }>()
 
 const emit = defineEmits<{

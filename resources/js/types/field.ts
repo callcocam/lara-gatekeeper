@@ -13,6 +13,15 @@ export interface FieldConfig {
     [key: string]: any;
 }
 
+export interface TabConfig {
+    id: string;
+    name: string;
+    label: string;
+    active: boolean;
+    disabled: boolean;
+    fields: FieldConfig[];
+}
+
 export interface FormErrors {
     [key: string]: string; // Erros do Inertia são string, não array
 }

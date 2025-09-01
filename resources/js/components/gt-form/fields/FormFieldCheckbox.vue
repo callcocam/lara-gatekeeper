@@ -14,7 +14,7 @@ const props = defineProps<{
     [key: string]: any;
   };
   inputProps?: Record<string, any>;
-  error?: string;
+  error?: string | null | undefined;
 }>()
 
 const model = defineModel<boolean | null>()

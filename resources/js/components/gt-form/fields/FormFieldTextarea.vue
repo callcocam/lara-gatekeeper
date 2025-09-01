@@ -7,7 +7,7 @@ const props = defineProps<{
   // modelValue: string | null; // Removido, usa defineModel
   field: { name: string;[key: string]: any }; // Adicionado name
   inputProps?: Record<string, any>;
-  error?: string;
+  error?: string | null | undefined;
 }>()
 
 // Use defineModel for v-model binding (Vue 3.4+)

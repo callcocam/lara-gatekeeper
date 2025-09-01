@@ -7,6 +7,7 @@
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
 use Callcocam\LaraGatekeeper\Core\Concerns\EvaluatesClosures;
+use Callcocam\LaraGatekeeper\Core\Support\Form\Fields\TabsField;
 use Callcocam\LaraGatekeeper\Traits\SortableWithRelationships;
 use Illuminate\Routing\Controller;
 use Illuminate\Database\Eloquent\Model;
@@ -64,10 +65,13 @@ abstract class AbstractController extends Controller
 
 
     protected function formFieldValues(?array $initialValues = null, $fields = []): array
-    { 
+    {
         foreach ($fields as $field) {
-
-            $initialValues[$field->getName()] = $field->getValue(data_get($initialValues, $field->getName()));
+            if ($field instanceof TabsField) {
+                $initialValues[$field->getName()] = $field->getValue($initialValues);
+            } else {
+                $initialValues[$field->getName()] = $field->getValue($initialValues);
+            }
         }
         return $initialValues;
     }
@@ -207,10 +211,10 @@ abstract class AbstractController extends Controller
 
         $initialValues = $this->formFieldValues($initialValues, $rawFields);
 
-        $this->setContext('edit'); 
+        $this->setContext('edit');
 
-        $actions = array_values($this->getFormActions($modelInstance)); 
- 
+        $actions = array_values($this->getFormActions($modelInstance));
+
         return Inertia::render($this->getViewEdit(), [
             'fields' => $fields,
             'initialValues' => $initialValues,
@@ -233,7 +237,7 @@ abstract class AbstractController extends Controller
             $request->validate($this->getValidationRules(true, $modelInstance)),
             $modelInstance
         );
-
+dd($validatedData);
         // Processar dados comuns (senha, user_id, etc.)
         $validatedData = $this->processCommonData($validatedData, $request, true);
 

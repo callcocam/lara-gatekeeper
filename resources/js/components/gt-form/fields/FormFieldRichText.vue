@@ -4,12 +4,14 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { cn } from '../../../lib/utils'
 import RichTextToolbar from './RichTextToolbar.vue'
+import { FieldConfig } from '../../../types/field';
 
 // Define props
 const props = defineProps<{
     id: string;
-    field: { name: string; [key: string]: any };
+    field: FieldConfig;
     inputProps?: { placeholder?: string; [key: string]: any };
+    error?: string | null | undefined;
 }>()
 
 const model = defineModel<string | null>()
@@ -68,7 +70,7 @@ onBeforeUnmount(() => {
         v-if="editor"
         class="rounded-md border border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 bg-background"
     >
-         <RichTextToolbar :editor="editor" />
+         <RichTextToolbar :editor="editor" :id="props.id" :error="props.error" :field="field" />
          <EditorContent :editor="editor" />
     </div>
     <div v-else class="text-destructive text-sm">Editor não inicializado.</div>

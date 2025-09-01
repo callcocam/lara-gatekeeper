@@ -22,6 +22,7 @@ import FormFieldCnpjLookup from './fields/FormFieldCnpjLookup.vue';
 import FormFieldAddress from './fields/FormFieldAddress.vue';
 import FormHasManyField from './fields/FormHasManyField.vue';
 import FormSectionField from './fields/FormSectionField.vue';
+import FormFieldTabs from './fields/FormFieldTabs.vue';
     
 export const defaultFieldComponents = {
     text: FormFieldInput,
@@ -56,6 +57,7 @@ export const defaultFieldComponents = {
     address: FormFieldAddress,
     hasMany: FormHasManyField,
     section: FormSectionField,
+    tabs: FormFieldTabs,
 };
 
 export type FieldRegistry = Record<string, Component>; 

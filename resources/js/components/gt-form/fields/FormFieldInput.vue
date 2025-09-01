@@ -10,24 +10,11 @@ const props = defineProps<{
   // modelValue: string | number | null; // Removido, usa defineModel
   field: FieldConfig // Adicionado name para logs
   inputProps?: Record<string, any>;
-  error?: string;
+  error?: string | null | undefined;
 }>()
 
 // Use defineModel for v-model binding (Vue 3.4+)
-const model = defineModel<string | number | null>()
-const emit = defineEmits<{
-  (e: 'reactive', value: string | number | null): void;
-}>();
-// Computed property to handle null/undefined for input binding
-// Needed because native <input> doesn't handle null well
-const modelValueForInput = computed({
-  get: () => model.value ?? '',
-  set: (value) => {
-    // console.log(`[Gatekeeper/Input:${props.field.name}] Setting value:`, value);
-    model.value = value === '' ? null : value;
-    emit('reactive', model.value);
-  }
-});
+const modelValue = defineModel<string | number | null>() 
 
 // Determine the input type based on field config, default to 'text'
 const inputType = computed(() => {
@@ -42,8 +29,8 @@ const inputType = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <GtLabel :field="field" :error="error" :fieldId="props.id" />
-    <Input :id="props.id" :type="inputType" v-model="modelValueForInput" v-bind="field.inputProps" autocomplete="off" />
+    <GtLabel :field="field" :error="error ?? ''" :fieldId="props.id" /> 
+    <Input :id="props.id" :type="inputType" v-model="modelValue" v-bind="field.inputProps" autocomplete="off" />
     <GtDescription :description="field.description" :error="props.error" />
     <GtError :id="props.id" :error="props.error" />
   </div>

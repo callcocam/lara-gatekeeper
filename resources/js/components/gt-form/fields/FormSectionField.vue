@@ -26,7 +26,7 @@ const props = defineProps<{
   // modelValue: string | number | null; // Removido, usa defineModel
   field: FieldConfig // Adicionado name para logs
   inputProps?: Record<string, any>;
-  error?: string;
+  error?: string | null | undefined;
   modelValue: any;
 }>()
 

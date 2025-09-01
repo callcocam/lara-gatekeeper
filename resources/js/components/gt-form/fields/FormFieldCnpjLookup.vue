@@ -13,7 +13,7 @@ const props = defineProps<{
     field: any;
     inputProps?: Record<string, any>;
     modelValue: any;
-    error?: string;
+    error?: string | null | undefined;
 }>();
 
 const emit = defineEmits(['update:form-values', 'update:modelValue']);

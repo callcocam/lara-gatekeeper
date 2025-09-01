@@ -7,8 +7,8 @@
     <div v-if="field.fields" class="grid grid-cols-12 gap-4">
       <div v-for="fieldOther in fields" :key="fieldOther.name" :class="getColSpanClass(fieldOther)">
         <GtFormFieldWrapper :field="fieldOther" :model-value="safeModel[fieldOther.name]"
-          :error="formData.errors[fieldOther.name]" @update:model-value="handleFieldUpdate(fieldOther.name, $event)"
-          @fieldAction="handleFieldAction" />
+          :error="error ? error[fieldOther.name] : null"
+          @update:model-value="handleFieldUpdate(fieldOther.name, $event)" @fieldAction="handleFieldAction" />
       </div>
     </div>
   </fieldset>
@@ -25,15 +25,9 @@ const props = defineProps<{
   field: FieldConfig & {
     cascadingFields: Record<string, string>; // Mapeamento dos campos em cascata
   };
-  error?: string;
+  error?: Record<string, string> | null | undefined;
   modelValue: any; // Valor atual do modelo
 }>()
-
-// Formulário para gerenciar dados e erros
-const formData = useForm({
-  ...props.modelValue,
-  errors: {},
-});
 
 // Eventos que o componente pode emitir
 const emit = defineEmits<{
@@ -77,7 +71,7 @@ const handleFieldUpdate = (fieldName: string, value: any) => {
       newModel.value[cascadingField] = null;
     }
   });
-
+  console.log(newModel.value, 'newModel');
   // Realiza requisição GET para atualizar a página com novos parâmetros
   router.get(window.location.href, {
     [props.field.name]: newModel.value

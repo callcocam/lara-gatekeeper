@@ -12,7 +12,7 @@ const props = defineProps<{
         [key: string]: any;
     };
     inputProps?: { placeholder?: string;[key: string]: any }; // Placeholder specifically
-    error?: string;
+    error?: string | null | undefined;
 }>()
 
 // Use defineModel for v-model binding (Vue 3.4+)

@@ -3,9 +3,18 @@
         <form class="space-y-4" @submit.prevent="submitForm" :data-form="formData">
             <div class="grid grid-cols-12 gap-x-4 gap-y-4 items-start">
                 <div v-for="field in fields" :key="field.name" :class="getColSpanClass(field)">
-                    <GtFormFieldWrapper :field="field" :model-value="formData[field.name]"
-                        :error="formData.errors[field.name]" @update:model-value="handleFieldUpdate(field.name, $event)"
-                        @fieldAction="handleFieldAction" />
+                    <template v-if="field.type === 'tabs'">
+                        <GtFormFieldTabs :activeTab="field.activeTab" :tabs="field.tabs" :model-value="formData[field.name]"
+                            :errors="formData.errors[field.name]"
+                            @update:model-value="handleFieldUpdate(field.name, $event)"
+                            @fieldAction="handleFieldAction" />
+                    </template>
+                    <template v-else>
+                        <GtFormFieldWrapper :field="field" :model-value="formData[field.name]"
+                            :error="formData.errors[field.name]"
+                            @update:model-value="handleFieldUpdate(field.name, $event)"
+                            @fieldAction="handleFieldAction" />
+                    </template>
                 </div>
                 <div class="col-span-full">
                     <slot name="actions" :form="formData"></slot>
