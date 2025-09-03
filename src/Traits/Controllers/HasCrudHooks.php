@@ -76,7 +76,7 @@ trait HasCrudHooks
     {
         // Lógica para tratar senha
         if (isset($validatedData['password'])) {
-            if ($isUpdate && empty($validatedData['password'])) {
+            if (empty($validatedData['password'])) {
                 unset($validatedData['password']); // Remove senha vazia no update
             } else {
                 $validatedData['password'] = bcrypt($validatedData['password']);
@@ -86,7 +86,7 @@ trait HasCrudHooks
         // Adicionar user_id se não existir
         if (!isset($validatedData['user_id']) && !$isUpdate) {
             $validatedData['user_id'] = $request->user()->id;
-        }
+        } 
 
         return $validatedData;
     }

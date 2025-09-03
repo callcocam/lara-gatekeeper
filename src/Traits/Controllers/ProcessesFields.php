@@ -41,7 +41,7 @@ trait ProcessesFields
             // Se já for um array de arrays, assumir que a lógica condicional
             // já foi tratada dentro do fields (menos ideal)
             $processedFields = $rawFields;
-        } 
+        }
         // Reindexar array para evitar problemas com índices faltando no JS
         return array_values($processedFields);
     }
@@ -72,12 +72,15 @@ trait ProcessesFields
 
         foreach ($fields as $field) {
             if (isset($field['relationship'])) {
-                $values[$field['key']] = $this->resolveRelationship(
-                    $field['relationship'],
-                    $modelInstance,
-                    $field['labelAttribute'] ?? 'name',
-                    $field['valueAttribute'] ?? 'id'
-                );
+                $key = data_get($field, 'name');
+                if (!empty($key)) {
+                    $values[$key] = $this->resolveRelationship(
+                        $field['relationship'],
+                        $modelInstance,
+                        $field['labelAttribute'] ?? 'name',
+                        $field['valueAttribute'] ?? 'id'
+                    );
+                }
             }
         }
 
@@ -139,7 +142,7 @@ trait ProcessesFields
     {
         $fields = $this->fields();
         $filteredFields = $this->filterFieldsByContext($fields, 'create');
-        
+
         return $this->processFields();
     }
 
@@ -150,7 +153,7 @@ trait ProcessesFields
     {
         $fields = $this->fields($model);
         $filteredFields = $this->filterFieldsByContext($fields, 'edit', $model);
-        
+
         return $this->processFields($model);
     }
 
@@ -161,7 +164,7 @@ trait ProcessesFields
     {
         $fields = $this->fields($model);
         $filteredFields = $this->filterFieldsByContext($fields, 'show', $model);
-        
+
         return $this->processFields($model);
     }
 
@@ -175,11 +178,11 @@ trait ProcessesFields
         }
 
         $relation = $model->{$relationship}();
-        
+
         // Para diferentes tipos de relacionamento
         if (method_exists($relation, 'getResults')) {
             $results = $relation->getResults();
-            
+
             if (is_iterable($results)) {
                 return collect($results)->pluck('name', 'id')->toArray();
             }
@@ -256,4 +259,4 @@ trait ProcessesFields
      * Placeholder para método que deve ser implementado pelo controller
      */
     abstract protected function fields(?Model $model = null): array;
-} 
+}
