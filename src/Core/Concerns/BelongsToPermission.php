@@ -122,9 +122,9 @@ trait BelongsToPermission
 
         // Se não encontrou, loga em debug e retorna null
         if (config('app.debug')) {
-            logger()->debug("Policy não encontrada para modelo: {$modelClass}", [
-                'tried_conventions' => array_merge([$policyClass], $conventions)
-            ]);
+            // logger()->debug("Policy não encontrada para modelo: {$modelClass}", [
+            //     'tried_conventions' => array_merge([$policyClass], $conventions)
+            // ]);
         }
 
         return null;

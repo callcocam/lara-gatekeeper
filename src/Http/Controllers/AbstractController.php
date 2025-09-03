@@ -236,8 +236,7 @@ abstract class AbstractController extends Controller
         $validatedData = $this->getDataToUpdate(
             $request->validate($this->getValidationRules(true, $modelInstance)),
             $modelInstance
-        );
-dd($validatedData);
+        ); 
         // Processar dados comuns (senha, user_id, etc.)
         $validatedData = $this->processCommonData($validatedData, $request, true);
 
