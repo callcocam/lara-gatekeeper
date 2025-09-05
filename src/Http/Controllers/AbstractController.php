@@ -187,6 +187,7 @@ abstract class AbstractController extends Controller
         return Inertia::render($this->getViewShow(), [
             'modelId' => $id,
             'fields' => $fields,
+            'model' => $modelInstance,
             'initialValues' => $modelInstance->toArray(),
             ...$this->getToArrayManagesResources('show', $modelInstance),
             'fullWidth' => $this->getFullWidthShowPage() ?? false,
