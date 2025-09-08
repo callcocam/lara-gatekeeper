@@ -23,8 +23,41 @@ You can install the package via composer:
 composer require callcocam/lara-gatekeeper
 ```
 
+### JavaScript Dependencies
 
+The package requires the following JavaScript dependencies for proper functionality:
 
+```bash
+npm install date-fns vue-sonner lodash-es vue-filepond filepond filepond-plugin-file-validate-type filepond-plugin-image-preview vue-the-mask @tiptap/vue-3 @tiptap/starter-kit
+```
+
+or with yarn:
+
+```bash
+yarn add date-fns vue-sonner lodash-es vue-filepond filepond filepond-plugin-file-validate-type filepond-plugin-image-preview vue-the-mask @tiptap/vue-3 @tiptap/starter-kit
+```
+
+### Shadcn-vue Components
+
+You'll also need to install the following UI components from shadcn-vue:
+
+```bash
+npx shadcn-vue@latest add progress radio-group select badge tabs alert-dialog combobox textarea table tags-input switch popover command range-calendar
+```
+
+After installing the JavaScript dependencies and UI components, build your assets:
+
+```bash
+npm run build
+```
+
+or for development:
+
+```bash
+npm run dev
+```
+
+### Database Setup
 
 You can publish and run the migrations with:
 
