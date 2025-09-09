@@ -25,6 +25,17 @@ interface Props {
     breadcrumbs: BreadcrumbItem[];
     routeNameBase: string;
     actions?: ActionItemProps[];
+    fullWidth?: boolean;
+    routes?: {
+        index: string;
+        show: string;
+        edit: string;
+        update: string;
+        destroy: string;
+        store: string;
+    };
+    resourceSingularTitle?: string;
+    resourcePluralTitle?: string;
 }
 
 const props = defineProps<Props>();
@@ -57,11 +68,11 @@ const initialData = computed(() => {
                 <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div class="overflow-hidden bg-white p-6 shadow-sm dark:bg-gray-800 sm:rounded-lg">
                         <GtDataForm :fields="fields" :inertia-form="initialData"
-                            :endpoint="route(`${routeNameBase}.store`)">
+                            :endpoint="routes?.store ?? '#'">
                             <template #actions="{ form }">
                                 <div class="flex justify-end space-x-4">
                                     <Button type="button" variant="outline"
-                                        @click="() => router.get(route(`${routeNameBase}.index`))"
+                                        @click="() => router.get(routes?.index ?? '#')"
                                         :disabled="form.processing">
                                         Cancelar
                                     </Button>

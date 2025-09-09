@@ -9,6 +9,7 @@
 namespace Callcocam\LaraGatekeeper\Core\Support;
 
 use Callcocam\LaraGatekeeper\Core;
+use Callcocam\LaraGatekeeper\Core\Support\Form\Concerns\HasRules;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,6 +27,7 @@ class Field
     // use Concerns\HasOptions;
     use Concerns\HasTextarea;
     use Concerns\HasCombobox;
+    use HasRules;
     public string $key;
     public bool $required = false;
     public ?int $colSpan = null; // Default to full width if not specified 
