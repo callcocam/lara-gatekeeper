@@ -63,6 +63,17 @@ trait ProcessesFields
     }
 
     /**
+     * Obtém os valores iniciais para o formulário de visualização.
+     * Pode ser sobrescrito por controllers filhos para lógica customizada.
+     */
+    protected function getInitialValuesForShow(Model $modelInstance, array $fields = []): array
+    {
+        $values = $modelInstance->toArray();
+
+        return $values;
+    }
+
+    /**
      * Obtém os valores iniciais para o formulário de edição.
      * Pode ser sobrescrito por controllers filhos para lógica customizada.
      */

@@ -182,12 +182,12 @@ abstract class AbstractController extends Controller
 
         $this->setContext('show');
         $actions = array_values($this->getFormActions($modelInstance));
-        $fields = $this->processFields($modelInstance);
+        $fields = $this->processFields($modelInstance); 
 
         return Inertia::render($this->getViewShow(), [
             'modelId' => $id,
             'fields' => $fields,
-            'model' => $modelInstance,
+            'model' => $this->getInitialValuesForShow($modelInstance),
             'initialValues' => $modelInstance->toArray(),
             ...$this->getToArrayManagesResources('show', $modelInstance),
             'fullWidth' => $this->getFullWidthShowPage() ?? false,
