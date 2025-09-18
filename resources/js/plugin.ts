@@ -70,7 +70,7 @@ const registerUIComponents = (app: App): void => {
         const originalName = componentFileName.replace(/\.\w+$/, '');
         if (componentRegistry.indexOf(originalName) === -1) {
             app.component(originalName, definition.default);
-            componentRegistry.push(originalName);
+            // componentRegistry.push(originalName);
             // console.log('originalName', originalName);
         }
     });
