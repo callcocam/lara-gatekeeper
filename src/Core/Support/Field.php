@@ -23,7 +23,7 @@ class Field
     use Core\Concerns\BelongsToType;
     use Core\Concerns\BelongsToVisible;
     use Core\Concerns\BelongsToPermission;
-    use Concerns\HasTypes;
+    use Concerns\HasTypes; 
     // use Concerns\HasOptions;
     use Concerns\HasTextarea;
     use Concerns\HasCombobox;
