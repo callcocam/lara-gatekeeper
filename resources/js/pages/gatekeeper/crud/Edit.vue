@@ -26,6 +26,15 @@ interface Props {
     routeNameBase: string;
     fullWidth?: boolean;
     actions?: ActionItemProps[];
+    routes?: {
+        index: string;
+        show: string;
+        edit: string;
+        update: string;
+        destroy: string;
+    };
+    resourceSingularTitle?: string;
+    resourcePluralTitle?: string;
 }
 
 const props = defineProps<Props>();
@@ -59,8 +68,8 @@ const initialData = computed(() => {
                 </GtHeading>
                 <div class="w-full sm:px-6 lg:px-8">
                     <div class="overflow-hidden bg-white p-6 shadow-sm dark:bg-gray-800 sm:rounded-lg">
-                        <GtDataForm :fields="fields" :inertia-form="initialData"
-                            :endpoint="route(`${routeNameBase}.update`, modelId)">
+                        <GtDataForm :fields="fields" :inertia-form="initialData" :endpoint="routes?.update ?? '#'"
+                            class="space-y-6">
                             <template #actions="{ form }">
                                 <div class="flex justify-end space-x-4">
                                     <ActionRenderer v-for="action in actions" :key="action.id" :action="action"

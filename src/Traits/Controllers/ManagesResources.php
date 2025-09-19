@@ -9,6 +9,7 @@
 namespace Callcocam\LaraGatekeeper\Traits\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 trait ManagesResources
@@ -19,10 +20,10 @@ trait ManagesResources
     protected string $routeNameBase = '';
     protected array $defaultBreadcrumbs = [];
     protected string $pageTitle = '';
-    
+
     /**
      * Inicializa os nomes dos recursos baseado no modelo
-    */
+     */
     protected function initializeResourceNames(): void
     {
         if ($this->model) {
@@ -170,8 +171,19 @@ trait ManagesResources
         return "{$this->getViewPrefix()}/Edit";
     }
 
-    protected function getToArrayManagesResources($name='index', ?Model $modelInstance = null): array
+    protected function getParamName($modelInstance = null): string
     {
+        if ($modelInstance) {
+            $paramName = Str::snake(class_basename($modelInstance));
+            return $paramName;
+        }
+        return 'model';
+    }
+
+    protected function getToArrayManagesResources($name = 'index', ?Model $modelInstance = null): array
+    {
+        $paramName = $this->getParamName($modelInstance);
+        $params[$paramName] = $modelInstance;
         return [
             'pageTitle' => $this->generatePageTitle($name, $modelInstance),
             'pageDescription' => $this->generatePageDescription($name, $modelInstance),
@@ -179,6 +191,64 @@ trait ManagesResources
             'routeNameBase' => $this->getRouteNameBase(),
             'useCustomFilters' => method_exists($this, 'useCustomFilters') ? $this->useCustomFilters() : false,
             'resourceName' => $this->getResourceName(),
+            'routes' => [
+                'index' => $this->getBaseRouteIndex(),
+                'create' => $this->getBaseRouteCreate(),
+                'store' => $this->getBaseRouteStore(),
+                'show' => $this->getBaseRouteShow($params),
+                'edit' => $this->getBaseRouteEdit($params),
+                'update' => $this->getBaseRouteUpdate($params),
+                'destroy' => $this->getBaseRouteDestroy($params),
+            ],
         ];
+    }
+
+    protected function getBaseRouteIndex(): string
+    {
+        if (Route::has($this->getRouteNameBase() . '.index'))
+            return route($this->getRouteNameBase() . '.index');
+        return '#';
+    }
+
+    protected function getBaseRouteCreate(): string
+    {
+        if (Route::has($this->getRouteNameBase() . '.create'))
+            return route($this->getRouteNameBase() . '.create');
+        return '#';
+    }
+
+    protected function getBaseRouteStore(): string
+    {
+        if (Route::has($this->getRouteNameBase() . '.store'))
+            return route($this->getRouteNameBase() . '.store');
+        return '#';
+    }
+
+    protected function getBaseRouteShow($params = []): string
+    {
+        if (array_filter($params) && Route::has($this->getRouteNameBase() . '.show'))
+            return route($this->getRouteNameBase() . '.show', $params);
+        return '#';
+    }
+
+    protected function getBaseRouteEdit($params = []): string
+    {
+        if (array_filter($params) && Route::has($this->getRouteNameBase() . '.edit'))
+            return route($this->getRouteNameBase() . '.edit', $params);
+        return '#';
+    }
+
+    protected function getBaseRouteUpdate($params = []): string
+    {
+        if (array_filter($params) && Route::has($this->getRouteNameBase() . '.update'))
+            return route($this->getRouteNameBase() . '.update', $params);
+        return '#';
+    }
+
+    protected function getBaseRouteDestroy($params = []): string
+    {
+        if (array_filter($params) && Route::has($this->getRouteNameBase() . '.destroy'))
+            return route($this->getRouteNameBase() . '.destroy', $params);
+        return '#';
     }
 }

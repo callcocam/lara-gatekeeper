@@ -215,7 +215,7 @@ abstract class AbstractController extends Controller
         $this->setContext('edit');
 
         $actions = array_values($this->getFormActions($modelInstance));
-
+ 
         return Inertia::render($this->getViewEdit(), [
             'fields' => $fields,
             'initialValues' => $initialValues,
@@ -223,7 +223,7 @@ abstract class AbstractController extends Controller
             'extraData' => $this->getExtraDataForEdit(),
             'fullWidth' => $this->getFullWidthEditForm() ?? false,
             ...$this->getToArrayManagesResources('edit', $modelInstance),
-            'actions' => $actions,
+            'actions' => $actions, 
         ]);
     }
 
