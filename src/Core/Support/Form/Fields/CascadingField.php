@@ -16,6 +16,7 @@ namespace Callcocam\LaraGatekeeper\Core\Support\Form\Fields;
 use Callcocam\LaraGatekeeper\Core\Support\Field;
 use Callcocam\LaraGatekeeper\Core\Concerns\BelongsToFields;
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 
 class CascadingField extends Field
 {
@@ -35,6 +36,14 @@ class CascadingField extends Field
      * @var Closure
      */
     protected Closure $queryCallback;
+
+
+    /**
+     * Model para buscar dados dinâmicos
+     * 
+     * @var string
+     */
+    protected ?string $modelName = null;
 
     /**
      * Construtor da classe
@@ -155,10 +164,21 @@ class CascadingField extends Field
         }
 
         // Busca parâmetros específicos do campo na query string
-        $cascadingFieldParams = request()->query($this->getName(), []); 
+        $cascadingFieldParams = request()->query($this->getName(), []);
 
         // Se existem parâmetros, usa eles; caso contrário, usa valor inicial
         return count($cascadingFieldParams) > 0 ? $cascadingFieldParams : data_get($initialValue, $this->getName(), []);
+    }
+
+    public function modelName(string $modelName): static
+    {
+        $this->modelName = $modelName;
+        return $this;
+    }
+
+    public function getModelName(): ?string
+    {
+        return $this->modelName ? app($this->modelName) : null;
     }
 
     /**
@@ -252,11 +272,11 @@ class CascadingField extends Field
         // Se não há parâmetros na query, usa dados do modelo
         if ($cascadingFieldParams->isEmpty()) {
             $requestData = data_get($this->getModel(), sprintf('%s.%s', $this->getName(), $parentField));
-            return $this->evaluate($this->queryCallback, ['request' => $requestData]) ?? [];
+            return $this->evaluate($this->queryCallback, ['request' => $requestData, 'parent' => $parentField, 'name'=>$this->getName()]) ?? [];
         }
         // Se há valor selecionado para o campo pai, busca opções baseadas nele
         if ($parentValue = $cascadingFieldParams->get($parentField)) {
-            return $this->evaluate($this->queryCallback, ['request' => $parentValue]) ?? [];
+            return $this->evaluate($this->queryCallback, ['request' => $parentValue, 'parent' => $parentField, 'name'=>$this->getName()]) ?? [];
         }
 
         // Caso contrário, retorna array vazio
