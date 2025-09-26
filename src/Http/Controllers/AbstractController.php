@@ -150,6 +150,11 @@ abstract class AbstractController extends Controller
         ]);
     }
 
+    protected function getRedirectRouteAfterStore(?Model $model = null): RedirectResponse
+    {
+        return redirect()->route($this->getRouteNameBase() . '.index')->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' criado(a) com sucesso.');
+    }
+
     /**
      * Método store usando as traits
      */
@@ -164,8 +169,7 @@ abstract class AbstractController extends Controller
         $model = $this->model::create($this->beforeStore($validatedData, $request));
         $this->afterStore($model, $validatedData, $request);
 
-        return redirect()->route($this->getRouteNameBase() . '.index')
-            ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' criado(a) com sucesso.');
+        return $this->getRedirectRouteAfterStore($model);
     }
 
     /**
@@ -182,7 +186,7 @@ abstract class AbstractController extends Controller
 
         $this->setContext('show');
         $actions = array_values($this->getFormActions($modelInstance));
-        $fields = $this->processFields($modelInstance); 
+        $fields = $this->processFields($modelInstance);
 
         return Inertia::render($this->getViewShow(), [
             'modelId' => $id,
@@ -195,6 +199,11 @@ abstract class AbstractController extends Controller
         ]);
     }
 
+    protected function getRedirectRouteAfterEdit(?Model $model = null): RedirectResponse
+    {
+        return redirect()->route($this->getRouteNameBase() . '.index')
+            ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' atualizado(a) com sucesso.');
+    }
     /**
      * Método edit usando as traits
      */
@@ -215,7 +224,7 @@ abstract class AbstractController extends Controller
         $this->setContext('edit');
 
         $actions = array_values($this->getFormActions($modelInstance));
- 
+
         return Inertia::render($this->getViewEdit(), [
             'fields' => $fields,
             'initialValues' => $initialValues,
@@ -223,7 +232,7 @@ abstract class AbstractController extends Controller
             'extraData' => $this->getExtraDataForEdit(),
             'fullWidth' => $this->getFullWidthEditForm() ?? false,
             ...$this->getToArrayManagesResources('edit', $modelInstance),
-            'actions' => $actions, 
+            'actions' => $actions,
         ]);
     }
 
@@ -237,15 +246,14 @@ abstract class AbstractController extends Controller
         $validatedData = $this->getDataToUpdate(
             $request->validate($this->getValidationRules(true, $modelInstance)),
             $modelInstance
-        ); 
+        );
         // Processar dados comuns (senha, user_id, etc.)
         $validatedData = $this->processCommonData($validatedData, $request, true);
 
         $modelInstance->update($this->beforeUpdate($validatedData, $request, $modelInstance));
         $this->afterUpdate($modelInstance, $validatedData, $request);
 
-        return redirect()->route($this->getRouteNameBase() . '.index')
-            ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' atualizado(a) com sucesso.');
+        return $this->getRedirectRouteAfterEdit($modelInstance);
     }
 
     /**
@@ -260,7 +268,12 @@ abstract class AbstractController extends Controller
         $modelInstance->delete();
         $this->afterDestroy($modelInstance);
 
-        return redirect()->route($this->getRouteNameBase() . '.index')
+        return $this->getRedirectRouteAfterDestroy($modelInstance);
+    }
+
+    protected function getRedirectRouteAfterDestroy(?Model $model = null): RedirectResponse
+    {
+        return $this->getRedirectRouteAfterDestroy($model)
             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
     }
 
