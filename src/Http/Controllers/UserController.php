@@ -17,7 +17,7 @@ use Callcocam\LaraGatekeeper\Core\Support\Table\Columns\StatusColumn;
 use Callcocam\LaraGatekeeper\Enums\DefaultStatus;
 use Callcocam\LaraGatekeeper\Models\Role;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -56,13 +56,13 @@ class UserController extends AbstractController
                 ->colSpan(6),
 
             Field::make('password', 'Senha')
-                ->type('password')
+                // ->type('password')
                 ->required(!$isUpdate)
                 ->placeholder($isUpdate ? 'Deixe em branco para não alterar' : '')
                 ->colSpan(6),
 
             Field::make('password_confirmation', 'Confirmar Senha')
-                ->type('password')
+                // ->type('password')
                 ->required(!$isUpdate)
                 ->colSpan(6),
 
@@ -130,18 +130,11 @@ class UserController extends AbstractController
             // 'avatar' => ['nullable'],
             'status' => ['required', Rule::in(array_column(DefaultStatus::cases(), 'value'))],
         ];
-        if (isset($rules['password'])) {
-            if ($isUpdate) {
-                if (!empty($request->password)) {
-                    $rules['password'] = ['required', 'string', Password::defaults(), 'confirmed'];
-                } else {
-                    unset($rules['password']);
-                }
-            } else {
-                $rules['password'] = ['required', 'string', Password::defaults(), 'confirmed'];
-            }
-        }
-
+        if ($isUpdate) {
+            $rules['password'] = ['nullable', 'string', Password::defaults(), 'confirmed'];
+        } else {
+            $rules['password'] = ['required', 'string', Password::defaults(), 'confirmed'];
+        } 
         return $rules;
     }
     /**
@@ -149,6 +142,7 @@ class UserController extends AbstractController
      */
     protected function processCommonData(array $validatedData, Request $request, bool $isUpdate = false): array
     {
+
         // Lógica para tratar senha
         if (empty($validatedData['password'])) {
             unset($validatedData['password']); // Remove senha vazia no update
@@ -181,7 +175,7 @@ class UserController extends AbstractController
         $roleIds = $validatedData['roles'] ?? [];
         $model->roles()->sync($roleIds);
     }
- 
+
 
 
     protected function getViewShow(): string
