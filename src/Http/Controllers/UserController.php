@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaraGatekeeper\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\User;
 use Callcocam\LaraGatekeeper\Core\Support\Action;
 use Callcocam\LaraGatekeeper\Core\Support\Column;
@@ -54,6 +55,11 @@ class UserController extends AbstractController
                 ->type('email')
                 ->required()
                 ->colSpan(6),
+            Field::make('client_id', 'Cliente')
+                ->type('select')
+                ->options(Client::pluck('name', 'id')->toArray())
+                ->searchable()
+                ->colSpan(12),
 
             Field::make('password', 'Senha')
                 // ->type('password')
@@ -127,6 +133,7 @@ class UserController extends AbstractController
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', $isUpdate ? Rule::unique('users')->ignore($userId) : Rule::unique('users')],
             'roles' => ['nullable', 'array'],
+            'client_id' => ['nullable', 'exists:clients,id'],
             // 'avatar' => ['nullable'],
             'status' => ['required', Rule::in(array_column(DefaultStatus::cases(), 'value'))],
         ];
@@ -134,7 +141,7 @@ class UserController extends AbstractController
             $rules['password'] = ['nullable', 'string', Password::defaults(), 'confirmed'];
         } else {
             $rules['password'] = ['required', 'string', Password::defaults(), 'confirmed'];
-        } 
+        }
         return $rules;
     }
     /**

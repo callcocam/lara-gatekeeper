@@ -17,8 +17,7 @@
 <script setup lang="ts">
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
-import { cn } from '../../../lib/utils';
-import { Link } from '@inertiajs/vue3';
+import { cn } from '../../../lib/utils'; 
 
 interface ActionProps {
     action: {

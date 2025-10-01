@@ -23,11 +23,13 @@ import type { FieldRegistry } from './components/gt-form/fieldRegistry';
 interface LaraGatekeeperPluginOptions {
   customFormatters?: Record<string, Function>;
   customFields?: FieldRegistry;
+  customComponents?: Record<string, Component>;
 }
 
 // Export the plugin install function
 const install = (app: App, options: LaraGatekeeperPluginOptions = {}): void => {
 
+    console.log('[LaraGatekeeperPlugin] Installing plugin with options:', options);
     // --- Registro de Formatadores ---
     const { renderFormattedCell, ...usableFormatters } = defaultFormatters;
     const finalFormatters = { 
