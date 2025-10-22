@@ -273,7 +273,7 @@ abstract class AbstractController extends Controller
 
     protected function getRedirectRouteAfterDestroy(?Model $model = null): RedirectResponse
     {
-        return $this->getRedirectRouteAfterDestroy($model)
+        return back()
             ->with('success', Str::ucfirst(Str::singular($this->getResourceName())) . ' excluído(a) com sucesso.');
     }
 
