@@ -336,7 +336,7 @@ abstract class AbstractController extends Controller
 
         $this->applyExtraFilters($query, $request);
 
-        $result = $this->evaluate($action->getCallback(), ['query' => $query]);
+        $result = $this->evaluate($action->getCallback(), ['query' => $query, 'request' => $request]);
 
         if ($result) {
             return $result;
