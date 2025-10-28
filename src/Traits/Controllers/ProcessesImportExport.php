@@ -118,8 +118,13 @@ trait ProcessesImportExport
     /**
      * Cria action de importação customizada
      */
-    protected function makeImportAction(string $name, string $label, string $route): ImportAction
+    protected function makeImportAction(string $name, string $label, string $route, $fields = []): ImportAction
     {
+        $fields = array_merge([
+            Field::make('file', 'Arquivo')
+                ->type('file')
+        ], $fields);
+        
         return ImportAction::make($name)
             ->icon('Upload')
             ->type('import')
@@ -129,10 +134,7 @@ trait ProcessesImportExport
             ->label($label)
             ->requiresPermissions('import-data')
             ->visibleWhen(fn() => $this->canImport())
-            ->fields([
-                Field::make('file', 'Arquivo')
-                    ->type('file')
-            ]);
+            ->fields($fields);
     }
 
     /**
