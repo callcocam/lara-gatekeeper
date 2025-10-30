@@ -69,7 +69,20 @@ trait BelongsToVisible
         }
 
         // Camada 2: Sistema de permissões (delega para BelongsToPermission)
-        return $this->validatePermissions($item);
+        if(!$this->validatePermissions($item)){
+            return false;
+        }
+        $user = Auth::user();
+        if(!$this->evaluate($this->visible, [
+            'item' => $item,
+            'model' => $item,
+            'record' => $item,
+            'user' => $user,
+            'auth' => $user,
+        ])){
+            return false;
+        }
+        return true;
     }
 
     /**
