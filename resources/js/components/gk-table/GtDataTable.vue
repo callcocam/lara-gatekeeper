@@ -14,8 +14,10 @@
                     <TableCell v-for="column in columns" :key="column.id">
                         <template v-if="column.id === 'actions' && item.actions">
                             <div class="flex items-center space-x-1 justify-start">
-                                <ActionRenderer v-for="action in item.actions" :key="action.id" :action="action"
-                                    position="row" />
+                                <template v-for="action in item.actions" :key="action.id">
+                                    <ActionRenderer :action="action" v-if="action.visible"
+                                        position="row" />
+                                </template>
                             </div>
                         </template>
                         <template v-else>
