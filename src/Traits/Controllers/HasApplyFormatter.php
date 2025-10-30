@@ -111,6 +111,10 @@ trait HasApplyFormatter
         foreach ($actions as $action) {
             $actionName = $action->getName();
 
+            if (!$action->isVisible($item)) {
+                continue;
+            }
+
             // Prioriza método format() se disponível
             if (method_exists($action, 'format')) {
                 $formatted = $action->format($item);
