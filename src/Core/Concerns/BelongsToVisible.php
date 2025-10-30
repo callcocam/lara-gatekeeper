@@ -192,10 +192,7 @@ trait BelongsToVisible
      */
     public function getVisibleWhenShow(): ?bool
     {
-        if ($this->visible === false) {
-            return false;
-        }
-
+        
         return $this->evaluate($this->visibleWhenShow);
     }
 
@@ -274,12 +271,15 @@ trait BelongsToVisible
      */
     public function isVisibleOnIndex($item = null): bool
     {
+        if (!$this->isVisible($item)) {
+            return false;
+        }
         $contextVisible = $this->getVisibleWhenIndex();
         if ($contextVisible === false) {
             return false;
         }
 
-        return $this->isVisible($item);
+        return true;
     }
 
     /**
@@ -287,12 +287,15 @@ trait BelongsToVisible
      */
     public function isVisibleOnCreate($item = null): bool
     {
+        if (!$this->isVisible($item)) {
+            return false;
+        }
         $contextVisible = $this->getVisibleWhenCreate();
         if ($contextVisible === false) {
             return false;
         }
 
-        return $this->isVisible($item);
+        return true;
     }
 
     /**
@@ -300,12 +303,15 @@ trait BelongsToVisible
      */
     public function isVisibleOnShow($item = null): bool
     {
+        if (!$this->isVisible($item)) {
+            return false;
+        }
         $contextVisible = $this->getVisibleWhenShow();
         if ($contextVisible === false) {
             return false;
         }
 
-        return $this->isVisible($item);
+        return true;
     }
 
     /**
@@ -313,12 +319,15 @@ trait BelongsToVisible
      */
     public function isVisibleOnEdit($item = null): bool
     {
+        if (!$this->isVisible($item)) {
+            return false;
+        }
         $contextVisible = $this->getVisibleWhenEdit();
         if ($contextVisible === false) {
             return false;
         }
 
-        return $this->isVisible($item);
+        return true;
     }
 
     /**
@@ -326,11 +335,14 @@ trait BelongsToVisible
      */
     public function isVisibleOnDelete($item = null): bool
     {
+        if (!$this->isVisible($item)) {
+            return false;
+        }
         $contextVisible = $this->getVisibleWhenDelete();
         if ($contextVisible === false) {
             return false;
         }
 
-        return $this->isVisible($item);
+        return true;
     }
 }
